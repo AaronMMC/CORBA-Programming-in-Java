@@ -1,0 +1,36 @@
+module ModifiedHangman {
+  exception WaitingTimeoutException {};
+  exception GameNotFoundException {};
+  exception InvalidGuessException {};
+  exception GuessLimitReachedException {
+    string message;
+  };
+
+  interface GameService {
+
+    void logout(in string username, in string token);
+
+    string start_game(in string username, in string token) raises(WaitingTimeoutException);
+
+	// may not be used
+    boolean is_game_over(in string username, in string gameCode, in string token);
+    boolean is_round_over(in string username, in string gameCode, in string token);
+    long get_round_number(in string username, in string gameCode, in string token);
+    long get_max_rounds(, in string token);
+
+
+    string guess_letter(
+      in string username,
+      in string gameCode,
+      in char letter,
+      in string token
+    ) raises(GameNotFoundException, InvalidGuessException, GuessLimitReachedException);
+
+    string get_current_masked_word(in string username, in string gameCode, in string token);
+    long get_remaining_attempts(in string username, in string gameCode, in string token);
+    long get_remaining_time(in string username, in string gameCode, in string token);
+
+    string get_winner(in string gameCode, in string token);
+    string get_leaderboard(, in string token);
+  };
+};
