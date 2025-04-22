@@ -1,0 +1,1 @@
+The files in the CORBA_IDLs are just temporary. They will be stored in the right place later on.

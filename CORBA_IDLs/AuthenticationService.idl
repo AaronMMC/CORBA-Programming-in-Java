@@ -1,0 +1,9 @@
+module ModifiedHangman {
+    exception LogInException {};
+
+    interface AuthenticationService {
+        // returns a token string
+        wstring login(in string username, in string password) raises(LoginException);
+    };
+
+};
