@@ -3,7 +3,8 @@ module ModifiedHangman {
 
     interface AuthenticationService {
         // returns a token string
-        wstring login(in string username, in string password) raises(LoginException);
+        string login(in string username, in string password) raises(LoginException);
+        void logout(in string token) raises (PlayerNotLoggedInException);
     };
 
 };

@@ -1,36 +1,78 @@
 module ModifiedHangman {
-  exception WaitingTimeoutException {};
   exception GameNotFoundException {};
-  exception InvalidGuessException {};
-  exception GuessLimitReachedException {
-    string message;
-  };
+  exception PlayerNotLoggedInException {};
 
   interface GameService {
 
-    void logout(in string username, in string token);
+    void registerCallback(in ClientCallback callback, in string token) raises (PlayerNotLoggedInException);
+    GameInfo start_game(in string username, in string token) raises (PlayerNotLoggedInException);
 
-    string start_game(in string username, in string token) raises(WaitingTimeoutException);
-
-	// may not be used
-    boolean is_game_over(in string username, in string gameCode, in string token);
-    boolean is_round_over(in string username, in string gameCode, in string token);
-    long get_round_number(in string username, in string gameCode, in string token);
-    long get_max_rounds(, in string token);
-
-
-    string guess_letter(
+    GuessResponse guessLetter(
       in string username,
-      in string gameCode,
+      in string gameId,
       in char letter,
       in string token
-    ) raises(GameNotFoundException, InvalidGuessException, GuessLimitReachedException);
+    ) raises (GameNotFoundException), (PlayerNotLoggedInException);
 
-    string get_current_masked_word(in string username, in string gameCode, in string token);
-    long get_remaining_attempts(in string username, in string gameCode, in string token);
-    long get_remaining_time(in string username, in string gameCode, in string token);
 
-    string get_winner(in string gameCode, in string token);
-    string get_leaderboard(, in string token);
+    sequence<GamePlayer> get_leaderboard(in string token) raises (PlayerNotLoggedInException);
   };
+
+
+  interface ClientCallback {
+    void startRound(long wordLength);
+    void startGameFailed();
+    void endGame(GameResult);
+    void endRound(RoundResult);
+    void proceedToNextRound(long wordLength);
+  };
+
+
+  struct Player {
+    string username;
+    string password;
+  };
+
+
+  struct AttemptedLetter {
+    string letter;
+    boolean isLetterCorrect;
+  };
+
+
+  struct GuessResponse {
+    boolean isWordGuessed;
+    string maskedWord;
+    sequence<AttemptedLetter> attemptedLetters;
+    long remainingAttemptsLeft;
+  };
+
+
+  struct GameInfo {
+    string gameId;
+    long roundLength;
+    long remainingWaitingTime;
+  };
+
+
+  struct GamePlayer {
+    string username;
+    long wins; // can be used in a game (round wins) or leaderboards (game wins)
+  };
+
+
+  struct GameResult {
+    string gameId;
+    string gameWinner;
+    sequence<GamePlayer> leaderboard;
+  };
+
+  struct RoundResult {
+    string gameId;
+    string roundWinner;
+    long roundWinnerTime;
+    string statusMessage; // it can be "You've done it in 20 seconds" or "You did not guessed it" or "You won this round"
+    sequence<GamePlayer> currentGameLeaderboard;
+  };
+
 };
