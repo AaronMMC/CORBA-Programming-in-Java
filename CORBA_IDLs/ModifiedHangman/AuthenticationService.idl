@@ -1,9 +1,10 @@
 module ModifiedHangman {
     exception LogInException {};
+    exception PlayerNotLoggedInException {};
 
     interface AuthenticationService {
         // returns a token string
-        string login(in string username, in string password) raises(LoginException);
+        string login(in string username, in string password) raises(LogInException);
         void logout(in string token) raises (PlayerNotLoggedInException);
     };
 
