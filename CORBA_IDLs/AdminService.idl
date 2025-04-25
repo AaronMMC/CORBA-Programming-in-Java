@@ -9,7 +9,8 @@ module ModifiedHangman {
 
     void set_waiting_time(in long seconds, in string token);
     void set_round_duration(in long seconds, in string token);
-    long get_waiting_time(, in string token);
-    long get_round_duration(, in string token);
+    long get_waiting_time(in string token);
+    long get_round_duration(in string token);
+
   };
 };
