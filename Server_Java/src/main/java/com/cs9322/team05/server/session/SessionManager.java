@@ -1,5 +1,7 @@
 package com.cs9322.team05.server.session;
 
+import ModifiedHangman.ClientCallback;
+
 import javax.security.auth.callback.Callback;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +14,11 @@ public class SessionManager {
     public SessionManager() {
         this.userSessions = new HashMap<>();
         this.clientCallbacks = new HashMap<>();
+    }
+
+
+    public void addCallback(ClientCallback clientCallback) {
+
     }
 
 

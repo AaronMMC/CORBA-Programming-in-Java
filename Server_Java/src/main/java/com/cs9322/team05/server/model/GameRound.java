@@ -11,4 +11,6 @@ public class GameRound {
     private Map<String, CountdownTimer> playerCountdowns; // username to their countdown timers, change the Countdown to the actual object to be used
     private Map<String, PlayerGuessWordState> playerGuessStates;
 
+
+
 }
