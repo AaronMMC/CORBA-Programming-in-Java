@@ -26,6 +26,7 @@ public class Game {
 
     public String getGameId() {
         return gameId;
+
     }
 
     public void setGameId(String gameId) {
