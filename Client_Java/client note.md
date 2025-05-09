@@ -2,7 +2,7 @@
 2. Client code will invoke the startGame of the GameService
 3. Client code will receive a game info contains the gameId, roundTimeLength, and the remaining waiting time (0 - 10 secs default). During this, just display the timer (remaining time counting down to 0).
 - it can be the case that this player will host a game (timer will be 10 seconds) or joining a game (timer will be less than 10 seconds but greater than 0 sec. ) if there exist a player who hosted a game not less than 10 seconds ago.
-4. After the 0 second, the server will call the method startGame(int wordLength) in the client side with the wordLength to be guessed.
+4. After the 0 second, the server will call(callback) the method startGame(int wordLength) in the client side with the wordLength to be guessed.
 5. Then the client will start to guess the word. (_ _ _ _ _ _ _ _)
 6. If a player guesses, the client code will invoke the guessLetter of the GameService, and will be receiving a GuessResponse object which contains
     - boolean isWordGuessed;

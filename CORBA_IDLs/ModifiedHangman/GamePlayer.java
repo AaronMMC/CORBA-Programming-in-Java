@@ -11,7 +11,7 @@ package ModifiedHangman;
 public final class GamePlayer implements org.omg.CORBA.portable.IDLEntity
 {
   public String username = null;
-  public int wins = (int)0;
+  public int wins = (int)0; // can be round wins or game wins depends on if leaderboards or game
 
   public GamePlayer ()
   {

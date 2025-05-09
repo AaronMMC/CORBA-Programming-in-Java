@@ -37,6 +37,7 @@ module ModifiedHangman {
   struct Player {
     string username;
     string password;
+    long wins;
   };
 
 

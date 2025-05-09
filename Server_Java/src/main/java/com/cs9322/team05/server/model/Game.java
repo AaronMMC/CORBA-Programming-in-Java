@@ -20,7 +20,7 @@ public class Game {
         this.players = new ArrayList<>();
         this.rounds = new ArrayList<>();
 
-        this.players.add(new GamePlayer(username, 0));
+        this.players.add(new GamePlayer(username, 0)); // 0 is round wins
     }
 
 

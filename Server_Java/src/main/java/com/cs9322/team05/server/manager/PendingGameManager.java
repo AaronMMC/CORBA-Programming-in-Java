@@ -1,6 +1,7 @@
-package com.cs9322.team05.server.session;
+package com.cs9322.team05.server.manager;
 
 import ModifiedHangman.GamePlayer;
+import com.cs9322.team05.server.impl.GameServiceImpl;
 import com.cs9322.team05.server.model.Game;
 
 import java.util.concurrent.Executors;
@@ -13,11 +14,16 @@ public class PendingGameManager {
     private final ScheduledExecutorService scheduler;
     private ScheduledFuture<?> pendingGameTask;
     private int remainingSeconds;
+    private GameServiceImpl gameService;
 
     public PendingGameManager() {
         this.scheduler = Executors.newScheduledThreadPool(1);
     }
 
+
+    public void setGameService(GameServiceImpl gameService) {
+        this.gameService = gameService;
+    }
 
     public synchronized boolean isPendingGameExists() {
         return pendingGame != null;
@@ -55,9 +61,11 @@ public class PendingGameManager {
                 if (remainingSeconds > 0)
                     remainingSeconds -= 1;
                 else {
-                    pendingGame = null;
                     remainingSeconds = 0;
                     pendingGameTask.cancel(false);
+
+                    gameService.addActiveGame(pendingGame);
+                    pendingGame = null;
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);

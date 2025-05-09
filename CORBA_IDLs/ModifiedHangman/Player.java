@@ -12,6 +12,7 @@ public final class Player implements org.omg.CORBA.portable.IDLEntity
 {
   public String username = null;
   public String password = null;
+  public int wins = 0;
 
   public Player ()
   {
@@ -23,4 +24,35 @@ public final class Player implements org.omg.CORBA.portable.IDLEntity
     password = _password;
   } // ctor
 
+  public Player (String _username, String _password, int _wins)
+  {
+    username = _username;
+    password = _password;
+    wins = _wins;
+  } // ctor
+
+
+  public String getUsername() {
+    return username;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public int getWins() {
+    return wins;
+  }
+
+  public void setWins(int wins) {
+    this.wins = wins;
+  }
 } // class Player

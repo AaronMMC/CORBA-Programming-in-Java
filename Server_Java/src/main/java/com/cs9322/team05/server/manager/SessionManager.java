@@ -1,4 +1,4 @@
-package com.cs9322.team05.server.session;
+package com.cs9322.team05.server.manager;
 
 import ModifiedHangman.ClientCallback;
 

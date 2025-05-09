@@ -4,7 +4,7 @@ import ModifiedHangman.AuthenticationServicePOA;
 import ModifiedHangman.ClientCallback;
 import ModifiedHangman.LogInException;
 import ModifiedHangman.PlayerNotLoggedInException;
-import com.cs9322.team05.server.session.SessionManager;
+import com.cs9322.team05.server.manager.SessionManager;
 
 import java.util.Random;
 
