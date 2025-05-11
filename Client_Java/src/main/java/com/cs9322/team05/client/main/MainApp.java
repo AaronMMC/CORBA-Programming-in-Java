@@ -9,6 +9,16 @@ public class MainApp extends Application {
     private LoginView loginView;
 
     public static void main(String[] args) {
+
+        ORB orb = ORB.init(args, null);
+        NamingContextExt ncRef = NamingContextExtHelper.narrow(orb.resolve_initial_references("NameService"));
+
+        AdminService adminService = AdminServiceHelper.narrow(ncRef.resolve_str("AdminService"));
+        // Dito nalang mag dagdag nung mga servies na gagamitin.
+        // AuthenticationService authService = AuthenticationServiceHelper.narrow(ncRef.resolve_str("AuthenticationService"));
+
+        AdminModel adminModel = new AdminModel(adminService);
+
         launch(args);
     }
 

@@ -8,18 +8,8 @@ public class AdminModel {
 
     private static AdminService adminServiceImpl;
 
-    public AdminModel(ORB orb) {
-        try {
-            //ORB orb = ORB.init(args, null); sa client main ata to
-
-            org.omg.CORBA.Object nameServiceObj = orb.resolve_initial_references("NameService");
-            NamingContextExt ncRef = NamingContextExtHelper.narrow(nameServiceObj);
-
-            String name = "AdminService";
-            adminServiceImpl = AdminServiceHelper.narrow(ncRef.resolve_str(name));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public AdminModel(AdminService adminService) {
+        this.adminService = adminService;
     }
 
     public boolean create_player(String username, String password, String token) {
