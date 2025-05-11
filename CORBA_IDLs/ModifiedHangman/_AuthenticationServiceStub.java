@@ -71,7 +71,7 @@ public class _AuthenticationServiceStub extends org.omg.CORBA.portable.ObjectImp
   private void readObject (java.io.ObjectInputStream s) throws java.io.IOException
   {
      String str = s.readUTF ();
-     com.sun.corba.se.impl.orbutil.IORCheckImpl.check(str, "ModifiedHangman._AuthenticationServiceStub");
+//     com.sun.corba.se.impl.orbutil.IORCheckImpl.check(str, "ModifiedHangman._AuthenticationServiceStub");
      String[] args = null;
      java.util.Properties props = null;
      org.omg.CORBA.ORB orb = org.omg.CORBA.ORB.init (args, props);

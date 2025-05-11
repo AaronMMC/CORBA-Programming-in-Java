@@ -14,11 +14,11 @@ public abstract class AuthenticationServicePOA extends org.omg.PortableServer.Se
 
   // Constructors
 
-  private static java.util.Hashtable _methods = new java.util.Hashtable ();
+  private static final java.util.Hashtable _methods = new java.util.Hashtable ();
   static
   {
-    _methods.put ("login", new java.lang.Integer (0));
-    _methods.put ("logout", new java.lang.Integer (1));
+    _methods.put ("login", Integer.valueOf(0));
+    _methods.put ("logout", Integer.valueOf(1));
   }
 
   public org.omg.CORBA.portable.OutputStream _invoke (String $method,
@@ -71,12 +71,12 @@ public abstract class AuthenticationServicePOA extends org.omg.PortableServer.Se
   } // _invoke
 
   // Type-specific CORBA::Object operations
-  private static String[] __ids = {
+  private static final String[] __ids = {
     "IDL:ModifiedHangman/AuthenticationService:1.0"};
 
   public String[] _all_interfaces (org.omg.PortableServer.POA poa, byte[] objectId)
   {
-    return (String[])__ids.clone ();
+    return __ids.clone ();
   }
 
   public AuthenticationService _this() 

@@ -1,118 +1,102 @@
 package com.cs9322.team05.client.player.view;
 
+import com.cs9322.team05.client.player.controller.LoginController;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.control.Alert.AlertType;
 
 public class LoginView {
+    private final LoginController controller;
+    private String currentToken = "";
 
-
-    private TextField usernameField;
-    private PasswordField passwordField;
-    private Button loginButton;
-    private Text messageText;
-
-
-    public LoginView() {
-
-
-        initComponents();
+    public LoginView(LoginController controller) {
+        this.controller = controller;
     }
 
-    private void initComponents() {
-
-
-        usernameField = new TextField();
-        passwordField = new PasswordField();
-        loginButton = new Button("Login");
-        messageText = new Text();
-    }
-
-
+    /**
+     * Creates and returns the login pane.
+     */
     public Parent createLoginPane() {
+        // Root layout
+        VBox root = new VBox(20);
+        root.setPadding(new Insets(50));
+
+        // Title
+        Text title = new Text("Player Login");
+        title.setFont(Font.font(24));
+
+        // Grid for labels + fields
         GridPane grid = new GridPane();
-        grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(25, 25, 25, 25));
+        grid.setVgap(15);
 
-        Text sceneTitle = new Text("Player Login");
-        sceneTitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
-        grid.add(sceneTitle, 0, 0, 2, 1);
+        Label userLabel = new Label("Username:");
+        TextField userField = new TextField();
+        userField.setPromptText("Enter your username");
 
-        Label usernameLabel = new Label("Username:");
-        grid.add(usernameLabel, 0, 1);
+        Label passLabel = new Label("Password:");
+        PasswordField passField = new PasswordField();
+        passField.setPromptText("Enter your password");
 
-        grid.add(usernameField, 1, 1);
+        grid.add(userLabel, 0, 0);
+        grid.add(userField, 1, 0);
+        grid.add(passLabel, 0, 1);
+        grid.add(passField, 1, 1);
 
-        Label passwordLabel = new Label("Password:");
-        grid.add(passwordLabel, 0, 2);
+        // Buttons
+        Button loginBtn = new Button("Login");
+        Button logoutBtn = new Button("Logout");
+        logoutBtn.setDisable(true); // disable until logged in
 
-        grid.add(passwordField, 1, 2);
+        HBox buttons = new HBox(15, loginBtn, logoutBtn);
 
-
-        HBox hbLoginButton = new HBox(10);
-        hbLoginButton.setAlignment(Pos.BOTTOM_RIGHT);
-        hbLoginButton.getChildren().add(loginButton);
-        grid.add(hbLoginButton, 1, 3);
-
-
-        messageText.setFill(Color.FIREBRICK);
-        grid.add(messageText, 0, 4, 2, 1);
-
-
-        loginButton.setOnAction(event -> {
-
-
-            if (getUsername().isEmpty() || getPassword().isEmpty()) {
-                setMessage("Username and Password cannot be empty.", true);
-            } else {
-                setMessage("Login button clicked. User: " + getUsername(), false);
-
-
+        // Handlers
+        loginBtn.setOnAction(evt -> {
+            String username = userField.getText().trim();
+            String password = passField.getText();
+            String result = controller.handleLogin(username, password);
+            showAlert(result);
+            // If login successful, enable logout button
+            if (result.startsWith("Login successful")) {
+                // extract token
+                currentToken = result.substring(result.indexOf("Token:") + 6).trim();
+                loginBtn.setDisable(true);
+                logoutBtn.setDisable(false);
             }
         });
 
-        return grid;
+        logoutBtn.setOnAction(evt -> {
+            String result = controller.handleLogout(currentToken);
+            showAlert(result);
+            if (result.startsWith("Logout successful")) {
+                // reset UI state
+                userField.clear();
+                passField.clear();
+                currentToken = "";
+                loginBtn.setDisable(false);
+                logoutBtn.setDisable(true);
+            }
+        });
+
+        // Assemble
+        root.getChildren().addAll(title, grid, buttons);
+        VBox.setVgrow(grid, Priority.ALWAYS);
+        return root;
     }
 
-
-    public void setMessage(String message, boolean isError) {
-        if (messageText != null) {
-            messageText.setText(message);
-            messageText.setFill(isError ? Color.FIREBRICK : Color.GREEN);
-        }
-    }
-
-
-    public void clearFields() {
-        if (usernameField != null) usernameField.clear();
-        if (passwordField != null) passwordField.clear();
-    }
-
-
-    public String getUsername() {
-        return usernameField != null ? usernameField.getText() : "";
-    }
-
-
-    public String getPassword() {
-        return passwordField != null ? passwordField.getText() : "";
-    }
-
-
-    public Button getLoginButton() {
-        return loginButton;
+    /** Utility to pop up a simple alert dialog. */
+    private void showAlert(String message) {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Authentication");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
