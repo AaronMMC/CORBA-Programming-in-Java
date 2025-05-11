@@ -8,9 +8,9 @@ public class AdminModel {
 
     private static AdminService adminServiceImpl;
 
-    public AdminModel() {
+    public AdminModel(ORB orb) {
         try {
-            ORB orb = ORB.init(args, null);
+            //ORB orb = ORB.init(args, null); sa client main ata to
 
             org.omg.CORBA.Object nameServiceObj = orb.resolve_initial_references("NameService");
             NamingContextExt ncRef = NamingContextExtHelper.narrow(nameServiceObj);
