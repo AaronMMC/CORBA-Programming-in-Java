@@ -121,7 +121,7 @@ public class _GameServiceStub extends org.omg.CORBA.portable.ObjectImpl implemen
   private void readObject (java.io.ObjectInputStream s) throws java.io.IOException
   {
      String str = s.readUTF ();
-     com.sun.corba.se.impl.orbutil.IORCheckImpl.check(str, "ModifiedHangman._GameServiceStub");
+//     com.sun.corba.se.impl.orbutil.IORCheckImpl.check(str, "ModifiedHangman._GameServiceStub");
      String[] args = null;
      java.util.Properties props = null;
      org.omg.CORBA.ORB orb = org.omg.CORBA.ORB.init (args, props);

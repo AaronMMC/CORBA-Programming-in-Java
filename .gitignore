@@ -69,3 +69,4 @@ venv/
 
 # Ignore resources that can be re-generated (like IDL-generated files)
 **/stubs/
+/Server_Java/src/main/java/com/cs9322/team05/server/model/CountdownTimer.java

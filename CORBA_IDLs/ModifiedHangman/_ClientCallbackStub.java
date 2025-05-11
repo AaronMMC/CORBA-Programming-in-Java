@@ -117,7 +117,7 @@ public class _ClientCallbackStub extends org.omg.CORBA.portable.ObjectImpl imple
   private void readObject (java.io.ObjectInputStream s) throws java.io.IOException
   {
      String str = s.readUTF ();
-     com.sun.corba.se.impl.orbutil.IORCheckImpl.check(str, "ModifiedHangman._ClientCallbackStub");
+//     com.sun.corba.se.impl.orbutil.IORCheckImpl.check(str, "ModifiedHangman._ClientCallbackStub");
      String[] args = null;
      java.util.Properties props = null;
      org.omg.CORBA.ORB orb = org.omg.CORBA.ORB.init (args, props);

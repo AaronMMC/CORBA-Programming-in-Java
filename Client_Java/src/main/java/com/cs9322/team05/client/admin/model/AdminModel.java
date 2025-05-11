@@ -1,40 +1,40 @@
-package com.cs9322.team05.client.admin.model;
+    package com.cs9322.team05.client.admin.model;
 
-import ModifiedHangman.*;
-import org.omg.CORBA.*;
-import org.omg.CosNaming.*;
+    import ModifiedHangman.*;
+    import org.omg.CORBA.*;
+    import org.omg.CosNaming.*;
 
-public class AdminModel {
+    public class AdminModel {
 
-    private static AdminService adminServiceImpl;
+        private static AdminService adminServiceImpl;
 
-    public AdminModel(AdminService adminService) {
-        this.adminService = adminService;
+        public AdminModel(AdminService adminService) {
+            AdminModel.adminServiceImpl = this.adminServiceImpl;
+        }
+
+        public boolean create_player(String username, String password, String token) {
+            return adminServiceImpl.create_player(username,password,token);
+        }
+
+        public boolean update_player(String username, String password, String token) {
+            return adminServiceImpl.update_player(username,password,token);
+        }
+
+        public boolean delete_player(String username, String token) {
+            return adminServiceImpl.delete_player(username,token);
+        }
+
+        //TODO: Search Player method that has questionable return type. in the AdminServiceImpl.
+
+        public void set_waiting_time(int seconds, String token) {
+            adminServiceImpl.set_waiting_time(seconds,token);
+        }
+
+        public int get_waiting_time(String token) {
+            adminServiceImpl.get_waiting_time(token);
+        }
+
+        public int get_round_duration(String token) {
+            adminServiceImpl.get_round_duration(token);
+        }
     }
-
-    public boolean create_player(String username, String password, String token) {
-        return adminServiceImpl.create_player(String username, String password, String token);
-    }
-
-    public boolean update_player(String username, String password, String token) {
-        return adminServiceImpl.update_player(String username, String new_password, String token);
-    }
-
-    public boolean delete_player(String username, String token) {
-        return adminServiceImpl.delete_player(String username, String token);
-    }
-
-    //TODO: Search Player method that has questionable return type. in the AdminServiceImpl.
-
-    public void set_waiting_time(int seconds, String token) {
-        adminServiceImpl.set_waiting_time(int seconds, String token);
-    }
-
-    public int get_waiting_time(String token) {
-        adminServiceImpl.get_waiting_time(String token);
-    }
-
-    public int get_round_duration(String token) {
-        adminServiceImpl.get_round_duration(String token);
-    }
-}
