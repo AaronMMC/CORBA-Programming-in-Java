@@ -1,7 +1,6 @@
 // HomeView.java
-package com.cs9322.team05.client.player.view;
+package com.cs9322.team05.client.player.services;
 import ModifiedHangman.GamePlayer;
-import com.cs9322.team05.client.player.controller.HomeController;
 import com.cs9322.team05.client.player.interfaces.HomeViewInterface;
 import javafx.scene.Parent;
 import javafx.scene.control.*;

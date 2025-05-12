@@ -1,5 +1,5 @@
 // HomeController.java
-package com.cs9322.team05.client.player.controller;
+package com.cs9322.team05.client.player.services;
 import ModifiedHangman.PlayerNotLoggedInException;
 import com.cs9322.team05.client.player.model.LoginModel;
 import com.cs9322.team05.client.player.model.LeaderboardModel;
