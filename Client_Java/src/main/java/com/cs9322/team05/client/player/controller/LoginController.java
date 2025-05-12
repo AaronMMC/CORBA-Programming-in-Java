@@ -1,13 +1,13 @@
 package com.cs9322.team05.client.player.controller;
 
-import com.cs9322.team05.client.player.model.AuthenticationModel;
+import com.cs9322.team05.client.player.model.LoginModel;
 import ModifiedHangman.LogInException;
 import ModifiedHangman.PlayerNotLoggedInException;
 
 public class LoginController {
-    private AuthenticationModel authModel;
+    private LoginModel authModel;
 
-    public LoginController(AuthenticationModel authModel) {
+    public LoginController(LoginModel authModel) {
         this.authModel = authModel;
     }
 

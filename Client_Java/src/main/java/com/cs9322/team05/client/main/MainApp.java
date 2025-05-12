@@ -1,9 +1,9 @@
 package com.cs9322.team05.client.main;  // or your correct package
 
 import com.cs9322.team05.client.player.controller.LoginController;
-import com.cs9322.team05.client.player.model.AuthenticationModel;
+import com.cs9322.team05.client.player.model.LoginModel;
 import com.cs9322.team05.client.player.view.LoginView;
-import com.cs9322.team05.client.admin.model.AdminModel;
+//import com.cs9322.team05.client.admin.model.AdminModel;
 
 import javafx.application.Application;
 import javafx.scene.Parent;
@@ -46,7 +46,7 @@ public class MainApp extends Application {
         AuthenticationService authService = AuthenticationServiceHelper.narrow(
                 ncRef.resolve_str("AuthenticationService")
         );
-        AuthenticationModel authModel       = new AuthenticationModel(authService);
+        LoginModel authModel       = new LoginModel(authService);
         LoginController loginController     = new LoginController(authModel);
         loginView                           = new LoginView(loginController);
 
@@ -54,10 +54,10 @@ public class MainApp extends Application {
         AdminService adminService = AdminServiceHelper.narrow(
                 ncRef.resolve_str("AdminService")
         );
-        AdminModel adminModel     = new AdminModel(adminService);
+//        AdminModel adminModel     = new AdminModel(adminService);
 
         // TODO: AdminController/AdminView
-        AdminController adminCtrl = new AdminController(adminModel);
+//        AdminController adminCtrl = new AdminController(adminModel);
         // adminView = new AdminView(adminCtrl);
     }
 
