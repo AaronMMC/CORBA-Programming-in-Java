@@ -40,6 +40,8 @@ public class MainApp extends Application {
         );
 
         // CLIENT LOOKUP
+        // Dapat yata dito lahat ng controllers ilagay nalang sa List or Set tapos iiterate ung set kung ano man yung need na controller sa view
+        // Sa mga view parameters sana parang new PlayerView (Stage stage, Set<HangmanControllers> controllers)
 
         AuthenticationService authService = AuthenticationServiceHelper.narrow(
                 ncRef.resolve_str("AuthenticationService")
@@ -55,7 +57,7 @@ public class MainApp extends Application {
         AdminModel adminModel     = new AdminModel(adminService);
 
         // TODO: AdminController/AdminView
-        // AdminController adminCtrl = new AdminController(adminModel);
+        AdminController adminCtrl = new AdminController(adminModel);
         // adminView = new AdminView(adminCtrl);
     }
 

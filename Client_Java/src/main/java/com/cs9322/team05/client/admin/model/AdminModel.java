@@ -6,10 +6,10 @@
 
     public class AdminModel {
 
-        private static AdminService adminServiceImpl;
+        private static final AdminService adminServiceImpl;
 
         public AdminModel(AdminService adminService) {
-            AdminModel.adminServiceImpl = this.adminServiceImpl;
+            AdminModel.adminServiceImpl = adminService;
         }
 
         public boolean create_player(String username, String password, String token) {
@@ -31,10 +31,10 @@
         }
 
         public int get_waiting_time(String token) {
-            adminServiceImpl.get_waiting_time(token);
+            return adminServiceImpl.get_waiting_time(token);
         }
 
         public int get_round_duration(String token) {
-            adminServiceImpl.get_round_duration(token);
+            return adminServiceImpl.get_round_duration(token);
         }
     }
