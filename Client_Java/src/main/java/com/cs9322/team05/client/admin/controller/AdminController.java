@@ -23,6 +23,9 @@ public class AdminController {
     }
 
     //TODO: Search Player method that has questionable return type. in the AdminServiceImpl.
+    public String search_player (String keyword, String token) {
+        return adminModel.search_player(keyword,token);
+    }
 
     public void set_waiting_time(int seconds, String token) {
         adminModel.set_waiting_time(seconds,token);

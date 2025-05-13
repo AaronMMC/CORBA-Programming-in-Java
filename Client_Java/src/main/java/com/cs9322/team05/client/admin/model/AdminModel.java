@@ -25,6 +25,9 @@
         }
 
         //TODO: Search Player method that has questionable return type. in the AdminServiceImpl.
+        public String search_player (String keyword, String token) {
+            return adminServiceImpl.search_player(keyword,token);
+        }
 
         public void set_waiting_time(int seconds, String token) {
             adminServiceImpl.set_waiting_time(seconds,token);

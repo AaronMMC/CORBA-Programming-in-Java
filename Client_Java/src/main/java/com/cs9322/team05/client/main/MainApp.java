@@ -1,6 +1,7 @@
 package com.cs9322.team05.client.main;
 
 import ModifiedHangman.*;
+import com.cs9322.team05.client.admin.controller.AdminController;
 import com.cs9322.team05.client.admin.model.AdminModel;
 import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
 import com.cs9322.team05.client.player.controller.GameController;
@@ -58,6 +59,7 @@ public class MainApp extends Application {
 
         LoginView loginView = new LoginView(loginCtrl);
         loginCtrl.setOnLoginSuccess((user, tok) -> {
+            //TODO: A logic to determine if a player or admin.
             this.username = user;
             this.token = tok;
             showHome();
@@ -69,6 +71,8 @@ public class MainApp extends Application {
     private void showAdminLandingPage() {
         AdminService adminService = AdminServiceHelper.narrow(getNamingRef("AdminService"));
         AdminModel adminModel = new AdminModel(adminService);
+        AdminController adminController = new AdminController(adminModel);
+
     }
 
     private void showHome() {
