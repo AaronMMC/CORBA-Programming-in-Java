@@ -1,13 +1,11 @@
 package com.cs9322.team05.client.player.callback;
 
 import ModifiedHangman.*;
-import org.omg.CosNaming.*;
-import org.omg.PortableServer.*;
 import javafx.application.Platform;
 import com.cs9322.team05.client.player.controller.GameController;
 
 public class ClientCallbackImpl extends ClientCallbackPOA {
-    private final GameController    controller;
+    private GameController controller;
 
     public ClientCallbackImpl(GameController controller) {
         this.controller = controller;
@@ -35,8 +33,10 @@ public class ClientCallbackImpl extends ClientCallbackPOA {
 
     @Override
     public void startGameFailed() {
-        Platform.runLater(() -> controller.onEndGame(
-            new GameResult(controller.getGameId(), "Error", /* empty leaderboard */ null)
-        ));
+        Platform.runLater(() -> controller.onEndGame(new GameResult(controller.getGameId(), "Error", /* empty leaderboard */ null)));
+    }
+
+    public void setController(GameController ctrl) {
+        this.controller = ctrl;
     }
 }

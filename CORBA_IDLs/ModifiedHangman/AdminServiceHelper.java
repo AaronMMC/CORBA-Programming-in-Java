@@ -42,7 +42,7 @@ abstract public class AdminServiceHelper
 
   public static ModifiedHangman.AdminService read (org.omg.CORBA.portable.InputStream istream)
   {
-    return narrow (istream.read_Object (_AdminServiceStub.class));
+    return narrow (istream.read_Object (AdminServiceStub.class));
   }
 
   public static void write (org.omg.CORBA.portable.OutputStream ostream, ModifiedHangman.AdminService value)
@@ -61,7 +61,7 @@ abstract public class AdminServiceHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._AdminServiceStub stub = new ModifiedHangman._AdminServiceStub ();
+      ModifiedHangman.AdminServiceStub stub = new ModifiedHangman.AdminServiceStub ();
       stub._set_delegate(delegate);
       return stub;
     }
@@ -76,7 +76,7 @@ abstract public class AdminServiceHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._AdminServiceStub stub = new ModifiedHangman._AdminServiceStub ();
+      ModifiedHangman.AdminServiceStub stub = new ModifiedHangman.AdminServiceStub ();
       stub._set_delegate(delegate);
       return stub;
     }

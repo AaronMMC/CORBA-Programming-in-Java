@@ -42,7 +42,7 @@ abstract public class GameServiceHelper
 
   public static ModifiedHangman.GameService read (org.omg.CORBA.portable.InputStream istream)
   {
-    return narrow (istream.read_Object (_GameServiceStub.class));
+    return narrow (istream.read_Object (GameServiceStub.class));
   }
 
   public static void write (org.omg.CORBA.portable.OutputStream ostream, ModifiedHangman.GameService value)
@@ -61,7 +61,7 @@ abstract public class GameServiceHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._GameServiceStub stub = new ModifiedHangman._GameServiceStub ();
+      ModifiedHangman.GameServiceStub stub = new ModifiedHangman.GameServiceStub ();
       stub._set_delegate(delegate);
       return stub;
     }
@@ -76,7 +76,7 @@ abstract public class GameServiceHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._GameServiceStub stub = new ModifiedHangman._GameServiceStub ();
+      ModifiedHangman.GameServiceStub stub = new ModifiedHangman.GameServiceStub ();
       stub._set_delegate(delegate);
       return stub;
     }

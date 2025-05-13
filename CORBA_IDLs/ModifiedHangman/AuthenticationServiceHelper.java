@@ -42,7 +42,7 @@ abstract public class AuthenticationServiceHelper
 
   public static ModifiedHangman.AuthenticationService read (org.omg.CORBA.portable.InputStream istream)
   {
-    return narrow (istream.read_Object (_AuthenticationServiceStub.class));
+    return narrow (istream.read_Object (AuthenticationServiceStub.class));
   }
 
   public static void write (org.omg.CORBA.portable.OutputStream ostream, ModifiedHangman.AuthenticationService value)
@@ -61,7 +61,7 @@ abstract public class AuthenticationServiceHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._AuthenticationServiceStub stub = new ModifiedHangman._AuthenticationServiceStub ();
+      ModifiedHangman.AuthenticationServiceStub stub = new ModifiedHangman.AuthenticationServiceStub ();
       stub._set_delegate(delegate);
       return stub;
     }
@@ -76,7 +76,7 @@ abstract public class AuthenticationServiceHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._AuthenticationServiceStub stub = new ModifiedHangman._AuthenticationServiceStub ();
+      ModifiedHangman.AuthenticationServiceStub stub = new ModifiedHangman.AuthenticationServiceStub ();
       stub._set_delegate(delegate);
       return stub;
     }

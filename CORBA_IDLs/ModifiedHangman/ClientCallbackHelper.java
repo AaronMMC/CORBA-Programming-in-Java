@@ -42,7 +42,7 @@ abstract public class ClientCallbackHelper
 
   public static ModifiedHangman.ClientCallback read (org.omg.CORBA.portable.InputStream istream)
   {
-    return narrow (istream.read_Object (_ClientCallbackStub.class));
+    return narrow (istream.read_Object (ClientCallbackStub.class));
   }
 
   public static void write (org.omg.CORBA.portable.OutputStream ostream, ModifiedHangman.ClientCallback value)
@@ -61,7 +61,7 @@ abstract public class ClientCallbackHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._ClientCallbackStub stub = new ModifiedHangman._ClientCallbackStub ();
+      ModifiedHangman.ClientCallbackStub stub = new ModifiedHangman.ClientCallbackStub ();
       stub._set_delegate(delegate);
       return stub;
     }
@@ -76,7 +76,7 @@ abstract public class ClientCallbackHelper
     else
     {
       org.omg.CORBA.portable.Delegate delegate = ((org.omg.CORBA.portable.ObjectImpl)obj)._get_delegate ();
-      ModifiedHangman._ClientCallbackStub stub = new ModifiedHangman._ClientCallbackStub ();
+      ModifiedHangman.ClientCallbackStub stub = new ModifiedHangman.ClientCallbackStub ();
       stub._set_delegate(delegate);
       return stub;
     }

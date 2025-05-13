@@ -14,17 +14,17 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
 
   // Constructors
 
-  private static final java.util.Hashtable _methods = new java.util.Hashtable ();
+  private static java.util.Hashtable _methods = new java.util.Hashtable ();
   static
   {
-    _methods.put ("create_player", Integer.valueOf(0));
-    _methods.put ("update_player", Integer.valueOf(1));
-    _methods.put ("delete_player", Integer.valueOf(2));
-    _methods.put ("search_player", Integer.valueOf(3));
-    _methods.put ("set_waiting_time", Integer.valueOf(4));
-    _methods.put ("set_round_duration", Integer.valueOf(5));
-    _methods.put ("get_waiting_time", Integer.valueOf(6));
-    _methods.put ("get_round_duration", Integer.valueOf(7));
+    _methods.put ("create_player", new java.lang.Integer (0));
+    _methods.put ("update_player", new java.lang.Integer (1));
+    _methods.put ("delete_player", new java.lang.Integer (2));
+    _methods.put ("search_player", new java.lang.Integer (3));
+    _methods.put ("set_waiting_time", new java.lang.Integer (4));
+    _methods.put ("set_round_duration", new java.lang.Integer (5));
+    _methods.put ("get_waiting_time", new java.lang.Integer (6));
+    _methods.put ("get_round_duration", new java.lang.Integer (7));
   }
 
   public org.omg.CORBA.portable.OutputStream _invoke (String $method,
@@ -105,7 +105,7 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
        case 6:  // ModifiedHangman/AdminService/get_waiting_time
        {
          String token = in.read_string ();
-         int $result = 0;
+         int $result = (int)0;
          $result = this.get_waiting_time (token);
          out = $rh.createReply();
          out.write_long ($result);
@@ -115,7 +115,7 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
        case 7:  // ModifiedHangman/AdminService/get_round_duration
        {
          String token = in.read_string ();
-         int $result = 0;
+         int $result = (int)0;
          $result = this.get_round_duration (token);
          out = $rh.createReply();
          out.write_long ($result);
@@ -130,12 +130,12 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
   } // _invoke
 
   // Type-specific CORBA::Object operations
-  private static final String[] __ids = {
+  private static String[] __ids = {
     "IDL:ModifiedHangman/AdminService:1.0"};
 
   public String[] _all_interfaces (org.omg.PortableServer.POA poa, byte[] objectId)
   {
-    return __ids.clone ();
+    return (String[])__ids.clone ();
   }
 
   public AdminService _this() 

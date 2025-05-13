@@ -10,7 +10,7 @@ public class HomeController {
   private final LoginModel auth;
   private final GameModel gameModel;
   private final LeaderboardModel lbModel;
-  private final HomeViewInterface view;
+  private HomeViewInterface view;
 
   public HomeController(LoginModel auth,
                         GameModel gameModel,
@@ -37,5 +37,9 @@ public class HomeController {
     } catch (PlayerNotLoggedInException e) {
       view.showError("Logout failed");
     }
+  }
+
+  public void setHomeView(HomeViewInterface view) {
+    this.view = view;
   }
 }
