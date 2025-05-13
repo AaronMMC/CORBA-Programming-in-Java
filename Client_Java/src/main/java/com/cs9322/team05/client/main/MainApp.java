@@ -1,6 +1,7 @@
 package com.cs9322.team05.client.main;
 
 import ModifiedHangman.*;
+import com.cs9322.team05.client.admin.model.AdminModel;
 import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
 import com.cs9322.team05.client.player.controller.GameController;
 import com.cs9322.team05.client.player.controller.LoginController;
@@ -63,6 +64,11 @@ public class MainApp extends Application {
         });
 
         setScene(loginView.createLoginPane());
+    }
+
+    private void showAdminLandingPage() {
+        AdminService adminService = AdminServiceHelper.narrow(getNamingRef("AdminService"));
+        AdminModel adminModel = new AdminModel(adminService);
     }
 
     private void showHome() {

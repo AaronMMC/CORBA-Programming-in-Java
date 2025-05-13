@@ -6,7 +6,7 @@
 
     public class AdminModel {
 
-        private static final AdminService adminServiceImpl;
+        private static AdminService adminServiceImpl;
 
         public AdminModel(AdminService adminService) {
             AdminModel.adminServiceImpl = adminService;
