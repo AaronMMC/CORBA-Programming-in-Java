@@ -1,5 +1,7 @@
 package com.cs9322.team05.client.admin.controller;
 
+import com.cs9322.team05.client.admin.model.AdminModel;
+
 public class AdminController {
 
     private final AdminModel adminModel;
@@ -31,6 +33,6 @@ public class AdminController {
     }
 
     public int get_round_duration(String token) {
-        return adminServiceImpl.get_round_duration(token);
+        return adminModel.get_round_duration(token);
     }
 }

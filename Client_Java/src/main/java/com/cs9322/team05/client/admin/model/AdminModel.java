@@ -1,6 +1,6 @@
     package com.cs9322.team05.client.admin.model;
 
-    import ModifiedHangman.*;
+    import ModifiedHangman.AdminService;
     import org.omg.CORBA.*;
     import org.omg.CosNaming.*;
 
