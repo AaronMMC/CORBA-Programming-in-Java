@@ -87,15 +87,34 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
 
 
         case 4:  // ModifiedHangman/AdminService/set_waiting_time
-       {
-         int seconds = in.read_long ();
-         String token = in.read_string ();
-         this.set_waiting_time (seconds, token);
-         out = $rh.createReply();
-         break;
-       }
+        {
+            int seconds = in.read_long ();
+            String token = in.read_string ();
+            this.set_waiting_time (seconds, token);
+            out = $rh.createReply();
+            break;
+        }
 
-       case 5:  // ModifiedHangman/AdminService/set_round_duration
+
+        case 5:  // ModifiedHangman/AdminService/get_all_players
+        {
+            java.util.List<ModifiedHangman.Player> $result = this.get_all_players(); // Call the servant method
+            out = $rh.createReply();
+            // Use the helper to write the list of Players.
+            // Iterate through the list and write each Player using PlayerHelper.write
+            if ($result != null) {
+                out.write_long($result.size()); // Write the number of players
+                for (ModifiedHangman.Player player : $result) {
+                    ModifiedHangman.PlayerHelper.write(out, player);
+                }
+            }
+            else{
+                out.write_long(0);
+            }
+            break;
+        }
+
+       case 6:  // ModifiedHangman/AdminService/set_round_duration
        {
          int seconds = in.read_long ();
          String token = in.read_string ();
@@ -104,7 +123,7 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
          break;
        }
 
-       case 6:  // ModifiedHangman/AdminService/get_waiting_time
+       case 7:  // ModifiedHangman/AdminService/get_waiting_time
        {
          String token = in.read_string ();
          int $result = (int)0;
@@ -114,7 +133,7 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
          break;
        }
 
-       case 7:  // ModifiedHangman/AdminService/get_round_duration
+       case 8:  // ModifiedHangman/AdminService/get_round_duration
        {
          String token = in.read_string ();
          int $result = (int)0;
