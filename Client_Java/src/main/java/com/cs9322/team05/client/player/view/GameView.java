@@ -5,6 +5,7 @@ import ModifiedHangman.GamePlayer;
 import ModifiedHangman.GameResult;
 import ModifiedHangman.RoundResult;
 import com.cs9322.team05.client.player.interfaces.GameViewInterface;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Insets;
@@ -40,7 +41,6 @@ public class GameView implements GameViewInterface {
     private Runnable onBackToMenu;
 
     public GameView() {
-
         countdownLabel.setStyle("-fx-font-size: 18px;");
         roundDurationLabel.setStyle("-fx-font-size: 18px;");
         maskedWordLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
@@ -51,8 +51,10 @@ public class GameView implements GameViewInterface {
         guessInput.setOnKeyPressed(evt -> {
             if (evt.getCode() == KeyCode.ENTER && onGuess != null) {
                 String text = guessInput.getText().trim();
-                if (!text.isEmpty()) {
-                    onGuess.accept(text.charAt(0));
+                if (!text.isEmpty() && Character.isLetter(text.charAt(0))) {
+                    onGuess.accept(Character.toLowerCase(text.charAt(0)));
+                    guessInput.clear();
+                } else {
                     guessInput.clear();
                 }
             }
@@ -68,6 +70,17 @@ public class GameView implements GameViewInterface {
         root.setAlignment(Pos.TOP_CENTER);
         root.getChildren().addAll(timerBox, maskedWordLabel, guessInput, attemptsLeftLabel, guessedLettersList, controls);
 
+        try {
+            String css = getClass().getResource("/css/styles.css").toExternalForm();
+            if (css != null) {
+                root.getStylesheets().add(css);
+            } else {
+                System.err.println("Warning: styles.css not found.");
+            }
+        } catch (NullPointerException e) {
+            System.err.println("Warning: styles.css not found or error loading it. " + e.getMessage());
+        }
+
 
         startBtn.setOnAction(e -> {
             if (onStart != null) onStart.run();
@@ -82,18 +95,45 @@ public class GameView implements GameViewInterface {
             if (onBackToMenu != null) onBackToMenu.run();
         });
 
-
         playAgainBtn.setVisible(false);
         backToMenuBtn.setVisible(false);
     }
 
+    private void animateLabelUpdate(Label label, String newText) {
+        if (label.getText() == null || label.getText().isEmpty() || !label.getText().equals(newText)) {
+            FadeTransition ftOut = new FadeTransition(Duration.millis(150), label);
+            ftOut.setFromValue(1.0);
+            ftOut.setToValue(0.0);
+            ftOut.setOnFinished(event -> {
+                label.setText(newText);
+                FadeTransition ftIn = new FadeTransition(Duration.millis(150), label);
+                ftIn.setFromValue(0.0);
+                ftIn.setToValue(1.0);
+                ftIn.play();
+            });
+            ftOut.play();
+        } else {
+            label.setText(newText);
+        }
+    }
 
     @Override
     public void showWaitingTimer(int seconds) {
         countdownLabel.setText("Match starts in " + seconds + "s");
         Timeline t = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-            int s = Integer.parseInt(countdownLabel.getText().replaceAll("\\D", ""));
-            if (s > 1) countdownLabel.setText("Match starts in " + (s - 1) + "s");
+            String currentText = countdownLabel.getText();
+            if (currentText == null || currentText.isEmpty()) return;
+            int s = 0;
+            try {
+                s = Integer.parseInt(currentText.replaceAll("\\D", ""));
+            } catch (NumberFormatException ex) {
+                return;
+            }
+            if (s > 1) {
+                countdownLabel.setText("Match starts in " + (s - 1) + "s");
+            } else if (s == 1) {
+                countdownLabel.setText("Match starts in 0s");
+            }
         }));
         t.setCycleCount(seconds);
         t.play();
@@ -101,28 +141,30 @@ public class GameView implements GameViewInterface {
 
     @Override
     public void showRoundDuration(int seconds) {
-        roundDurationLabel.setText("Round time: " + seconds + "s");
+        animateLabelUpdate(roundDurationLabel, "Round time: " + seconds + "s");
     }
 
     @Override
     public void prepareNewRound(int wordLength) {
-        maskedWordLabel.setText("_ ".repeat(wordLength).trim());
-        attemptsLeftLabel.setText("Attempts: 5");
+        animateLabelUpdate(maskedWordLabel, "_ ".repeat(wordLength).trim());
+        animateLabelUpdate(attemptsLeftLabel, "Attempts: 5");
         guessedLettersList.getItems().clear();
         guessInput.setDisable(false);
+        guessInput.requestFocus();
         startBtn.setDisable(true);
         playAgainBtn.setVisible(false);
         backToMenuBtn.setVisible(false);
+        countdownLabel.setText("");
     }
 
     @Override
     public void updateMaskedWord(String masked) {
-        maskedWordLabel.setText(masked);
+        animateLabelUpdate(maskedWordLabel, masked);
     }
 
     @Override
     public void updateAttemptsLeft(long n) {
-        attemptsLeftLabel.setText("Attempts left: " + n);
+        animateLabelUpdate(attemptsLeftLabel, "Attempts left: " + n);
     }
 
     @Override
@@ -142,10 +184,10 @@ public class GameView implements GameViewInterface {
     @Override
     public void showFinalResult(GameResult g) {
         guessInput.setDisable(true);
-        maskedWordLabel.setText("");
-        attemptsLeftLabel.setText("");
-        countdownLabel.setText("");
-        roundDurationLabel.setText("");
+        animateLabelUpdate(maskedWordLabel, "");
+        animateLabelUpdate(attemptsLeftLabel, "");
+        animateLabelUpdate(countdownLabel, "");
+        animateLabelUpdate(roundDurationLabel, "");
 
         StringBuilder sb = new StringBuilder("Winner: ").append(g.gameWinner).append("\n\nLeaderboard:\n");
         for (GamePlayer p : g.leaderboard) {
@@ -155,9 +197,10 @@ public class GameView implements GameViewInterface {
         a.setHeaderText("Game Over");
         a.showAndWait();
 
-
         playAgainBtn.setVisible(true);
         backToMenuBtn.setVisible(true);
+        startBtn.setDisable(true);
+        leaderboardBtn.setDisable(false);
     }
 
     @Override
@@ -178,17 +221,14 @@ public class GameView implements GameViewInterface {
 
     @Override
     public void clearAll() {
-
-        countdownLabel.setText("");
-        roundDurationLabel.setText("");
-        maskedWordLabel.setText("");
-        attemptsLeftLabel.setText("");
-
+        animateLabelUpdate(countdownLabel, "");
+        animateLabelUpdate(roundDurationLabel, "");
+        animateLabelUpdate(maskedWordLabel, "");
+        animateLabelUpdate(attemptsLeftLabel, "");
 
         guessedLettersList.getItems().clear();
         guessInput.clear();
         guessInput.setDisable(true);
-
 
         startBtn.setDisable(false);
         startBtn.setVisible(true);
