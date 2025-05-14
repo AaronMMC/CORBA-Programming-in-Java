@@ -2,25 +2,23 @@ package com.cs9322.team05.client.player.controller;
 
 import ModifiedHangman.GameInfo;
 import ModifiedHangman.PlayerNotLoggedInException;
-import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
+import com.cs9322.team05.client.player.callback.ClientCallbackService;
 import com.cs9322.team05.client.player.model.GameModel;
 import com.cs9322.team05.client.player.view.MatchmakingView;
 
 public class MatchmakingController {
     private final GameModel gameModel;
-    private final ClientCallbackImpl callback;
+    private final ClientCallbackService callback;
     private final MatchmakingView view;
 
     private Runnable onMatchFound;
     private Runnable onCancel;
 
-    public MatchmakingController(GameModel gameModel,
-                                 ClientCallbackImpl callback) {
+    public MatchmakingController(GameModel gameModel, ClientCallbackService callback) {
         this.gameModel = gameModel;
-        this.callback  = callback;
-        this.view      = new MatchmakingView();
-
-        view.setOnCancel(() -> {
+        this.callback = callback;
+        this.view = new MatchmakingView();
+        this.view.setOnCancel(() -> {
             if (onCancel != null) onCancel.run();
         });
     }
@@ -28,19 +26,14 @@ public class MatchmakingController {
     public void startMatchmaking() {
         new Thread(() -> {
             try {
-                // 1) Register our CORBA callback with the server
-                gameModel.registerCallback(callback, gameModel.getPoa());
 
-                // 2) Call start_game() to host or join
+
                 GameInfo info = gameModel.startGame();
 
-                // 3) Update UI with remaining wait time
-                view.enqueueStatusUpdate(
-                        "Match found — starting in "
-                                + info.remainingWaitingTime + "s"
-                );
 
-                // 4) Fire match-found callback
+                view.enqueueStatusUpdate("Match found — starting in " + info.remainingWaitingTime + "s");
+
+
                 if (onMatchFound != null) onMatchFound.run();
 
             } catch (PlayerNotLoggedInException e) {

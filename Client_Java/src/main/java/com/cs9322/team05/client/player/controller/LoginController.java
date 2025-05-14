@@ -1,4 +1,4 @@
-// src/main/java/com/cs9322/team05/client/player/controller/LoginController.java
+
 package com.cs9322.team05.client.player.controller;
 
 import com.cs9322.team05.client.player.model.LoginModel;
@@ -15,10 +15,6 @@ public class LoginController {
         this.authModel = authModel;
     }
 
-    /**
-     * Attempts login and fires the onLoginSuccess callback if successful.
-     * @return a status message for display.
-     */
     public String handleLogin(String username, String password) {
         try {
             String token = authModel.login(username, password);

@@ -1,9 +1,7 @@
 package com.cs9322.team05.client.main;
 
 import ModifiedHangman.*;
-import com.cs9322.team05.client.admin.controller.AdminController;
-import com.cs9322.team05.client.admin.model.AdminModel;
-import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
+import com.cs9322.team05.client.player.callback.ClientCallbackService;
 import com.cs9322.team05.client.player.controller.GameController;
 import com.cs9322.team05.client.player.controller.LoginController;
 import com.cs9322.team05.client.player.controller.MatchmakingController;
@@ -19,15 +17,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.omg.CORBA.ORB;
-import org.omg.CosNaming.NamingContextExt;
 import org.omg.CosNaming.NamingContextExtHelper;
-import org.omg.PortableServer.POA;
-import org.omg.PortableServer.POAHelper;
 
 public class MainApp extends Application {
     private Stage primaryStage;
     private ORB orb;
-    private POA poa;
     private String username, token;
 
     public static void main(String[] args) {
@@ -36,11 +30,7 @@ public class MainApp extends Application {
 
     @Override
     public void init() throws Exception {
-
         orb = ORB.init(new String[0], null);
-        NamingContextExt nc = NamingContextExtHelper.narrow(orb.resolve_initial_references("NameService"));
-        poa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-        poa.the_POAManager().activate();
     }
 
     @Override
@@ -52,47 +42,46 @@ public class MainApp extends Application {
     }
 
     private void showLogin() {
-
-        AuthenticationService authSvc = AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"));
+        AuthenticationService authSvc = AuthenticationServiceHelper.narrow(
+                getNamingRef("AuthenticationService")
+        );
         LoginModel authModel = new LoginModel(authSvc);
         LoginController loginCtrl = new LoginController(authModel);
 
         LoginView loginView = new LoginView(loginCtrl);
         loginCtrl.setOnLoginSuccess((user, tok) -> {
-            //TODO: A logic to determine if a player or admin.
             this.username = user;
-            this.token = tok;
+            this.token    = tok;
             showHome();
         });
 
         setScene(loginView.createLoginPane());
     }
 
-    private void showAdminLandingPage() {
-        AdminService adminService = AdminServiceHelper.narrow(getNamingRef("AdminService"));
-        AdminModel adminModel = new AdminModel(adminService);
-        AdminController adminController = new AdminController(adminModel);
-
-    }
-
     private void showHome() {
-
-        GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
-        GameModel gameModel = new GameModel(gameSvc, username, token);
+        // Prepare models
+        GameService    gameSvc   = GameServiceHelper.narrow(getNamingRef("GameService"));
+        GameModel      gameModel = new GameModel(gameSvc, username, token);
         LeaderboardModel lbModel = new LeaderboardModel(gameModel);
 
-
-        HomeController homeCtrl = new HomeController(new LoginModel(AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"))), gameModel, lbModel, null);
+        // Home MVC
+        HomeController homeCtrl = new HomeController(
+                new LoginModel(
+                        AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"))
+                ),
+                gameModel,
+                lbModel,
+                null
+        );
         HomeView homeView = new HomeView(token, homeCtrl);
         homeCtrl.setHomeView(homeView);
-
 
         homeView.setOnStartGame(this::showMatchmaking);
         homeView.setOnViewLeaderboard(() -> {
             try {
                 homeView.showLeaderboard(lbModel.fetchTop5());
             } catch (PlayerNotLoggedInException e) {
-                throw new RuntimeException(e);
+                homeView.showError("Failed to fetch leaderboard");
             }
         });
         homeView.setOnLogout(() -> {
@@ -104,36 +93,32 @@ public class MainApp extends Application {
     }
 
     private void showMatchmaking() {
-        GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
-        GameModel gameModel = new GameModel(gameSvc, username, token);
+        GameService gameSvc   = GameServiceHelper.narrow(getNamingRef("GameService"));
+        GameModel   gameModel = new GameModel(gameSvc, username, token);
 
-
-        ClientCallbackImpl callback = new ClientCallbackImpl(null);
-        GameController gameCtrl = new GameController(gameModel, null);
-        callback.setController(gameCtrl);
-        gameCtrl.registerCallback(callback, poa);
-
+        GameController gc = new GameController(gameModel, null);
+        ClientCallbackService callback = new ClientCallbackService(gc);
+        gc.setGameView(null);
 
         MatchmakingController mmCtrl = new MatchmakingController(gameModel, callback);
-        mmCtrl.setOnMatchFound(() -> showGame(gameModel, gameCtrl, callback));
+        mmCtrl.setOnMatchFound(() -> showGame(gameModel, gc, callback));
         mmCtrl.setOnCancel(this::showHome);
 
         setScene(mmCtrl.getView().getRootPane());
+        mmCtrl.startMatchmaking();
     }
 
-    private void showGame(GameModel gameModel, GameController gameCtrl, ClientCallbackImpl callback) {
+    private void showGame(GameModel gameModel, GameController gc, ClientCallbackService callback) {
         GameView view = new GameView();
-        gameCtrl.setGameView(view);
+        gc.setGameView(view);
 
+        // Wire UI → controller
+        view.setOnStart(      gc::startGame);
+        view.setOnGuess(      gc::submitGuess);
+        view.setOnLeaderboard(gc::fetchLeaderboard);
+        view.setOnPlayAgain(  gc::resetAndStart);
+        view.setOnBackToMenu( this::showHome);
 
-        view.setOnStart(gameCtrl::startGame);
-        view.setOnGuess(gameCtrl::submitGuess);
-        view.setOnLeaderboard(gameCtrl::fetchLeaderboard);
-        view.setOnPlayAgain(gameCtrl::resetAndStart);
-        view.setOnBackToMenu(this::showHome);
-
-
-        gameCtrl.registerCallback(callback, poa);
         view.clearAll();
 
         setScene(view.getRoot());
@@ -141,17 +126,20 @@ public class MainApp extends Application {
 
     private org.omg.CORBA.Object getNamingRef(String name) {
         try {
-            return NamingContextExtHelper.narrow(orb.resolve_initial_references("NameService")).resolve_str(name);
+            return NamingContextExtHelper
+                    .narrow(orb.resolve_initial_references("NameService"))
+                    .resolve_str(name);
         } catch (Exception e) {
             throw new RuntimeException("Lookup failed: " + name, e);
         }
     }
 
     private void setScene(Parent root) {
-        if (primaryStage.getScene() == null) {
+        Scene scene = primaryStage.getScene();
+        if (scene == null) {
             primaryStage.setScene(new Scene(root, 1000, 700));
         } else {
-            primaryStage.getScene().setRoot(root);
+            scene.setRoot(root);
         }
     }
 }
