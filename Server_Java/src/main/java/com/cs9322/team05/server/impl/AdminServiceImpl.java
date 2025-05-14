@@ -25,7 +25,7 @@ public class AdminServiceImpl extends AdminServicePOA {
     @Override
     public Player search_player(String keyword, String token) {
         return null;
-    }//TODO: Lowkey kinda useless pede naman sa jvafx lang logic nung pagsearch need lang ng list nung mga players.
+    }
 
     @Override
     public List<Player> get_all_players() {

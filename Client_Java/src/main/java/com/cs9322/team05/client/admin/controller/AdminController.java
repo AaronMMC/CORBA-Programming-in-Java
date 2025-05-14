@@ -23,7 +23,6 @@ public class AdminController {
         return adminModel.delete_player(username,token);
     }
 
-    //TODO: Search Player method that has questionable return type. in the AdminServiceImpl.
     public Player search_player (String keyword, String token) {
         return adminModel.search_player(keyword,token);
     }
