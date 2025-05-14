@@ -1,6 +1,7 @@
 package com.cs9322.team05.server.impl;
 
 import ModifiedHangman.AdminServicePOA;
+import ModifiedHangman.Player;
 
 public class AdminServiceImpl extends AdminServicePOA {
     @Override
@@ -19,8 +20,8 @@ public class AdminServiceImpl extends AdminServicePOA {
     }
 
     @Override
-    public String search_player(String keyword, String token) {
-        return "";
+    public Player search_player(String keyword, String token) {
+        return null;
     }//TODO: Lowkey kinda useless pede naman sa jvafx lang logic nung pagsearch need lang ng list nung mga players.
 
     @Override

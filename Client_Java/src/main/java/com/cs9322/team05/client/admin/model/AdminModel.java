@@ -1,6 +1,7 @@
     package com.cs9322.team05.client.admin.model;
 
     import ModifiedHangman.AdminService;
+    import ModifiedHangman.Player;
     import org.omg.CORBA.*;
     import org.omg.CosNaming.*;
 
@@ -25,7 +26,7 @@
         }
 
         //TODO: Search Player method that has questionable return type. in the AdminServiceImpl.
-        public String search_player (String keyword, String token) {
+        public Player search_player (String keyword, String token) {
             return adminServiceImpl.search_player(keyword,token);
         }
 

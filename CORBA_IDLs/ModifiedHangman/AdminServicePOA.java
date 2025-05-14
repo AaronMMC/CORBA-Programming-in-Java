@@ -73,18 +73,20 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
          break;
        }
 
-       case 3:  // ModifiedHangman/AdminService/search_player
-       {
-         String keyword = in.read_string ();
-         String token = in.read_string ();
-         String $result = null;
-         $result = this.search_player (keyword, token);
-         out = $rh.createReply();
-         out.write_string ($result);
-         break;
-       }
+        case 3:  // ModifiedHangman/AdminService/search_player
+        {
+            String keyword = in.read_string ();
+            String token = in.read_string ();
+            Player $result = null;
+            $result = this.search_player (keyword, token);
+            out = $rh.createReply();
+            // Changed from out.write_string($result) to PlayerHelper.write(out, $result);
+            PlayerHelper.write(out, $result);
+            break;
+        }// the out.write should be a player
 
-       case 4:  // ModifiedHangman/AdminService/set_waiting_time
+
+        case 4:  // ModifiedHangman/AdminService/set_waiting_time
        {
          int seconds = in.read_long ();
          String token = in.read_string ();

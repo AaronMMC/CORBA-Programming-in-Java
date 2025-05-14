@@ -13,7 +13,7 @@ public interface AdminServiceOperations
   boolean create_player (String username, String password, String token);
   boolean update_player (String username, String new_password, String token);
   boolean delete_player (String username, String token);
-  String search_player (String keyword, String token);
+  Player search_player (String keyword, String token);
   void set_waiting_time (int seconds, String token);
   void set_round_duration (int seconds, String token);
   int get_waiting_time (String token);

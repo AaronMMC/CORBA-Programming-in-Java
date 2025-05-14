@@ -76,28 +76,29 @@ public class AdminServiceStub extends org.omg.CORBA.portable.ObjectImpl implemen
             }
   } // delete_player
 
-  public String search_player (String keyword, String token)
-  {
-            org.omg.CORBA.portable.InputStream $in = null;
-            try {
-                org.omg.CORBA.portable.OutputStream $out = _request ("search_player", true);
-                $out.write_string (keyword);
-                $out.write_string (token);
-                $in = _invoke ($out);
-                String $result = $in.read_string ();
-                return $result;
-            } catch (org.omg.CORBA.portable.ApplicationException $ex) {
-                $in = $ex.getInputStream ();
-                String _id = $ex.getId ();
-                throw new org.omg.CORBA.MARSHAL (_id);
-            } catch (org.omg.CORBA.portable.RemarshalException $rm) {
-                return search_player (keyword, token        );
-            } finally {
-                _releaseReply ($in);
-            }
-  } // search_player
+    public Player search_player (String keyword, String token)
+    {
+        org.omg.CORBA.portable.InputStream $in = null;
+        try {
+            org.omg.CORBA.portable.OutputStream $out = _request ("search_player", true);
+            $out.write_string (keyword);
+            $out.write_string (token);
+            $in = _invoke ($out);
+            // Changed from read_string() to read_Player()
+            Player $result = PlayerHelper.read ($in);
+            return $result;
+        } catch (org.omg.CORBA.portable.ApplicationException $ex) {
+            $in = $ex.getInputStream ();
+            String _id = $ex.getId ();
+            throw new org.omg.CORBA.MARSHAL (_id);
+        } catch (org.omg.CORBA.portable.RemarshalException $rm) {
+            return search_player (keyword, token        );
+        } finally {
+            _releaseReply ($in);
+        }
+    } // search_player
 
-  public void set_waiting_time (int seconds, String token)
+    public void set_waiting_time (int seconds, String token)
   {
             org.omg.CORBA.portable.InputStream $in = null;
             try {
