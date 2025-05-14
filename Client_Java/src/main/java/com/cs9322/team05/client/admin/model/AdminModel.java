@@ -5,6 +5,8 @@
     import org.omg.CORBA.*;
     import org.omg.CosNaming.*;
 
+    import java.util.List;
+
     public class AdminModel {
 
         private static AdminService adminServiceImpl;
@@ -28,6 +30,10 @@
         //TODO: Search Player method that has questionable return type. in the AdminServiceImpl.
         public Player search_player (String keyword, String token) {
             return adminServiceImpl.search_player(keyword,token);
+        }
+
+        public List<Player> getAllPlayers() {
+            return adminServiceImpl.get_all_players();
         }
 
         public void set_waiting_time(int seconds, String token) {

@@ -2,6 +2,9 @@ package com.cs9322.team05.server.impl;
 
 import ModifiedHangman.AdminServicePOA;
 import ModifiedHangman.Player;
+import com.cs9322.team05.server.dao.PlayerDao;
+
+import java.util.List;
 
 public class AdminServiceImpl extends AdminServicePOA {
     @Override
@@ -23,6 +26,12 @@ public class AdminServiceImpl extends AdminServicePOA {
     public Player search_player(String keyword, String token) {
         return null;
     }//TODO: Lowkey kinda useless pede naman sa jvafx lang logic nung pagsearch need lang ng list nung mga players.
+
+    @Override
+    public List<Player> get_all_players() {
+        PlayerDao playerDao = new PlayerDao();
+        return playerDao.getAllPlayers();
+    }
 
     @Override
     public void set_waiting_time(int seconds, String token) {
