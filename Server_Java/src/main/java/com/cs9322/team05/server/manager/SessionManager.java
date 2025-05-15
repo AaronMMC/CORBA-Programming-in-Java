@@ -51,4 +51,8 @@ public class SessionManager {
     public ClientCallback getCallback(String username) {
         return clientCallbacks.get(username);
     }
+
+    public boolean isUserLoggedIn(String username) {
+        return clientCallbacks.containsKey(username);
+    }
 }

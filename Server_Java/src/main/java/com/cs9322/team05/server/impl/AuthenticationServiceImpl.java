@@ -19,29 +19,27 @@ public class AuthenticationServiceImpl extends AuthenticationServicePOA {
 
     @Override
     public String login(String username, String password) throws LogInException {
-
         Player player = userDao.getPlayerByUsername(username);
-        if (player != null) {
-            String storedHash = player.password;
-            if (BCrypt.checkpw(password, storedHash)) {
-                return sessionManager.createSession(username, "player");
-            } else {
-                throw new LogInException("Incorrect password.");
-            }
-        }
+        if (player != null)
+            return attemptLogin(username, password, player.password, "player");
 
         Admin admin = userDao.getAdminByUsername(username);
-        if (admin != null) {
-            String storedHash = admin.getPassword();
-            if (BCrypt.checkpw(password, storedHash)) {
-                return sessionManager.createSession(username, "admin");
-            } else {
-                throw new LogInException("Incorrect password.");
-            }
-        }
+        if (admin != null)
+            return attemptLogin(username, password, admin.getPassword(), "admin");
 
         throw new LogInException("User not found.");
     }
+
+    private String attemptLogin(String username, String rawPassword, String hashedPassword, String userType) throws LogInException {
+        if (!BCrypt.checkpw(rawPassword, hashedPassword))
+            throw new LogInException("Incorrect password.");
+
+        if (sessionManager.isUserLoggedIn(username))
+            throw new LogInException("You're already logged in. Please log out on the other terminal first before logging in again.");
+
+        return sessionManager.createSession(username, userType);
+    }
+
 
 
     @Override
