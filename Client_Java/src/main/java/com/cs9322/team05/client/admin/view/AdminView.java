@@ -27,6 +27,10 @@ public class AdminView {
     public AdminView(String token, AdminController adminController) {
         this.token = token;
         this.adminController = adminController;
+        if (this.adminController == null) {
+            showAlert("Initialization Error", "Admin Controller is null. The application might not function correctly.");
+            // Consider disabling UI elements or taking other appropriate actions
+        }
         GridPane root = initializeUI(); // Initialize UI and get the root pane
         this.scene = new Scene(root); // Initialize the scene with the correct root
         // Initially load the player data
@@ -53,6 +57,10 @@ public class AdminView {
         Button addPlayerBtn = new Button("Add Player");
         GridPane.setConstraints(addPlayerBtn, 2, 1);
         addPlayerBtn.setOnAction(event -> {
+            if (adminController == null) {
+                showAlert("Error", "Admin Controller is not available.");
+                return;
+            }
             String username = usernameField.getText();
             String password = passwordField.getText();
             if (username.isEmpty() || password.isEmpty()) {
@@ -85,6 +93,10 @@ public class AdminView {
         Button updatePlayerBtn = new Button("Update Player");
         GridPane.setConstraints(updatePlayerBtn, 2, 5);
         updatePlayerBtn.setOnAction(event -> {
+            if (adminController == null) {
+                showAlert("Error", "Admin Controller is not available.");
+                return;
+            }
             Player selectedPlayer = playerTable.getSelectionModel().getSelectedItem();
             if (selectedPlayer == null) {
                 showAlert("No Player Selected", "Please select a player to update.");
@@ -106,15 +118,19 @@ public class AdminView {
         Button deletePlayerBtn = new Button("Delete Player");
         GridPane.setConstraints(deletePlayerBtn, 0, 7, 3, 1);
         deletePlayerBtn.setOnAction(event -> {
+            if (adminController == null) {
+                showAlert("Error", "Admin Controller is not available.");
+                return;
+            }
             Player selectedPlayer = playerTable.getSelectionModel().getSelectedItem();
             if (selectedPlayer == null) {
                 showAlert("No Player Selected", "Please select a player to delete.");
-            } else {
-                boolean confirmed = showConfirmation("Confirm Delete", "Are you sure you want to delete player: " + selectedPlayer.getUsername() + "?");
-                if (confirmed) {
-                    adminController.delete_player(selectedPlayer.getUsername(), token);
-                    refreshPlayerTable();
-                }
+                return;
+            }
+            boolean confirmed = showConfirmation("Confirm Delete", "Are you sure you want to delete player: " + selectedPlayer.getUsername() + "?");
+            if (confirmed) {
+                adminController.delete_player(selectedPlayer.getUsername(), token);
+                refreshPlayerTable();
             }
         });
 
@@ -129,6 +145,10 @@ public class AdminView {
         Button setWaitingTimeBtn = new Button("Set");
         GridPane.setConstraints(setWaitingTimeBtn, 2, 9);
         setWaitingTimeBtn.setOnAction(event -> {
+            if (adminController == null) {
+                showAlert("Error", "Admin Controller is not available.");
+                return;
+            }
             String waitingTimeText = waitingTimeField.getText();
             if (waitingTimeText.isEmpty()) {
                 showAlert("Empty Field", "Please enter a value for waiting time.");
@@ -150,6 +170,10 @@ public class AdminView {
         Button setRoundDurationBtn = new Button("Set");
         GridPane.setConstraints(setRoundDurationBtn, 2, 10);
         setRoundDurationBtn.setOnAction(event -> {
+            if (adminController == null) {
+                showAlert("Error", "Admin Controller is not available.");
+                return;
+            }
             String roundDurationText = roundDurationField.getText();
             if (roundDurationText.isEmpty()) {
                 showAlert("Empty Field", "Please enter a value for round duration.");
@@ -178,6 +202,10 @@ public class AdminView {
     }
 
     private void refreshPlayerTable() {
+        if (adminController == null) {
+            showAlert("Error", "Admin Controller is not available.");
+            return;
+        }
         List<Player> playerList = adminController.getAllPlayers(token);
         if (playerList != null) {
             ObservableList<Player> players = FXCollections.observableArrayList(playerList);
@@ -185,12 +213,10 @@ public class AdminView {
                 playerTable.setItems(players);
             } else {
                 showAlert("UI Error", "Player table is not initialized.");
-                // You might want to log this error as well for debugging
                 System.err.println("Error: Player table is null during refresh.");
             }
         } else {
             showAlert("Data Error", "Could not retrieve player list.");
-            // Optionally, you could also clear the table if it exists
             if (playerTable != null) {
                 playerTable.getItems().clear();
             }
@@ -198,6 +224,10 @@ public class AdminView {
     }
 
     private void fetchAndDisplayRules() {
+        if (adminController == null) {
+            showAlert("Error", "Admin Controller is not available.");
+            return;
+        }
         // Assuming you have methods in your AdminController to get the current rules
         Integer waitingTime = adminController.get_waiting_time(token); // You'll need to implement this in your controller
         Integer roundDuration = adminController.get_round_duration(token); // You'll need to implement this in your controller
