@@ -86,7 +86,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public Leaderboard get_leaderboard(String token) throws PlayerNotLoggedInException {
-        if (!!isTokenValid(token))
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         List<Player> players = userDao.getAllPlayers();
