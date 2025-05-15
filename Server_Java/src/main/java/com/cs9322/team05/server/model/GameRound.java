@@ -11,8 +11,6 @@ public class GameRound {
     private final String wordToGuess;
     private GamePlayer winner;
     private final Map<String, GamePlayer> players;
-    private final SessionManager sessionManager;
-
     private final Map<String, ScheduledFuture<?>> countdownTasks;
     private final Map<String, PlayerGuessWordState> playerGuessStates;
 
@@ -54,8 +52,12 @@ public class GameRound {
                 else
                     statusMessage = "You lost this round!";
 
-                //TODO :  add the word to guess here
-                RoundResult roundResult = new RoundResult(gameId, roundNumber, winner, wordToGuess, statusMessage, null);
+                GamePlayer[] leaderboard = players.values()
+                        .stream()
+                        .sorted((p1, p2) -> Integer.compare(p2.wins, p1.wins))
+                        .toArray(GamePlayer[]::new);
+
+                RoundResult roundResult = new RoundResult(gameId, roundNumber, winner, wordToGuess, statusMessage, leaderboard);
                 try {
                     clientCallback.endRound(roundResult);}
                 catch (RuntimeException e) {
@@ -103,7 +105,7 @@ public class GameRound {
                 winner = players.get(username);
         }
 
-        // Convert Set<Character> to AttemptedLetter[]
+        // convert the Set<Charactr> to Array
         AttemptedLetter[] attemptedLetters = playerGuessWordState.getAttemptedLetters()
                 .keySet()
                 .stream()
@@ -125,5 +127,9 @@ public class GameRound {
                 updatedMasked.setCharAt(i, letter);
         return updatedMasked;
     }
+
+
+
+    private final SessionManager sessionManager;
 
 }

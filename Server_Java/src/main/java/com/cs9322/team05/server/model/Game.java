@@ -99,7 +99,7 @@ public class Game {
 
         GamePlayer[] leaderboards = new GamePlayer[0];
 
-        for (GamePlayer player : players) {
+        for (GamePlayer player : players)
             if (player.wins == 3) {
                 leaderboards = players.stream()
                         .sorted((p1, p2) -> Integer.compare(p2.wins, p1.wins))
@@ -107,7 +107,7 @@ public class Game {
                 isGameOver = true;
                 break;
             }
-        }
+
 
         if (isGameOver)
             for (GamePlayer player : players) {
@@ -126,5 +126,5 @@ public class Game {
 
 
 
-    private SessionManager sessionManager;
+    private final SessionManager sessionManager;
 }
