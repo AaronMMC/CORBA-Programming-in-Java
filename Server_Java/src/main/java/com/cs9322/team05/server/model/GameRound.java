@@ -36,22 +36,36 @@ public class GameRound {
 
     public void startRound(int seconds, String gameId) {
         for (String username : playerGuessStates.keySet()) {
+            ClientCallback clientCallback = sessionManager.getCallback(username);
+            try {
+                clientCallback.startRound(wordToGuess.length(), roundNumber); // send start signal to clientt
+            } catch (RuntimeException e) {
+                e.printStackTrace();  }
+
             ScheduledFuture<?> task = scheduler.schedule(() -> {
                 System.out.println("Time's up for " + username);
-                ClientCallback clientCallback = sessionManager.getCallback(username);
                 String statusMessage;
-                if (this.winner.username.equals(username))
-                    statusMessage = "You won this Round!";
+
+                if (winner == null)
+                    statusMessage = "No one guessed the word";
+                else if (this.winner.username.equals(username)) {
+                    winner.wins++;
+                    statusMessage = "You won this Round!"; }
                 else
                     statusMessage = "You lost this round!";
 
-                RoundResult roundResult = new RoundResult(gameId, winner.username, 0, statusMessage, null); // the current leaderboards will be updated in the other class
-                clientCallback.endRound(roundResult);
+                //TODO :  add the word to guess here
+                RoundResult roundResult = new RoundResult(gameId, roundNumber, winner, wordToGuess, statusMessage, null);
+                try {
+                    clientCallback.endRound(roundResult);}
+                catch (RuntimeException e) {
+                    e.printStackTrace(); }
             }, seconds, TimeUnit.SECONDS);
 
             countdownTasks.put(username, task);
         }
     }
+
 
     public void cancelCountdownForPlayer(String username) {
         ScheduledFuture<?> task = countdownTasks.get(username);
