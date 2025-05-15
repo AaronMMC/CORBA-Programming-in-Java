@@ -110,26 +110,26 @@ public class MainApp extends Application {
     private void showAdminView() {
         logger.info("Displaying Admin View.");
 
-        // Resolve the AdminService
+        
         AdminService adminSvc = AdminServiceHelper.narrow(getNamingRef("AdminService"));
         if (adminSvc == null) return;
 
-        // Resolve the AuthenticationService
+        
         AuthenticationService authSvc = AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"));
         if (authSvc == null) return;
 
-        // Initialize the models
+        
         AdminModel adminModel = new AdminModel(adminSvc);
         AuthenticationModel authModel = new AuthenticationModel(authSvc);
 
-        // Initialize the controllers
+        
         AdminController adminController = new AdminController(adminModel);
         AuthenticationController authController = new AuthenticationController(authModel);
 
-        // Initialize the AdminView with the properly initialized AuthenticationController
+        
         AdminView adminView = new AdminView(token, adminController, authController);
 
-        // Set the scene
+        
         setScene(adminView.getRootPane());
     }
 

@@ -14,14 +14,24 @@ public class GameDao {
 
     public int getCurrentWaitingTimeLength() {
         String query = "SELECT waiting_time_length FROM game_settings WHERE id = ?";
+        // ADD Log: Indicate which ID is being queried if it's not always 1 in the future.
+        System.out.println("GameDao: Querying game_settings for waiting_time_length with id = 1");
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-
-            stmt.setInt(1, 1);
+            stmt.setInt(1, 1); // Hardcoded to 1
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next())
-                    return rs.getInt("waiting_time_length");
+                if (rs.next()) {
+                    int value = rs.getInt("waiting_time_length");
+                    // ADD Log: Value found
+                    System.out.println("GameDao: Found waiting_time_length: " + value + " for id = 1");
+                    return value;
+                } else {
+                    // ADD Log: ID not found
+                    System.err.println("GameDao: No record found in game_settings for id = 1. Returning fallback 0.");
+                }
             }
         } catch (SQLException e) {
+            // MODIFY Log: More specific error
+            System.err.println("GameDao: SQLException fetching waiting_time_length for id = 1: " + e.getMessage());
             e.printStackTrace();
         }
         return 0; // fallback value

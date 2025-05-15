@@ -1,4 +1,4 @@
-// HomeView.java
+
 package com.cs9322.team05.client.player.services;
 
 import ModifiedHangman.GamePlayer;

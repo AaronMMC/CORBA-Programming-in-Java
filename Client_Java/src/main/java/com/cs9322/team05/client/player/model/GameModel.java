@@ -4,12 +4,21 @@ import ModifiedHangman.*;
 
 public class GameModel {
     private final GameService gameService;
-    private final String username, token;
+    private final String username; 
+    private final String token;
 
     public GameModel(GameService gameService, String username, String token) {
         this.gameService = gameService;
         this.username    = username;
         this.token       = token;
+    }
+
+    public String getUsername() { 
+        return this.username;
+    }
+
+    public String getToken() { 
+        return this.token;
     }
 
     public GameInfo startGame() throws PlayerNotLoggedInException {

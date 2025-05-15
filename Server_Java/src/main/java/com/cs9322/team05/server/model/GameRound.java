@@ -36,9 +36,7 @@ public class GameRound {
         for (String username : playerGuessStates.keySet()) {
             ClientCallback clientCallback = sessionManager.getCallback(username);
             try {
-                if (roundNumber == 1)
-                    clientCallback.startRound(wordToGuess.length(), roundNumber); // send start signal to clientt
-                else clientCallback.proceedToNextRound(wordToGuess.length(), roundNumber);
+                clientCallback.startRound(wordToGuess.length(), roundNumber); // send start signal to clientt
             } catch (RuntimeException e) {
                 e.printStackTrace();  }
 

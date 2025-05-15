@@ -25,7 +25,7 @@ public class MatchmakingController {
 
     private Thread matchmakingThread;
     private final AtomicBoolean cancellationRequested = new AtomicBoolean(false);
-    private static final long CLIENT_SIDE_MATCHMAKING_TIMEOUT_MS = 30000;
+    private static final long CLIENT_SIDE_MATCHMAKING_TIMEOUT_MS = 300000;
     private Timer timeoutTimer = null;
 
     public MatchmakingController(GameModel gameModel, ClientCallbackImpl clientCallback, GameController gameController) {
@@ -167,8 +167,8 @@ public class MatchmakingController {
             } finally {
                 logger.fine("Matchmaking thread finished execution. Cancellation requested: " + cancellationRequested.get());
                 if (cancellationRequested.get() && !registrationSuccessful) {
-                    // If cancelled before successful registration and thread ends here.
-                    // Ensure UI reflects cancellation if not already handled by interrupt.
+                    
+                    
                     Platform.runLater(() -> {
                         view.showMatchmakingCancelled();
                         if (onMatchmakingCancelledOrFailed != null) {

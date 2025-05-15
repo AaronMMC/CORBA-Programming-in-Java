@@ -14,7 +14,7 @@ public class GameController {
     private final GameModel gameModel;
     private GameViewInterface view;
     private String gameId;
-    private int expectedRoundDurationSeconds; // Set from GameInfo.roundLength
+    private int expectedRoundDurationSeconds; 
     private int currentRoundNumber = 0;
 
     public GameController(GameModel gameModel, GameViewInterface view) {
@@ -32,8 +32,8 @@ public class GameController {
             return;
         }
         logger.fine("Binding view actions for GameController.");
-        // The setOnStart for a "Start Game" button in GameView is removed.
-        // Round starts are now purely server-driven via ClientCallbackImpl -> onStartRound.
+        
+        
         view.setOnGuess(this::submitGuess);
         view.setOnLeaderboard(this::fetchLeaderboard);
         view.setOnPlayAgain(this::requestPlayAgain);
@@ -43,7 +43,7 @@ public class GameController {
     public void setGameContext(String gameId, int roundDurationSeconds) {
         this.gameId = gameId;
         this.expectedRoundDurationSeconds = roundDurationSeconds;
-        this.currentRoundNumber = 0; // Reset round count for a new game context
+        this.currentRoundNumber = 0; 
         logger.info("GameController context set - GameID: " + this.gameId + ", ExpectedRoundDuration: " + this.expectedRoundDurationSeconds + "s");
     }
 
@@ -60,7 +60,7 @@ public class GameController {
 
         Platform.runLater(() -> {
             view.prepareNewRound(wordLength, currentRoundNumber);
-            view.showRoundDuration(this.expectedRoundDurationSeconds); // Display the round timer
+            view.showRoundDuration(this.expectedRoundDurationSeconds); 
         });
     }
 
@@ -161,9 +161,9 @@ public class GameController {
     private void requestBackToMenu() {
         logger.info("Controller: Back to Menu requested by user. Triggering view's onReturnToMenu.");
         if (view == null) return;
-        // TODO: If the game is active, the client should ideally send a "leaveGame" or "quitGame" message
-        // to the server so the server knows this player has left and can notify other players.
-        // For now, it just transitions the UI.
+        
+        
+        
         view.onReturnToMenu();
     }
 

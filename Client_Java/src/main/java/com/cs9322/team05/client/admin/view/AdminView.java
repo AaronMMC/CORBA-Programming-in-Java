@@ -1,9 +1,9 @@
-// AdminView.java
+
 package com.cs9322.team05.client.admin.view;
 
 import ModifiedHangman.Player;
 import com.cs9322.team05.client.admin.controller.AdminController;
-import com.cs9322.team05.client.player.controller.AuthenticationController; // ADDED IMPORT
+import com.cs9322.team05.client.player.controller.AuthenticationController; 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -11,9 +11,9 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-// import javafx.scene.Scene;
+
 import javafx.scene.control.*;
-// import javafx.scene.control.cell.PropertyValueFactory;
+
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -22,7 +22,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-// import javafx.stage.Stage;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +35,7 @@ public class AdminView {
 
     private final BorderPane rootLayout;
     private final AdminController adminController;
-    private final AuthenticationController authController; // ADDED
+    private final AuthenticationController authController; 
     private final String token;
 
     private Runnable onLogout;
@@ -52,16 +52,16 @@ public class AdminView {
     private Label currentRoundDurationLabelGS;
     private TextField roundDurationInputGS;
 
-    // MODIFIED CONSTRUCTOR
+    
     public AdminView(String token, AdminController adminController, AuthenticationController authController) {
         this.token = token;
         this.adminController = adminController;
-        this.authController = authController; // INITIALIZE
+        this.authController = authController; 
 
         if (this.adminController == null) {
             Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Initialization Critical Error", "Admin Controller is missing. Admin panel cannot function."));
         }
-        if (this.authController == null) { // ADDED CHECK
+        if (this.authController == null) { 
             Platform.runLater(() -> showAlert(Alert.AlertType.WARNING, "Initialization Warning", "Authentication Controller is missing. Logout may not fully function."));
         }
         this.rootLayout = createCompleteUI();
@@ -99,7 +99,7 @@ public class AdminView {
         HBox logoutButtonContainer = new HBox();
         Button logoutButton = new Button("Logout");
         logoutButton.setStyle("-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold;");
-        logoutButton.setOnAction(e -> handleLogout()); // Calls the modified handleLogout
+        logoutButton.setOnAction(e -> handleLogout()); 
         logoutButtonContainer.getChildren().add(logoutButton);
         HBox.setHgrow(logoutButtonContainer, Priority.ALWAYS);
         logoutButtonContainer.setAlignment(Pos.CENTER_RIGHT);
@@ -229,7 +229,7 @@ public class AdminView {
     }
 
     private VBox createGameSettingsSection() {
-        // ... (GameSettings section remains the same as previous full code block) ...
+        
         VBox section = new VBox(15);
         section.setPadding(new Insets(20));
         section.setStyle("-fx-background-color: white; -fx-border-color: #d1d9e6; -fx-border-width: 1; -fx-border-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.5, 0, 0);");
@@ -276,9 +276,9 @@ public class AdminView {
     }
 
 
-    // MODIFIED handleLogout
+    
     private void handleLogout() {
-        logger.info("Logout button clicked. Token for logout: " + this.token); // Ensure 'this.token' is the correct admin token
+        logger.info("Logout button clicked. Token for logout: " + this.token); 
         if (authController == null) {
             showAlert(Alert.AlertType.ERROR, "Logout Error", "Authentication Controller not available for logout.");
             logger.warning("handleLogout: authController is null.");
@@ -286,14 +286,14 @@ public class AdminView {
         }
 
         try {
-            // Assuming this.token is the admin's session token that needs to be invalidated
+            
             String logoutMessage = authController.handleLogout(this.token);
             showAlert(Alert.AlertType.INFORMATION, "Logout Status", logoutMessage);
 
             if (logoutMessage != null && logoutMessage.toLowerCase().contains("successful")) {
                 logger.info("Logout successful via AuthenticationController. Triggering onLogout callback.");
                 if (onLogout != null) {
-                    onLogout.run(); // Execute the UI switching callback
+                    onLogout.run(); 
                 } else {
                     logger.warning("onLogout callback is null. No UI transition will occur from AdminView.");
                 }
@@ -301,8 +301,8 @@ public class AdminView {
                 logger.warning("Logout attempt reported as not successful by AuthenticationController: " + logoutMessage);
             }
         } catch (Exception e) {
-            // This would catch unexpected exceptions from authController.handleLogout,
-            // or if authController.handleLogout itself throws something not PlayerNotLoggedInException
+            
+            
             logger.log(Level.SEVERE, "Exception during logout process via AuthenticationController.", e);
             showAlert(Alert.AlertType.ERROR, "Logout Error", "An unexpected error occurred: " + e.getMessage());
         }
@@ -336,8 +336,8 @@ public class AdminView {
             adminController.update_player(selectedPlayer.username, newPassword, token);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Password update for '" + selectedPlayer.username + "' sent.");
             updatePasswordFieldUP.clear();
-            // Potentially refresh player table if password hash display could change or to confirm update
-            // refreshPlayerTable();
+            
+            
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Error update player", ex);
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to update password: " + ex.getMessage());
@@ -392,7 +392,7 @@ public class AdminView {
         try {
             List<Player> playerList = adminController.getAllPlayers(token);
 
-            // Console output for debugging player list content
+            
             if (playerList == null) { System.out.println("PLAYER_LIST_OUTPUT: NULL"); }
             else { System.out.println("PLAYER_LIST_OUTPUT: START - Size: " + playerList.size());
                 for (int i = 0; i < playerList.size(); i++) { Player p = playerList.get(i);
