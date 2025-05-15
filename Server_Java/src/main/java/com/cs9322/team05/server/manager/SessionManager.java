@@ -22,8 +22,8 @@ public class SessionManager {
     }
 
 
-    public String createSession(String username, String player) {
-        String token = UUID.randomUUID().toString();
+    public String createSession(String username, String userType) {
+        String token = userType + ":" + UUID.randomUUID(); // either "player:hah234ahsdh22sks....." or // "admin:ahh135hdahwq28dhai2...."
         userSessions.put(token, username);
         return token;
     }
