@@ -33,7 +33,8 @@
         }
 
         public List<Player> getAllPlayers(String token) {
-            return adminServiceImpl.get_all_players(token);
+            //return adminServiceImpl.get_all_players(token);
+            return null;
         }
 
         public void set_waiting_time(int seconds, String token) throws AdminNotLoggedInException {
