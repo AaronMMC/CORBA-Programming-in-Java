@@ -144,9 +144,12 @@ public class GameView implements GameViewInterface {
         animateLabelUpdate(roundDurationLabel, "Round time: " + seconds + "s");
     }
 
-    @Override
     public void prepareNewRound(int wordLength) {
-        animateLabelUpdate(maskedWordLabel, "_ ".repeat(wordLength).trim());
+        String repeatedMask = "";
+        for (int i = 0; i < wordLength; i++) {
+            repeatedMask += "_ ";
+        }
+        animateLabelUpdate(maskedWordLabel, repeatedMask.trim());
         animateLabelUpdate(attemptsLeftLabel, "Attempts: 5");
         guessedLettersList.getItems().clear();
         guessInput.setDisable(false);
