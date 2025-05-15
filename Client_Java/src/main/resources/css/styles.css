@@ -46,16 +46,16 @@
 }
 
 .list-view .list-cell:hover {
-    -fx-background-color: #f0f8ff; /* AliceBlue for hover */
+    -fx-background-color: #f0f8ff;
 }
 
 .list-view .list-cell:filled:selected {
-    -fx-background-color: #add8e6; /* LightBlue for selection */
-    -fx-text-fill: black;
+    -fx-background-color: #add8e6;
+    fx-text-fill: black;
 }
 
 .list-view .list-cell:filled:selected:focused {
-    -fx-background-color: #a0cfe0; /* Slightly darker blue when focused and selected */
+    -fx-background-color: #a0cfe0;
     -fx-text-fill: black;
 }
 

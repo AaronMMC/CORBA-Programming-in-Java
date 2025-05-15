@@ -1,11 +1,11 @@
 module ModifiedHangman {
   interface AdminService {
 
-    boolean create_player(in string username, in string password, in string token);
-    boolean update_player(in string username, in string new_password, in string token);
-    boolean delete_player(in string username, in string token);
-    string search_player(in string keyword, in string token);
-
+    void create_player(in string username, in string password, in string token);
+    void update_player(in string username, in string new_password, in string token);
+    void delete_player(in string username, in string token);
+    Player search_player(in string keyword, in string token);
+    List<Player> get_all_player (in string token);
 
     void set_waiting_time(in long seconds, in string token);
     void set_round_duration(in long seconds, in string token);

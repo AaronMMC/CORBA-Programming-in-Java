@@ -1,7 +1,7 @@
 package com.cs9322.team05.client.main;
 
 import ModifiedHangman.*;
-import com.cs9322.team05.client.player.callback.ClientCallbackService;
+import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
 import com.cs9322.team05.client.player.controller.GameController;
 import com.cs9322.team05.client.player.controller.LoginController;
 import com.cs9322.team05.client.player.controller.MatchmakingController;
@@ -42,16 +42,14 @@ public class MainApp extends Application {
     }
 
     private void showLogin() {
-        AuthenticationService authSvc = AuthenticationServiceHelper.narrow(
-                getNamingRef("AuthenticationService")
-        );
+        AuthenticationService authSvc = AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"));
         LoginModel authModel = new LoginModel(authSvc);
         LoginController loginCtrl = new LoginController(authModel);
 
         LoginView loginView = new LoginView(loginCtrl);
         loginCtrl.setOnLoginSuccess((user, tok) -> {
             this.username = user;
-            this.token    = tok;
+            this.token = tok;
             showHome();
         });
 
@@ -59,22 +57,16 @@ public class MainApp extends Application {
     }
 
     private void showHome() {
-        // Prepare models
-        GameService    gameSvc   = GameServiceHelper.narrow(getNamingRef("GameService"));
-        GameModel      gameModel = new GameModel(gameSvc, username, token);
+
+        GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
+        GameModel gameModel = new GameModel(gameSvc, username, token);
         LeaderboardModel lbModel = new LeaderboardModel(gameModel);
 
-        // Home MVC
-        HomeController homeCtrl = new HomeController(
-                new LoginModel(
-                        AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"))
-                ),
-                gameModel,
-                lbModel,
-                null
-        );
+
+        HomeController homeCtrl = new HomeController(new LoginModel(AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"))), gameModel, lbModel, null);
         HomeView homeView = new HomeView(token, homeCtrl);
         homeCtrl.setHomeView(homeView);
+
 
         homeView.setOnStartGame(this::showMatchmaking);
         homeView.setOnViewLeaderboard(() -> {
@@ -93,11 +85,18 @@ public class MainApp extends Application {
     }
 
     private void showMatchmaking() {
-        GameService gameSvc   = GameServiceHelper.narrow(getNamingRef("GameService"));
-        GameModel   gameModel = new GameModel(gameSvc, username, token);
+        GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
+        GameModel gameModel = new GameModel(gameSvc, username, token);
+
 
         GameController gc = new GameController(gameModel, null);
-        ClientCallbackService callback = new ClientCallbackService(gc);
+        ClientCallbackImpl callback = new ClientCallbackImpl(orb, gameSvc, token, gc);
+        try {
+            callback.register();
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
         gc.setGameView(null);
 
         MatchmakingController mmCtrl = new MatchmakingController(gameModel, callback);
@@ -108,16 +107,17 @@ public class MainApp extends Application {
         mmCtrl.startMatchmaking();
     }
 
-    private void showGame(GameModel gameModel, GameController gc, ClientCallbackService callback) {
+    private void showGame(GameModel gameModel, GameController gc, ClientCallbackImpl callback) {
         GameView view = new GameView();
         gc.setGameView(view);
 
-        // Wire UI → controller
-        view.setOnStart(      gc::startGame);
-        view.setOnGuess(      gc::submitGuess);
+
+        view.setOnStart(gc::startGame);
+        view.setOnGuess(gc::submitGuess);
         view.setOnLeaderboard(gc::fetchLeaderboard);
-        view.setOnPlayAgain(  gc::resetAndStart);
-        view.setOnBackToMenu( this::showHome);
+        view.setOnPlayAgain(gc::resetAndStart);
+        view.setOnBackToMenu(this::showHome);
+
 
         view.clearAll();
 
@@ -126,9 +126,7 @@ public class MainApp extends Application {
 
     private org.omg.CORBA.Object getNamingRef(String name) {
         try {
-            return NamingContextExtHelper
-                    .narrow(orb.resolve_initial_references("NameService"))
-                    .resolve_str(name);
+            return NamingContextExtHelper.narrow(orb.resolve_initial_references("NameService")).resolve_str(name);
         } catch (Exception e) {
             throw new RuntimeException("Lookup failed: " + name, e);
         }

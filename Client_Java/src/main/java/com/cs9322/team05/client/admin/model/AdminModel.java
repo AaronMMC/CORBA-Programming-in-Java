@@ -15,28 +15,32 @@
             AdminModel.adminServiceImpl = adminService;
         }
 
-        public boolean create_player(String username, String password, String token) {
-            return adminServiceImpl.create_player(username,password,token);
+        public void create_player(String username, String password, String token) {
+            adminServiceImpl.create_player(username,password,token);
         }
 
-        public boolean update_player(String username, String password, String token) {
-            return adminServiceImpl.update_player(username,password,token);
+        public void update_player(String username, String password, String token) {
+            adminServiceImpl.update_player(username,password,token);
         }
 
-        public boolean delete_player(String username, String token) {
-            return adminServiceImpl.delete_player(username,token);
+        public void delete_player(String username, String token) {
+            adminServiceImpl.delete_player(username,token);
         }
 
         public Player search_player (String keyword, String token) {
             return adminServiceImpl.search_player(keyword,token);
         }
 
-        public List<Player> getAllPlayers() {
-            return adminServiceImpl.get_all_players();
+        public List<Player> getAllPlayers(String token) {
+            return adminServiceImpl.get_all_players(token);
         }
 
         public void set_waiting_time(int seconds, String token) {
             adminServiceImpl.set_waiting_time(seconds,token);
+        }
+
+        public void set_round_duration(int seconds, String token) {
+            adminServiceImpl.set_round_duration(seconds,token);
         }
 
         public int get_waiting_time(String token) {

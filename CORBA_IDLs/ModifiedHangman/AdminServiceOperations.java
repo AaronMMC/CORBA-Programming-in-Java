@@ -12,11 +12,11 @@ import java.util.List;
 
 public interface AdminServiceOperations 
 {
-  boolean create_player (String username, String password, String token);
-  boolean update_player (String username, String new_password, String token);
-  boolean delete_player (String username, String token);
+  void create_player (String username, String password, String token);
+  void update_player (String username, String new_password, String token);
+  void delete_player (String username, String token);
   Player search_player (String keyword, String token);
-  List<Player> get_all_players();
+  List<Player> get_all_players(String token);
   void set_waiting_time (int seconds, String token);
   void set_round_duration (int seconds, String token);
   int get_waiting_time (String token);
