@@ -7,6 +7,12 @@ import com.cs9322.team05.server.dao.PlayerDao;
 import java.util.List;
 
 public class AdminServiceImpl extends AdminServicePOA {
+    private final PlayerDao playerDao;
+
+    public AdminServiceImpl(PlayerDao playerDao) {
+        this.playerDao = playerDao;
+    }
+
     @Override
     public boolean create_player(String username, String password, String token) {
         return false;
@@ -29,7 +35,6 @@ public class AdminServiceImpl extends AdminServicePOA {
 
     @Override
     public List<Player> get_all_players() {
-        PlayerDao playerDao = new PlayerDao();
         return playerDao.getAllPlayers();
     }
 
