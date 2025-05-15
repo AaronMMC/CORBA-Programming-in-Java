@@ -1,0 +1,91 @@
+module ModifiedHangman {
+  exception GameNotFoundException {
+    string message;
+  };
+
+  exception PlayerNotLoggedInException {
+    string message;
+  };
+
+
+
+
+    struct GamePlayer {
+      string username;
+      long wins; // can be used in a game (round wins) or leaderboards (game wins)
+    };
+
+
+    struct GameResult {
+      string gameId;
+      string gameWinner;
+      sequence<GamePlayer> leaderboard;
+    };
+
+
+  struct RoundResult {
+      string gameId;
+      string roundWinner;
+      long roundWinnerTime;
+      string statusMessage; // it can be "You've done it in 20 seconds" or "You did not guessed it" or "You won this round"
+      sequence<GamePlayer> currentGameLeaderboard;
+    };
+
+  interface ClientCallback {
+    void startRound(in long wordLength);
+    void startGameFailed();
+    void endGame(in GameResult gameResult);
+    void endRound(in RoundResult roundResult);
+    void proceedToNextRound(in long wordLength);
+  };
+
+
+  struct Player {
+    string username;
+    string password;
+    long wins;
+  };
+
+
+  struct AttemptedLetter {
+    char letter;
+    boolean isLetterCorrect;
+  };
+
+
+  struct GuessResponse {
+    boolean isWordGuessed;
+    string maskedWord;
+    sequence<AttemptedLetter> attemptedLetters;
+    long remainingAttemptsLeft;
+  };
+
+
+  struct GameInfo {
+    string gameId;
+    long roundLength;
+    long remainingWaitingTime;
+  };
+
+  struct Leaderboard {
+    sequence<GamePlayer> players;
+  };
+
+
+  interface GameService {
+
+      void registerCallback(in ClientCallback callback, in string token) raises (PlayerNotLoggedInException);
+      GameInfo start_game(in string username, in string token) raises (PlayerNotLoggedInException);
+
+      GuessResponse guessLetter(
+        in string username,
+        in string gameId,
+        in char letter,
+        in string token
+      ) raises (GameNotFoundException, PlayerNotLoggedInException);
+
+
+      Leaderboard get_leaderboard(in string token) raises (PlayerNotLoggedInException);
+    };
+
+};
