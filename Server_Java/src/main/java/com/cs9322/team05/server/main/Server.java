@@ -26,13 +26,13 @@ public class Server {
             // DAOs and Managers
             UserDao playerDao = new UserDao(connection);
             GameDao gameDao = new GameDao(connection);
-            SessionManager sessionManager = new SessionManager();
+            SessionManager sessionManager = SessionManager.getInstance();
             PendingGameManager pendingGameManager = new PendingGameManager();
 
             // Servants (service implementations)
             AdminServiceImpl adminServiceImpl = new AdminServiceImpl(sessionManager, playerDao, gameDao);
             AuthenticationServiceImpl authServiceImpl = new AuthenticationServiceImpl(sessionManager, playerDao);
-            GameServiceImpl gameServiceImpl = new GameServiceImpl(sessionManager, gameDao, playerDao, pendingGameManager);
+            GameServiceImpl gameServiceImpl = GameServiceImpl.getInstance(sessionManager, gameDao, playerDao, pendingGameManager);
 
             POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 

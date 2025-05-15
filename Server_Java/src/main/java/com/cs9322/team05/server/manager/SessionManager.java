@@ -7,20 +7,30 @@ import java.util.Map;
 import java.util.UUID;
 
 public class SessionManager {
-    private Map<String, String> userSessions; // token -> username
-    private Map<String, ClientCallback> clientCallbacks; // token -> callback
 
+    private static volatile SessionManager instance;
 
-    public SessionManager() {
+    private final Map<String, String> userSessions; // token -> username
+    private final Map<String, ClientCallback> clientCallbacks; // username -> callback
+
+    private SessionManager() {
         this.userSessions = new HashMap<>();
         this.clientCallbacks = new HashMap<>();
     }
 
-
-    public void addCallback(ClientCallback clientCallback, String token) {
-        clientCallbacks.put(token, clientCallback);
+    public static SessionManager getInstance() {
+        if (instance == null)
+            synchronized (SessionManager.class) {
+                if (instance == null)
+                    instance = new SessionManager();
+            }
+        return instance;
     }
 
+    public void addCallback(ClientCallback clientCallback, String token) {
+        String username = userSessions.get(token);
+        clientCallbacks.put(username, clientCallback);
+    }
 
     public String createSession(String username, String userType) {
         String token = userType + ":" + UUID.randomUUID(); // either "player:hah234ahsdh22sks....." or // "admin:ahh135hdahwq28dhai2...."
@@ -28,17 +38,17 @@ public class SessionManager {
         return token;
     }
 
-
-    public void invalidateSession(String sessionId) {
-        userSessions.remove(sessionId);
+    public void invalidateSession(String token) {
+        String username = userSessions.get(token);
+        userSessions.remove(token);
+        clientCallbacks.remove(username);
     }
-
 
     public boolean isSessionValid(String sessionId) {
         return userSessions.containsKey(sessionId);
     }
 
-
-
-
+    public ClientCallback getCallback(String username) {
+        return clientCallbacks.get(username);
+    }
 }

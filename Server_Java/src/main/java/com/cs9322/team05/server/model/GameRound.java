@@ -1,8 +1,7 @@
 package com.cs9322.team05.server.model;
 
-import ModifiedHangman.AttemptedLetter;
-import ModifiedHangman.GamePlayer;
-import ModifiedHangman.GuessResponse;
+import ModifiedHangman.*;
+import com.cs9322.team05.server.manager.SessionManager;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -12,6 +11,7 @@ public class GameRound {
     private final String wordToGuess;
     private GamePlayer winner;
     private final Map<String, GamePlayer> players;
+    private final SessionManager sessionManager;
 
     private final Map<String, ScheduledFuture<?>> countdownTasks;
     private final Map<String, PlayerGuessWordState> playerGuessStates;
@@ -26,6 +26,7 @@ public class GameRound {
         this.roundNumber = roundNumber;
         this.wordToGuess = wordToGuess;
         int wordToGuessLength = wordToGuess.length();
+        this.sessionManager = SessionManager.getInstance();
 
         for (GamePlayer player : playersList) {
             playerGuessStates.put(player.username, new PlayerGuessWordState(wordToGuessLength));
@@ -33,16 +34,35 @@ public class GameRound {
         }
     }
 
-    public void startRound(int seconds) {
+    public void startRound(int seconds, String gameId) {
         for (String username : playerGuessStates.keySet()) {
+            ClientCallback clientCallback = sessionManager.getCallback(username);
+            try {
+                clientCallback.startRound(wordToGuess.length()); // send start signal to clientt
+            } catch (RuntimeException e) {
+                e.printStackTrace();  }
+
             ScheduledFuture<?> task = scheduler.schedule(() -> {
                 System.out.println("Time's up for " + username);
-                // Optionally update their state, or notify game logic
+                String statusMessage;
+
+                if (this.winner.username.equals(username)) {
+                    winner.wins++;
+                    statusMessage = "You won this Round!"; }
+                else
+                    statusMessage = "You lost this round!";
+
+                RoundResult roundResult = new RoundResult(gameId, winner.username, 0, statusMessage, null);
+                try {
+                    clientCallback.endRound(roundResult);}
+                catch (RuntimeException e) {
+                    e.printStackTrace(); }
             }, seconds, TimeUnit.SECONDS);
 
             countdownTasks.put(username, task);
         }
     }
+
 
     public void cancelCountdownForPlayer(String username) {
         ScheduledFuture<?> task = countdownTasks.get(username);

@@ -48,7 +48,12 @@ public class AdminController {
     }
 
     public List<Player> getAllPlayers(String token) {
-        return adminModel.getAllPlayers(token);
+        try {
+            return adminModel.getAllPlayers(token);
+        } catch (AdminNotLoggedInException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void set_waiting_time(int seconds, String token) {

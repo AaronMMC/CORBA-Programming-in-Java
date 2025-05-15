@@ -12,7 +12,7 @@ public final class RoundResult implements org.omg.CORBA.portable.IDLEntity
 {
   public String gameId = null;
   public String roundWinner = null;
-  public int roundWinnerTime = (int)0;
+  public int roundWinnerTime = (int)0; // TODO : remove this datafield
   public String statusMessage = null;
 
   // it can be "You've done it in 20 seconds" or "You did not guessed it" or "You won this round"

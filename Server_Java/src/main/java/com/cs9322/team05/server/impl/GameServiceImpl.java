@@ -11,19 +11,33 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GameServiceImpl extends GameServicePOA {
-    private GameDao gameDao;
-    private UserDao userDao;
-    private SessionManager sessionManager;
-    private PendingGameManager pendingGameManager;
-    private Map<String, Game> activeGames;
+    private static GameServiceImpl instance;
 
+    private final GameDao gameDao;
+    private final UserDao userDao;
+    private final SessionManager sessionManager;
+    private final PendingGameManager pendingGameManager;
+    private final Map<String, Game> activeGames;
 
-    public GameServiceImpl(SessionManager sessionManager, GameDao gameDao, UserDao userDao, PendingGameManager pendingGameManager) {
+    private GameServiceImpl(SessionManager sessionManager, GameDao gameDao, UserDao userDao, PendingGameManager pendingGameManager) {
         this.sessionManager = sessionManager;
         this.gameDao = gameDao;
         this.userDao = userDao;
         this.activeGames = new HashMap<>();
         this.pendingGameManager = pendingGameManager;
+    }
+
+    public static synchronized GameServiceImpl getInstance(SessionManager sessionManager, GameDao gameDao, UserDao userDao, PendingGameManager pendingGameManager) {
+        if (instance == null)
+            instance = new GameServiceImpl(sessionManager, gameDao, userDao, pendingGameManager);
+
+        return instance;
+    }
+
+    public static GameServiceImpl getInstance() {
+        if (instance == null)
+            throw new IllegalStateException("GameServiceImpl is not yet initialized.");
+        return instance;
     }
 
 
@@ -105,7 +119,14 @@ public class GameServiceImpl extends GameServicePOA {
 
     // this ain't declared in the .idl file, so clients can't call it and it should be okay //
     public void addActiveGame(Game pendingGame) {
-        activeGames.put(pendingGame.getGameId(), pendingGame);
+        if (pendingGame.getPlayers().size() == 1)
+            sessionManager.getCallback(pendingGame.getPlayers().get(0).username).startGameFailed();
+        else {
+            activeGames.put(pendingGame.getGameId(), pendingGame);
+            pendingGame.startGame();
+//            for (GamePlayer player : pendingGame.getPlayers())
+//                sessionManager.getCallback(player.username).startRound();
+        }
     }
 
 

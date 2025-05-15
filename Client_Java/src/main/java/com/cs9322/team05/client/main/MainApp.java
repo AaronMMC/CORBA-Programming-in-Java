@@ -1,6 +1,9 @@
 package com.cs9322.team05.client.main;
 
 import ModifiedHangman.*;
+import com.cs9322.team05.client.admin.controller.AdminController;
+import com.cs9322.team05.client.admin.model.AdminModel;
+import com.cs9322.team05.client.admin.view.AdminView;
 import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
 import com.cs9322.team05.client.player.controller.GameController;
 import com.cs9322.team05.client.player.controller.LoginController;
@@ -23,6 +26,7 @@ public class MainApp extends Application {
     private Stage primaryStage;
     private ORB orb;
     private String username, token;
+    private final Stage stage = new Stage();
 
     public static void main(String[] args) {
         launch(args);
@@ -54,6 +58,15 @@ public class MainApp extends Application {
         });
 
         setScene(loginView.createLoginPane());
+    }
+
+    private void showAdminHome() {
+        AdminService adminSvc = AdminServiceHelper.narrow(getNamingRef("AdminService"));
+        AdminModel adminModel = new AdminModel(adminSvc);
+        AdminController adminController = new AdminController(adminModel);
+
+        AdminView adminView = new AdminView(token, adminController);
+        stage.setScene(adminView.getScene());
     }
 
     private void showHome() {
