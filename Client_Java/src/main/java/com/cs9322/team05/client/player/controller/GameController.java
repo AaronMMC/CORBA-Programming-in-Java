@@ -8,12 +8,12 @@ import java.util.Arrays;
 
 public class GameController {
     private final GameModel gameModel;
-    private       GameViewInterface view;
-    private       String gameId;
+    private GameViewInterface view;
+    private String gameId;
 
     public GameController(GameModel gameModel, GameViewInterface view) {
         this.gameModel = gameModel;
-        this.view      = view;
+        this.view = view;
         bindViewActions();
     }
 
@@ -24,8 +24,6 @@ public class GameController {
         view.setOnPlayAgain(this::resetAndStart);
         view.setOnBackToMenu(this::backToMenu);
     }
-
-
 
 
     public void startGame() {
