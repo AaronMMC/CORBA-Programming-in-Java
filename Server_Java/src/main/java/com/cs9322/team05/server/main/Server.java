@@ -11,49 +11,52 @@ import com.cs9322.team05.server.manager.SessionManager;
 import com.cs9322.team05.server.manager.PendingGameManager;
 import org.omg.CORBA.*;
 import org.omg.PortableServer.*;
+import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*;
 
 import java.sql.Connection;
+import java.util.Properties;
 
 public class Server {
     public static void main(String[] args) {
         try {
-            // Initialize the ORB
-            ORB orb = ORB.init(args, null);
+            Properties props = new Properties();
+            props.put("org.omg.CORBA.ORBInitialPort", "2634");
+            props.put("org.omg.CORBA.ORBInitialHost", "localhost");
 
-            // Get the database connection
+            ORB orb = ORB.init(args, props);
+
+            // Get Root POA and activate the POAManager
+            POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+            rootPOA.the_POAManager().activate();
+
+            // Connect to DB and prepare services
             Connection connection = DatabaseConnection.getConnection();
 
-            // DAOs and Managers
             UserDao playerDao = new UserDao(connection);
             GameDao gameDao = new GameDao(connection);
             SessionManager sessionManager = SessionManager.getInstance();
             PendingGameManager pendingGameManager = new PendingGameManager();
 
-            // Servants (service implementations)
-            AdminServiceImpl adminServiceImpl = new AdminServiceImpl(sessionManager, playerDao, gameDao);
-            AuthenticationServiceImpl authServiceImpl = new AuthenticationServiceImpl(sessionManager, playerDao);
-            GameServiceImpl gameServiceImpl = GameServiceImpl.getInstance(sessionManager, gameDao, playerDao, pendingGameManager);
+            // Instantiate service implementations
+            AdminServiceImpl adminImpl = new AdminServiceImpl(sessionManager, playerDao, gameDao);
+            AuthenticationServiceImpl authImpl = new AuthenticationServiceImpl(sessionManager, playerDao);
+            GameServiceImpl gameImpl = GameServiceImpl.getInstance(sessionManager, gameDao, playerDao, pendingGameManager);
 
-            POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+            // Convert servants to CORBA object references
+            org.omg.CORBA.Object adminRef = rootPOA.servant_to_reference(adminImpl);
+            org.omg.CORBA.Object authRef = rootPOA.servant_to_reference(authImpl);
+            org.omg.CORBA.Object gameRef = rootPOA.servant_to_reference(gameImpl);
 
-            org.omg.CORBA.Object adminRef = rootPOA.servant_to_reference(adminServiceImpl);
-            org.omg.CORBA.Object authRef = rootPOA.servant_to_reference(authServiceImpl);
-            org.omg.CORBA.Object gameRef = rootPOA.servant_to_reference(gameServiceImpl);
+            // Register with Naming Service
+            org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+            NamingContextExt namingContext = NamingContextExtHelper.narrow(objRef);
 
-            AdminService adminService = AdminServiceHelper.narrow(adminRef);
-            AuthenticationService authService = AuthenticationServiceHelper.narrow(authRef);
-            GameService gameService = GameServiceHelper.narrow(gameRef);
+            namingContext.rebind(namingContext.to_name("AdminService"), adminRef);
+            namingContext.rebind(namingContext.to_name("AuthenticationService"), authRef);
+            namingContext.rebind(namingContext.to_name("GameService"), gameRef);
 
-            String adminIOR = orb.object_to_string(adminService);
-            String authIOR = orb.object_to_string(authService);
-            String gameIOR = orb.object_to_string(gameService);
-
-            System.out.println("Server ready and waiting...");
-            System.out.println("Admin Service IOR: " + adminIOR);
-            System.out.println("Authentication Service IOR: " + authIOR);
-            System.out.println("Game Service IOR: " + gameIOR);
-
-            rootPOA.the_POAManager().activate();
+            System.out.println("Server ready and services bound to Naming Service.");
             orb.run();
 
         } catch (Exception e) {

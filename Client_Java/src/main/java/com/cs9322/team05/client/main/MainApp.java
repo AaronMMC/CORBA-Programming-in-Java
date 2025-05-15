@@ -22,6 +22,8 @@ import javafx.stage.Stage;
 import org.omg.CORBA.ORB;
 import org.omg.CosNaming.NamingContextExtHelper;
 
+import java.util.Properties;
+
 public class MainApp extends Application {
     private Stage primaryStage;
     private ORB orb;
@@ -34,7 +36,11 @@ public class MainApp extends Application {
 
     @Override
     public void init() throws Exception {
-        orb = ORB.init(new String[0], null);
+        Properties props = new Properties();
+        props.put("org.omg.CORBA.ORBInitialPort", "2634");
+        props.put("org.omg.CORBA.ORBInitialHost", "localhost");
+
+        orb = ORB.init(new String[0], props);
     }
 
     @Override
