@@ -27,7 +27,6 @@ public class Game {
 
     public String getGameId() {
         return gameId;
-
     }
 
     public void setGameId(String gameId) {
@@ -82,4 +81,11 @@ public class Game {
         GameRound currentRound = rounds.get(rounds.size() - 1);
         return currentRound.guessLetter(username, letter);
     }
+
+    public void startGame() {
+
+    }
+
+
+
 }
