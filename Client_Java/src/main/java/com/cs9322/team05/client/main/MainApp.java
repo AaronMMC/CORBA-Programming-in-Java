@@ -8,11 +8,13 @@ import com.cs9322.team05.client.player.controller.MatchmakingController;
 import com.cs9322.team05.client.player.model.AuthenticationModel;
 import com.cs9322.team05.client.player.model.GameModel;
 import com.cs9322.team05.client.player.model.LeaderboardModel;
-import com.cs9322.team05.client.player.model.AuthenticationModel;
 import com.cs9322.team05.client.player.services.HomeController;
 import com.cs9322.team05.client.player.services.HomeView;
 import com.cs9322.team05.client.player.view.GameView;
 import com.cs9322.team05.client.player.view.AuthenticationView;
+import com.cs9322.team05.client.admin.controller.AdminController;
+import com.cs9322.team05.client.admin.model.AdminModel;
+import com.cs9322.team05.client.admin.view.AdminView;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -20,7 +22,6 @@ import javafx.stage.Stage;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.Object;
 import org.omg.CosNaming.NamingContextExtHelper;
-
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,7 +40,6 @@ public class MainApp extends Application {
 
     @Override
     public void init() throws Exception {
-        // Initialize ORB with hard‑coded defaults
         logger.info("Initializing ORB");
         Properties props = new Properties();
         props.put("org.omg.CORBA.ORBInitialHost", "localhost");
@@ -67,17 +67,41 @@ public class MainApp extends Application {
         AuthenticationModel authModel = new AuthenticationModel(authSvc);
         AuthenticationController loginCtrl = new AuthenticationController(authModel);
 
-        // (a) Normal user login
         loginCtrl.setOnLoginSuccess((user, tok) -> {
             this.username = user;
             this.token = tok;
-            showHome();
+            if ("admin".equalsIgnoreCase(this.username)) {
+                showAdminView();
+            } else {
+                showHome();
+            }
         });
 
         AuthenticationView authenticationView = new AuthenticationView(loginCtrl);
         setScene(authenticationView.createLoginPane());
     }
 
+    private void showAdminView() {
+        logger.info("Transitioning to Admin view for user=" + this.username);
+        try {
+            AdminService adminSvc = AdminServiceHelper.narrow(getNamingRef("AdminService"));
+            AdminModel adminModel = new AdminModel(adminSvc);
+            AdminController adminCtrl = new AdminController(adminModel);
+            AdminView adminView = new AdminView(this.token, adminCtrl);
+
+            if (adminView.getScene() != null && adminView.getScene().getRoot() != null) {
+                setScene(adminView.getScene().getRoot());
+                primaryStage.setTitle("Admin Panel - What's The Word");
+                logger.info("Admin view shown");
+            } else {
+                logger.log(Level.SEVERE, "AdminView scene or root is null. Cannot display Admin view.");
+                showLogin();
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to transition to Admin view", e);
+            showLogin();
+        }
+    }
 
     private void showHome() {
         logger.info("Transitioning to Home view for user=" + username);
@@ -112,43 +136,35 @@ public class MainApp extends Application {
     }
 
     private void showMatchmaking() {
-        logger.info("Transitioning to Matchmaking view");
+        logger.info("Transitioning to Matchmaking view for user=" + username);
         GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
         GameModel gameModel = new GameModel(gameSvc, username, token);
-
         GameController gc = new GameController(gameModel, null);
         ClientCallbackImpl callback = new ClientCallbackImpl(orb, gameSvc, token, gc);
-        try {
-            logger.info("Registering callback with server");
-            callback.register();
-            logger.info("Callback registered successfully");
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Callback registration failed", e);
-        }
-        gc.setGameView(null);
 
         MatchmakingController mmCtrl = new MatchmakingController(gameModel, callback);
-        mmCtrl.setOnMatchFound(() -> {
-            logger.info("Match found, launching game view");
+
+        mmCtrl.setOnMatchReadyToProceed(() -> {
+            logger.info("Matchmaking successful and initial wait period over. Proceeding to game view setup.");
             showGame(gameModel, gc, callback);
         });
-        mmCtrl.setOnCancel(() -> {
-            logger.info("Matchmaking cancelled by user");
+        mmCtrl.setOnMatchmakingCancelledOrFailed(() -> {
+            logger.info("Matchmaking cancelled or failed. Returning to home view.");
             showHome();
         });
 
         setScene(mmCtrl.getView().getRootPane());
-        logger.info("Starting matchmaking process");
+        logger.info("Displaying matchmaking view and starting matchmaking process...");
         mmCtrl.startMatchmaking();
     }
 
     private void showGame(GameModel gameModel, GameController gc, ClientCallbackImpl callback) {
-        logger.info("Transitioning to Game view");
+        logger.info("Transitioning to Game view for user=" + username);
         GameView view = new GameView();
         gc.setGameView(view);
 
         view.setOnStart(() -> {
-            logger.info("Game start requested");
+            logger.info("Game start requested by user via UI (should ideally be server-driven after matchmaking).");
             gc.startGame();
         });
         view.setOnGuess(guess -> {
@@ -156,12 +172,12 @@ public class MainApp extends Application {
             gc.submitGuess(guess);
         });
         view.setOnLeaderboard(() -> {
-            logger.info("Fetching in‑game leaderboard");
+            logger.info("Fetching in-game leaderboard");
             gc.fetchLeaderboard();
         });
         view.setOnPlayAgain(() -> {
             logger.info("User requested Play Again");
-            gc.resetAndStart();
+            showMatchmaking();
         });
         view.setOnBackToMenu(() -> {
             logger.info("User returning to Home menu from game");
@@ -170,6 +186,7 @@ public class MainApp extends Application {
 
         view.clearAll();
         setScene(view.getRoot());
+        logger.info("Game view shown. Waiting for server to initiate round via ClientCallback.startGame(wordLength).");
     }
 
     private Object getNamingRef(String name) {
@@ -194,7 +211,4 @@ public class MainApp extends Application {
             scene.setRoot(root);
         }
     }
-
-
-
 }
