@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class SessionManager {
-    private Map<String, String> userSessions;
-    private Map<String, ClientCallback> clientCallbacks;
+    private Map<String, String> userSessions; // token -> username
+    private Map<String, ClientCallback> clientCallbacks; // token -> callback
 
 
     public SessionManager() {
@@ -36,7 +36,7 @@ public class SessionManager {
 
 
     public boolean isSessionValid(String sessionId) {
-        return false;
+        return userSessions.containsKey(sessionId);
     }
 
 

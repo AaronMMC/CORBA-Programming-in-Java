@@ -31,7 +31,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public GameInfo start_game(String username, String token) throws PlayerNotLoggedInException {
-        if (isTokenNotValid(token))
+        if (isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         if (pendingGameDoesNotExist()) {
@@ -51,7 +51,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {
-        if (isTokenNotValid(token))
+        if (isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         sessionManager.addCallback(callback, token);
@@ -61,7 +61,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public GuessResponse guessLetter(String username, String gameId, char letter, String token) throws GameNotFoundException, PlayerNotLoggedInException {
-        if (isTokenNotValid(token))
+        if (isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         Game game = activeGames.get(gameId);
@@ -73,7 +73,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public Leaderboard get_leaderboard(String token) throws PlayerNotLoggedInException {
-        if (isTokenNotValid(token))
+        if (isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         List<Player> players = playerDao.getAllPlayers();
@@ -95,8 +95,7 @@ public class GameServiceImpl extends GameServicePOA {
 
 
 
-    // this ain't declared in the .idl file, so clients can't call it? should be //
-    // TODO :  make this not exposed to the client side (this method is used by another server class which is not in the same package so I can't use protected or the package protection)
+    // this ain't declared in the .idl file, so clients can't call it and it should be okay //
     public void addActiveGame(Game pendingGame) {
         activeGames.put(pendingGame.getGameId(), pendingGame);
     }
@@ -106,7 +105,7 @@ public class GameServiceImpl extends GameServicePOA {
         return !pendingGameManager.isPendingGameExists();
     }
 
-    private boolean isTokenNotValid(String token) {
-        return !sessionManager.isSessionValid(token);
+    private boolean isTokenValid(String token) {
+        return sessionManager.isSessionValid(token);
     }
 }

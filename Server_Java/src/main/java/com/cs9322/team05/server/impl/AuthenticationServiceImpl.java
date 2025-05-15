@@ -27,10 +27,10 @@ public class AuthenticationServiceImpl extends AuthenticationServicePOA {
         return sessionManager.createSession(username);
     }
 
-    // TODO : add this method in the .idl file
-    public void registerCallback(ClientCallback callback, String token) {
-        if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a PlayerNotLoggedInException
+    @Override
+    public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {
+        if (isTokenValid(token))
+            throw new PlayerNotLoggedInException("Access denied: Player login is required to register a Callback.");
 
         sessionManager.addCallback(callback, token);
     }
@@ -38,13 +38,13 @@ public class AuthenticationServiceImpl extends AuthenticationServicePOA {
 
     @Override
     public void logout(String token) throws PlayerNotLoggedInException {
-        if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a PlayerNotLoggedInException
+        if (isTokenValid(token))
+            throw new PlayerNotLoggedInException("Access denied: User login is required to log out.");
 
         sessionManager.invalidateSession(token);
     }
 
-    private boolean isTokenNotValid(String token) {
-        return !sessionManager.isSessionValid(token);
+    private boolean isTokenValid(String token) {
+        return sessionManager.isSessionValid(token);
     }
 }
