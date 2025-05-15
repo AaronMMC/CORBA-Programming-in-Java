@@ -77,18 +77,18 @@ public class AdminView {
         Label playerListLabel = new Label("Player List");
         GridPane.setConstraints(playerListLabel, 0, 2, 3, 1);
         playerTable = new TableView<>();
-        TableColumn<Player, String> usernameCol = new TableColumn<>("Username");
-        usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
-        TableColumn<Player, String> playerIdCol = new TableColumn<>("Player ID");
-        playerIdCol.setCellValueFactory(new PropertyValueFactory<>("playerId"));
-        playerTable.getColumns().addAll(playerIdCol, usernameCol);
+        TableColumn<Player, String> passwordCol = new TableColumn<>("Password");
+        passwordCol.setCellValueFactory(new PropertyValueFactory<>("password"));
+        TableColumn<Player, String> playerUsernameCol = new TableColumn<>("Player Username");
+        playerUsernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
+        playerTable.getColumns().addAll(playerUsernameCol, passwordCol);
         GridPane.setConstraints(playerTable, 0, 3, 3, 1);
 
         // Update Player Section
         Label updatePlayerLabel = new Label("Update Selected Player");
         GridPane.setConstraints(updatePlayerLabel, 0, 4, 3, 1);
         TextField updatePasswordField = new TextField();
-        updatePasswordField.setPromptText("New Username");
+        updatePasswordField.setPromptText("New Password");
         GridPane.setConstraints(updatePasswordField, 0, 5, 2, 1);
         Button updatePlayerBtn = new Button("Update Player");
         GridPane.setConstraints(updatePlayerBtn, 2, 5);
