@@ -10,11 +10,11 @@ import java.util.function.Consumer;
 
 public interface GameViewInterface {
 
-    void showWaitingTimer(int seconds);
+    void showWaitingTimer(int seconds); // For matchmaking countdown
 
-    void showRoundDuration(int seconds);
+    void showRoundDuration(int seconds); // For actual round playing time
 
-    void prepareNewRound(int wordLength);
+    void prepareNewRound(int wordLength, int roundNumber); // Added roundNumber
 
     void updateMaskedWord(String maskedWord);
 
@@ -22,19 +22,25 @@ public interface GameViewInterface {
 
     void showAttemptedLetters(List<AttemptedLetter> attempted);
 
+    void disableGuessing(); // Added
+
+    void showStatusMessage(String message); // Added
+
     void showRoundResult(RoundResult result);
 
     void showFinalResult(GameResult result);
 
     void showError(String message);
 
-    void showLeaderboard(List<GamePlayer> leaderboard);
+    void showLeaderboard(List<GamePlayer> leaderboard); // For overall leaderboard
 
     void clearAll();
 
-    void onReturnToMenu();
+    void onReturnToMenu(); // Callback for MainApp
 
-    void setOnStart(Runnable onStart);
+    // Event Setters
+    // setOnStart is removed as game start is server-driven after matchmaking.
+    // void setOnStart(Runnable onStart);
 
     void setOnGuess(Consumer<Character> onGuess);
 

@@ -3,92 +3,185 @@ package com.cs9322.team05.client.player.controller;
 import ModifiedHangman.*;
 import com.cs9322.team05.client.player.interfaces.GameViewInterface;
 import com.cs9322.team05.client.player.model.GameModel;
+import javafx.application.Platform;
 
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GameController {
+    private static final Logger logger = Logger.getLogger(GameController.class.getName());
     private final GameModel gameModel;
     private GameViewInterface view;
     private String gameId;
+    private int expectedRoundDurationSeconds; // Set from GameInfo.roundLength
+    private int currentRoundNumber = 0;
 
     public GameController(GameModel gameModel, GameViewInterface view) {
         this.gameModel = gameModel;
-        this.view = view;
-        bindViewActions();
-    }
-
-    private void bindViewActions() {
-        view.setOnStart(this::startGame);
-        view.setOnGuess(this::submitGuess);
-        view.setOnLeaderboard(this::fetchLeaderboard);
-        view.setOnPlayAgain(this::resetAndStart);
-        view.setOnBackToMenu(this::backToMenu);
-    }
-
-
-    public void startGame() {
-        view.clearAll();
-        try {
-            GameInfo info = gameModel.startGame();
-            this.gameId = info.gameId;
-            view.showWaitingTimer(info.remainingWaitingTime);
-            view.showRoundDuration(info.roundLength);
-        } catch (PlayerNotLoggedInException e) {
-            view.showError("Cannot start game: " + e.getMessage());
+        if (view != null) {
+            setGameView(view);
+        } else {
+            logger.info("GameController initialized with a null view. View must be set later.");
         }
     }
 
+    private void bindViewActions() {
+        if (view == null) {
+            logger.warning("GameController.bindViewActions() called with a null view. Actions will not be bound.");
+            return;
+        }
+        logger.fine("Binding view actions for GameController.");
+        // The setOnStart for a "Start Game" button in GameView is removed.
+        // Round starts are now purely server-driven via ClientCallbackImpl -> onStartRound.
+        view.setOnGuess(this::submitGuess);
+        view.setOnLeaderboard(this::fetchLeaderboard);
+        view.setOnPlayAgain(this::requestPlayAgain);
+        view.setOnBackToMenu(this::requestBackToMenu);
+    }
+
+    public void setGameContext(String gameId, int roundDurationSeconds) {
+        this.gameId = gameId;
+        this.expectedRoundDurationSeconds = roundDurationSeconds;
+        this.currentRoundNumber = 0; // Reset round count for a new game context
+        logger.info("GameController context set - GameID: " + this.gameId + ", ExpectedRoundDuration: " + this.expectedRoundDurationSeconds + "s");
+    }
+
+    public void onStartRound(int wordLength) {
+        currentRoundNumber++;
+        logger.info("Controller: Server initiated onStartRound for round " + currentRoundNumber + " with wordLength: " + wordLength);
+        if (view == null) {
+            logger.severe("View is null in onStartRound! Cannot prepare round.");
+            return;
+        }
+        if (this.gameId == null || this.gameId.isEmpty()) {
+            logger.severe("GameId is null or empty in onStartRound! This is critical.");
+        }
+
+        Platform.runLater(() -> {
+            view.prepareNewRound(wordLength, currentRoundNumber);
+            view.showRoundDuration(this.expectedRoundDurationSeconds); // Display the round timer
+        });
+    }
+
     public void submitGuess(char letter) {
+        if (view == null) {
+            logger.warning("SubmitGuess called but view is null.");
+            return;
+        }
+        if (gameId == null || gameId.isEmpty()) {
+            logger.severe("Cannot submit guess: gameId is not set!");
+            Platform.runLater(() -> view.showError("Error: Game session not properly initialized. Game ID missing."));
+            return;
+        }
+        logger.info("Submitting guess '" + letter + "' for gameId: " + gameId + ", round: " + currentRoundNumber);
         try {
-            GuessResponse resp = gameModel.guessLetter(gameId, letter);
-            view.updateMaskedWord(resp.maskedWord);
-            view.updateAttemptsLeft(resp.remainingAttemptsLeft);
-            view.showAttemptedLetters(Arrays.asList(resp.attemptedLetters));
+            GuessResponse resp = gameModel.guessLetter(this.gameId, letter);
+            logger.fine("GuessResponse received: wordGuessed=" + resp.isWordGuessed + ", attemptsLeft=" + resp.remainingAttemptsLeft);
+            Platform.runLater(() -> {
+                view.updateMaskedWord(resp.maskedWord);
+                view.updateAttemptsLeft(resp.remainingAttemptsLeft);
+                view.showAttemptedLetters(Arrays.asList(resp.attemptedLetters));
+                if (resp.isWordGuessed) {
+                    logger.info("Word guessed correctly by player " + gameModel.getUsername());
+                    view.disableGuessing();
+                    view.showStatusMessage("Word Guessed! Waiting for round to end...");
+                } else if (resp.remainingAttemptsLeft <= 0) {
+                    logger.info("No attempts left for player " + gameModel.getUsername());
+                    view.disableGuessing();
+                    view.showStatusMessage("No attempts left. Waiting for round to end...");
+                }
+            });
+        } catch (GameNotFoundException e) {
+            logger.log(Level.SEVERE, "GameNotFoundException while guessing: " + gameId, e);
+            Platform.runLater(() -> view.showError("Error: Game not found. (" + gameId + ")"));
+        } catch (PlayerNotLoggedInException e) {
+            logger.log(Level.SEVERE, "PlayerNotLoggedInException while guessing.", e);
+            Platform.runLater(() -> view.showError("Error: You are not logged in."));
         } catch (Exception e) {
-            view.showError("Guess failed: " + e.getMessage());
+            logger.log(Level.SEVERE, "Unexpected exception while submitting guess.", e);
+            Platform.runLater(() -> view.showError("Error during guess: " + e.getMessage()));
         }
     }
 
     public void fetchLeaderboard() {
+        if (view == null) {
+            logger.warning("FetchLeaderboard called but view is null.");
+            return;
+        }
+        logger.info("Fetching overall leaderboard.");
         try {
             Leaderboard lb = gameModel.getLeaderboard();
-            view.showLeaderboard(Arrays.asList(lb.players));
+            Platform.runLater(() -> view.showLeaderboard(Arrays.asList(lb.players)));
         } catch (PlayerNotLoggedInException e) {
-            view.showError("Cannot fetch leaderboard: " + e.getMessage());
+            logger.log(Level.WARNING, "PlayerNotLoggedInException for leaderboard.", e);
+            Platform.runLater(() -> view.showError("Cannot fetch leaderboard: Not logged in."));
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Exception fetching leaderboard.", e);
+            Platform.runLater(() -> view.showError("Error fetching leaderboard: " + e.getMessage()));
         }
     }
 
-    public void onStartRound(int wordLength) {
-        view.prepareNewRound(wordLength);
-    }
-
     public void onProceedToNextRound(int nextWordLength) {
-        view.showWaitingTimer(nextWordLength);
+        logger.info("Controller: Server signaled onProceedToNextRound. Next wordLength hint: " + nextWordLength);
+        if (view == null) {
+            logger.warning("onProceedToNextRound called but view is null.");
+            return;
+        }
+        Platform.runLater(() -> {
+            view.showStatusMessage("Round " + currentRoundNumber + " ended. Preparing for the next round...");
+        });
     }
 
     public void onEndRound(RoundResult result) {
-        view.showRoundResult(result);
+        logger.info("Controller: Server signaled onEndRound for round " + result.roundNumber);
+        if (view == null) {
+            logger.warning("onEndRound called but view is null.");
+            return;
+        }
+        Platform.runLater(() -> view.showRoundResult(result));
     }
 
     public void onEndGame(GameResult result) {
-        view.showFinalResult(result);
+        logger.info("Controller: Server signaled onEndGame. Winner: " + result.gameWinner);
+        if (view == null) {
+            logger.warning("onEndGame called but view is null.");
+            return;
+        }
+        this.currentRoundNumber = 0;
+        Platform.runLater(() -> view.showFinalResult(result));
     }
 
-    public void resetAndStart() {
-        view.clearAll();
-        startGame();
+    private void requestPlayAgain() {
+        logger.info("Controller: Play Again requested by user. Triggering view's onReturnToMenu.");
+        if (view == null) return;
+        view.onReturnToMenu();
     }
 
-    public void backToMenu() {
+    private void requestBackToMenu() {
+        logger.info("Controller: Back to Menu requested by user. Triggering view's onReturnToMenu.");
+        if (view == null) return;
+        // TODO: If the game is active, the client should ideally send a "leaveGame" or "quitGame" message
+        // to the server so the server knows this player has left and can notify other players.
+        // For now, it just transitions the UI.
         view.onReturnToMenu();
     }
 
     public void setGameView(GameViewInterface view) {
+        logger.fine("Setting GameView for GameController.");
         this.view = view;
-        bindViewActions();
+        if (this.view != null) {
+            bindViewActions();
+        } else {
+            logger.warning("setGameView called with a null view instance.");
+        }
     }
 
     public String getGameId() {
         return gameId;
+    }
+
+    public GameModel getGameModel() {
+        return gameModel;
     }
 }
