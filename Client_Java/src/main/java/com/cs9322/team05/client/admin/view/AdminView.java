@@ -107,7 +107,7 @@ public class AdminView {
                 showAlert("Empty Field", "Please enter a new username.");
                 return;
             }
-            adminController.update_player(selectedPlayer.getUsername(), newPassword, token);
+            adminController.update_player(selectedPlayer.username, newPassword, token);
             updatePasswordField.clear();
             refreshPlayerTable();
         });
@@ -127,9 +127,9 @@ public class AdminView {
                 showAlert("No Player Selected", "Please select a player to delete.");
                 return;
             }
-            boolean confirmed = showConfirmation("Confirm Delete", "Are you sure you want to delete player: " + selectedPlayer.getUsername() + "?");
+            boolean confirmed = showConfirmation("Confirm Delete", "Are you sure you want to delete player: " + selectedPlayer.username + "?");
             if (confirmed) {
-                adminController.delete_player(selectedPlayer.getUsername(), token);
+                adminController.delete_player(selectedPlayer.username, token);
                 refreshPlayerTable();
             }
         });
