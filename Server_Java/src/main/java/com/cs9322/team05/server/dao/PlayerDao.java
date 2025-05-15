@@ -14,7 +14,7 @@ public class PlayerDao {
     }
 
     public void addPlayer(Player player) {
-        String query = " INSERT INTO players (username, password, wins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, wins = ? ";
+        String query = " INSERT INTO players (username, password, total_wins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, total_wins = ? ";
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -44,7 +44,7 @@ public class PlayerDao {
 
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
-        String query = "SELECT username, password, wins FROM players";
+        String query = "SELECT username, password, total_wins FROM players";
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
@@ -53,7 +53,7 @@ public class PlayerDao {
                 Player player = new Player();
                 player.username = rs.getString("username");
                 player.password = rs.getString("password");
-                player.wins = rs.getInt("wins");
+                player.wins = rs.getInt("total_wins");
                 players.add(player);
             }
         } catch (SQLException e) {
@@ -63,7 +63,7 @@ public class PlayerDao {
     }
 
     public Player getPlayerByUsername(String username) {
-        String query = "SELECT username, password, wins FROM players WHERE username = ?";
+        String query = "SELECT username, password, total_wins FROM players WHERE username = ?";
         try (Connection conn = databaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -73,7 +73,7 @@ public class PlayerDao {
                     Player player = new Player();
                     player.username = rs.getString("username");
                     player.password = rs.getString("password");
-                    player.wins = rs.getInt("wins");
+                    player.wins = rs.getInt("total_wins");
                     return player;
                 }
             }
@@ -82,4 +82,24 @@ public class PlayerDao {
         }
         return null;
     }
+
+    public void updatePlayer(Player player) {
+        String query = "UPDATE players SET password = ?, total_wins = ? WHERE username = ?";
+        try (Connection conn = databaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, player.getPassword());
+            stmt.setInt(2, player.getWins());
+            stmt.setString(3, player.getUsername());
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0)
+                System.out.println("Player updated successfully.");
+            else
+                System.out.println("No player found with username: " + player.getUsername());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

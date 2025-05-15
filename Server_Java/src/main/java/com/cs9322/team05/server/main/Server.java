@@ -27,7 +27,7 @@ public class Server {
             PendingGameManager pendingGameManager = new PendingGameManager();
 
             // servants (service implementations)
-            AdminServiceImpl adminServiceImpl = new AdminServiceImpl(playerDao);
+            AdminServiceImpl adminServiceImpl = new AdminServiceImpl(sessionManager, playerDao, gameDao);
             AuthenticationServiceImpl authServiceImpl = new AuthenticationServiceImpl(sessionManager, playerDao);
             GameServiceImpl gameServiceImpl = new GameServiceImpl(sessionManager, gameDao, playerDao, pendingGameManager);
 
