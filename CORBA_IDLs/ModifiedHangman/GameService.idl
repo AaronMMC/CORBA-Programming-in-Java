@@ -65,7 +65,7 @@ module ModifiedHangman {
 
   interface GameService {
     void registerCallback(in ClientCallback callback, in string token) raises (PlayerNotLoggedInException);
-
+    Player getPlayerByUsername(in string username, in string token) raises (PlayerNotLoggedInException);
     GameInfo start_game(in string username, in string token) raises (PlayerNotLoggedInException);
 
     GuessResponse guessLetter(
