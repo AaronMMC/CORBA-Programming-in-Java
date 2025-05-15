@@ -43,12 +43,13 @@ public class MainApp extends Application {
         logger.info("Initializing ORB");
         Properties props = new Properties();
         props.put("org.omg.CORBA.ORBInitialHost", "localhost");
-        props.put("org.omg.CORBA.ORBInitialPort", "1050");
+        props.put("org.omg.CORBA.ORBInitialPort", "2634"); // changed from 1050 to 2634
         orb = ORB.init(new String[0], props);
         logger.info("ORB initialized successfully: " +
                 "host=" + props.getProperty("org.omg.CORBA.ORBInitialHost") +
                 " port=" + props.getProperty("org.omg.CORBA.ORBInitialPort"));
     }
+
 
     @Override
     public void start(Stage stage) {
