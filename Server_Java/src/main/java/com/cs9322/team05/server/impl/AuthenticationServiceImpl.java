@@ -21,7 +21,7 @@ public class AuthenticationServiceImpl extends AuthenticationServicePOA {
 
         if (player == null)
             throw new LogInException("Player " + username +  " not found. ");
-        if (!player.getPassword().equals(password))
+        if (!player.password.equals(password))
             throw new LogInException("Incorrect password. ");
 
         return sessionManager.createSession(username);

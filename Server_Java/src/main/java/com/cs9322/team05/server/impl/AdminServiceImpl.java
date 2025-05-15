@@ -1,5 +1,6 @@
 package com.cs9322.team05.server.impl;
 
+import ModifiedHangman.AdminNotLoggedInException;
 import ModifiedHangman.AdminServicePOA;
 import ModifiedHangman.Player;
 import com.cs9322.team05.server.dao.GameDao;
@@ -20,79 +21,82 @@ public class AdminServiceImpl extends AdminServicePOA {
     }
 
     @Override
-    public void create_player(String username, String password, String token) {
+    public void create_player(String username, String password, String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to create a player.");
 
-        playerDao.addPlayer(new Player(username, password)); // TODO : hash the password
+        playerDao.addPlayer(new Player(username, password, 0)); // TODO : hash the password
     }
 
     @Override
-    public void update_player(String username, String new_password, String token) {
+    public void update_player(String username, String new_password, String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to update a player.");
 
-        playerDao.updatePlayer(new Player(username, new_password)); // TODO : hash the password
+
+        playerDao.updatePlayer(new Player(username, new_password, 0)); // TODO : hash the password
     }
 
     @Override
-    public void delete_player(String username, String token) {
+    public void delete_player(String username, String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to delete a player.");
 
         playerDao.removePlayer(username);
     }
 
     @Override
-    public Player search_player(String keyword, String token) {
+    public Player search_player(String keyword, String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to search a player.");
 
-        List<Player> players = get_all_players(token);
+        Player[] players = get_all_player(token);
         for (Player player : players)
-            if (player.getUsername().toLowerCase().contains(keyword.toLowerCase()))
+            if (player.username.toLowerCase().contains(keyword.toLowerCase()))
                 return player;
 
         return null;
     }
 
     @Override
-    public List<Player> get_all_players(String token) {
+    public Player[] get_all_player(String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to retrieve all players.");
 
-        return playerDao.getAllPlayers();
+        List<Player> playerList = playerDao.getAllPlayers();
+        return playerList.toArray(new Player[0]);
     }
 
+
+
     @Override
-    public void set_waiting_time(int seconds, String token) {
+    public void set_waiting_time(int seconds, String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to modify the waiting time");
 
         gameDao.setWaitingTimeLength(seconds);
     }
 
     @Override
-    public void set_round_duration(int seconds, String token) {
+    public void set_round_duration(int seconds, String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to modify the round duration.");
 
         gameDao.setRoundLength(seconds);
     }
 
     @Override
-    public int get_waiting_time(String token) {
+    public int get_waiting_time(String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to retrieve the waiting time.");
 
         return gameDao.getCurrentWaitingTimeLength();
     }
 
     @Override
-    public int get_round_duration(String token) {
+    public int get_round_duration(String token) throws AdminNotLoggedInException {
         if (isTokenNotValid(token))
-            throw new RuntimeException("You are not yet logged in sir. "); // TODO : add in the .idl file that this method throws a AdminNotLoggedInException
-
+            throw new AdminNotLoggedInException("Access denied: Admin login is required to retrieve the round duration.");
         return gameDao.getCurrentRoundLength();
     }
 

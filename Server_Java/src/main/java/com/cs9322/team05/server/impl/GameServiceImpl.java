@@ -79,12 +79,20 @@ public class GameServiceImpl extends GameServicePOA {
         List<Player> players = playerDao.getAllPlayers();
 
         List<Player> sortedPlayers = players.stream()
-                .filter(player -> player.getWins() > 0)
-                .sorted(Comparator.comparingInt(Player::getWins).reversed())
+                .filter(player -> player.wins > 0)
+                .sorted((player1, player2) -> Integer.compare(player2.wins, player1.wins))
                 .collect(Collectors.toList());
 
-        return new Leaderboard(sortedPlayers);
+        GamePlayer[] gamePlayers = new GamePlayer[sortedPlayers.size()];
+        for (int i = 0; i < sortedPlayers.size(); i++) {
+            Player player = sortedPlayers.get(i);
+            gamePlayers[i] = new GamePlayer(player.username, player.wins);
+        }
+
+        return new Leaderboard(gamePlayers);
     }
+
+
 
 
     // this ain't declared in the .idl file, so clients can't call it? should be //
