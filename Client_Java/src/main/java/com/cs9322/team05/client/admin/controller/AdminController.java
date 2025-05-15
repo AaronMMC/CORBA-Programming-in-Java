@@ -48,12 +48,31 @@ public class AdminController {
     }
 
     public List<Player> getAllPlayers(String token) {
+        System.out.println("AdminController.getAllPlayers: Called with token: " + token);
+        List<Player> players = null;
         try {
-            return adminModel.getAllPlayers(token);
+            players = adminModel.getAllPlayers(token); 
+            if (players == null) {
+                System.out.println("AdminController.getAllPlayers: Received NULL list from adminModel.");
+            } else {
+                System.out.println("AdminController.getAllPlayers: Received list with " + players.size() + " players from adminModel.");
+            }
         } catch (AdminNotLoggedInException e) {
+            System.err.println("AdminController.getAllPlayers: Caught AdminNotLoggedInException from adminModel: " + e.getMessage() + ". Returning null.");
+            
+            return null; 
+        } catch (Exception e) { 
+            System.err.println("AdminController.getAllPlayers: Caught UNEXPECTED Exception from adminModel: " + e.toString() + ". Returning null.");
             e.printStackTrace();
+            return null; 
         }
-        return null;
+        
+        if (players == null) {
+            System.out.println("AdminController.getAllPlayers: Returning NULL list to AdminView.");
+        } else {
+            System.out.println("AdminController.getAllPlayers: Returning list with " + players.size() + " players to AdminView.");
+        }
+        return players;
     }
 
     public void set_waiting_time(int seconds, String token) {
@@ -73,20 +92,41 @@ public class AdminController {
     }
 
     public int get_waiting_time(String token) {
+        
+        System.out.println("AdminController.get_waiting_time: Called with token: " + token);
+        int result = 0; 
         try {
-            return adminModel.get_waiting_time(token);
+            result = adminModel.get_waiting_time(token);
+            
+            System.out.println("AdminController.get_waiting_time: Value from adminModel: " + result);
         } catch (AdminNotLoggedInException e) {
+            
+            System.err.println("AdminController.get_waiting_time: Caught AdminNotLoggedInException: " + e.getMessage() + ". Returning 0.");
+            
+        } catch (Exception e) {
+            
+            System.err.println("AdminController.get_waiting_time: Caught UNEXPECTED Exception from adminModel: " + e.toString() + ". Returning 0.");
             e.printStackTrace();
         }
-        return 0;
+        
+        System.out.println("AdminController.get_waiting_time: Returning to view: " + result);
+        return result;
     }
 
     public int get_round_duration(String token) {
+        System.out.println("AdminController.get_round_duration: Called with token: " + token);
+        int result = 0;
         try {
-            return adminModel.get_round_duration(token);
+            result = adminModel.get_round_duration(token);
+            System.out.println("AdminController.get_round_duration: Value from adminModel: " + result);
         } catch (AdminNotLoggedInException e) {
+            System.err.println("AdminController.get_round_duration: Caught AdminNotLoggedInException: " + e.getMessage() + ". Returning 0.");
+            
+        } catch (Exception e) {
+            System.err.println("AdminController.get_round_duration: Caught UNEXPECTED Exception from adminModel: " + e.toString() + ". Returning 0.");
             e.printStackTrace();
         }
-        return 0;
+        System.out.println("AdminController.get_round_duration: Returning to view: " + result);
+        return result;
     }
 }

@@ -64,15 +64,15 @@ public class MainApp extends Application {
         primaryStage.setTitle("What's The Word - Hangman");
         primaryStage.setOnCloseRequest(event -> {
             logger.info("Application closing, performing cleanup...");
-            // TODO: Add any server-side logout or session cleanup calls if necessary
-            // For example, if a game is in progress, notify the server.
+
+
             if (orb != null) {
                 logger.info("Shutting down ORB.");
-                orb.shutdown(true); // Graceful shutdown
+                orb.shutdown(true);
                 orb.destroy();
             }
-            Platform.exit(); // Ensures JavaFX toolkit shutdown
-            System.exit(0); // Ensures non-JavaFX threads are also terminated
+            Platform.exit();
+            System.exit(0);
         });
         primaryStage.show();
         logger.info("Primary stage shown");
@@ -110,20 +110,32 @@ public class MainApp extends Application {
     private void showAdminView() {
         logger.info("Displaying Admin View.");
 
+        // Resolve the AdminService
         AdminService adminSvc = AdminServiceHelper.narrow(getNamingRef("AdminService"));
         if (adminSvc == null) return;
 
+        // Resolve the AuthenticationService
+        AuthenticationService authSvc = AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"));
+        if (authSvc == null) return;
+
+        // Initialize the models
         AdminModel adminModel = new AdminModel(adminSvc);
+        AuthenticationModel authModel = new AuthenticationModel(authSvc);
+
+        // Initialize the controllers
         AdminController adminController = new AdminController(adminModel);
+        AuthenticationController authController = new AuthenticationController(authModel);
 
-        AdminView adminView = new AdminView(token, adminController);
-        setScene(adminView.getScene()); // ✅ SAFE
+        // Initialize the AdminView with the properly initialized AuthenticationController
+        AdminView adminView = new AdminView(token, adminController, authController);
+
+        // Set the scene
+        setScene(adminView.getRootPane());
     }
-
 
     private void showHome() {
         logger.info("Displaying Home View for user=" + username);
-        this.gameControllerInstance = null; // Clear previous game controller if returning home
+        this.gameControllerInstance = null;
         this.clientCallbackInstance = null;
 
         GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
@@ -156,7 +168,7 @@ public class MainApp extends Application {
             logger.info("Logout requested by user: " + username);
             try {
                 if (this.token != null) {
-                    authModelForHome.logout(this.token); // Assuming logout method exists
+                    authModelForHome.logout(this.token);
                     logger.info("Server logout successful for token: " + this.token);
                 }
             } catch (Exception e) {
@@ -177,7 +189,7 @@ public class MainApp extends Application {
         GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
         if (gameSvc == null) {
             logger.severe("GameService is null, cannot proceed to matchmaking.");
-            showHome(); // Fallback to home if critical service is missing
+            showHome();
             return;
         }
 
@@ -234,22 +246,22 @@ public class MainApp extends Application {
         });
         view.setOnPlayAgain(() -> {
             logger.info("UI Event: Play Again requested from GameView. Transitioning to matchmaking.");
-            this.gameControllerInstance = null; // Clear current game controller for a new game
+            this.gameControllerInstance = null;
             this.clientCallbackInstance = null;
             showMatchmaking();
         });
         view.setOnBackToMenu(() -> {
             logger.info("UI Event: Back to Menu requested from GameView.");
-            // TODO: Consider if server needs to be notified of player leaving an active game.
-            this.gameControllerInstance = null; // Clear current game controller
+
+            this.gameControllerInstance = null;
             this.clientCallbackInstance = null;
             showHome();
         });
 
         Platform.runLater(() -> {
-            view.clearAll(); // Initialize to "waiting for server" state
-            // The matchmaking countdown (if any) was handled by MatchmakingView.
-            // GameView now just waits for the server's startRound callback.
+            view.clearAll();
+
+
             view.showStatusMessage("Waiting for server to start the round...");
             setScene(view.getRoot());
             logger.info("Game View shown. Client is ready and waiting for server's ClientCallback.startRound().");
@@ -294,16 +306,16 @@ public class MainApp extends Application {
 
 
     private void setScene(Parent root) {
-        Platform.runLater(() -> { // This is line 313 or around it
+        Platform.runLater(() -> {
             if (primaryStage == null) {
                 logger.severe("PrimaryStage is null in setScene. Cannot update UI.");
                 return;
             }
             Scene scene = primaryStage.getScene();
             if (scene == null) {
-                primaryStage.setScene(new Scene(root, 900, 700)); // Creates a NEW scene
+                primaryStage.setScene(new Scene(root, 1000, 900));
             } else {
-                scene.setRoot(root); // Tries to set the root of the EXISTING scene
+                scene.setRoot(root);
             }
         });
     }

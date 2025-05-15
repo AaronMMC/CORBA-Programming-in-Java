@@ -62,11 +62,25 @@ public class AdminServiceImpl extends AdminServicePOA {
 
     @Override
     public Player[] get_all_player(String token) throws AdminNotLoggedInException {
-        if (!isTokenValid(token))
+        System.out.println("AdminServiceImpl.get_all_player: Called with token: " + token);
+        if (!isTokenValid(token)) {
+            System.err.println("AdminServiceImpl.get_all_player: TOKEN INVALID: " + token + ". Throwing AdminNotLoggedInException.");
             throw new AdminNotLoggedInException("Access denied: Admin login is required to retrieve all players.");
+        }
 
-        List<Player> playerList = userDao.getAllPlayers();
-        return playerList.toArray(new Player[0]);
+        List<Player> playerList = userDao.getAllPlayers(); // Calls the DAO method above
+        if (playerList == null) { // Should ideally not be null from your DAO
+            System.err.println("AdminServiceImpl.get_all_player: UserDao returned NULL list! This is unexpected. Returning empty array.");
+            return new Player[0];
+        }
+        System.out.println("AdminServiceImpl.get_all_player: Received " + playerList.size() + " players from UserDao.");
+        // Optional: Log details of players received if suspecting data corruption
+        // for(Player p : playerList) { System.out.println("AdminServiceImpl: Player from DAO - " + p.username); }
+
+
+        Player[] playersArray = playerList.toArray(new Player[0]);
+        System.out.println("AdminServiceImpl.get_all_player: Returning Player array with " + playersArray.length + " players.");
+        return playersArray;
     }
 
 
@@ -89,18 +103,31 @@ public class AdminServiceImpl extends AdminServicePOA {
 
     @Override
     public int get_waiting_time(String token) throws AdminNotLoggedInException {
-        if (!isTokenValid(token))
-            throw new AdminNotLoggedInException("Access denied: Admin login is required to retrieve the waiting time.");
-
-        return gameDao.getCurrentWaitingTimeLength();
+        // ADD Log: Entry point
+        System.out.println("AdminServiceImpl.get_waiting_time: Called with token: " + token);
+        if (!isTokenValid(token)) {
+            System.err.println("AdminServiceImpl.get_waiting_time: TOKEN INVALID: " + token);
+            throw new AdminNotLoggedInException("Access denied: Admin login is required.");
+        }
+        int value = gameDao.getCurrentWaitingTimeLength();
+        // This log is already good:
+        System.out.println("AdminServiceImpl.get_waiting_time: Value from DAO: " + value);
+        return value;
     }
 
     @Override
     public int get_round_duration(String token) throws AdminNotLoggedInException {
-        if (!isTokenValid(token))
+        // ADD Log: Entry point
+        System.out.println("AdminServiceImpl.get_round_duration: Called with token: " + token);
+        if (!isTokenValid(token)) {
+            // ADD Log: Token invalid
+            System.err.println("AdminServiceImpl.get_round_duration: TOKEN INVALID: " + token);
             throw new AdminNotLoggedInException("Access denied: Admin login is required to retrieve the round duration.");
-
-        return gameDao.getCurrentRoundLength();
+        }
+        int value = gameDao.getCurrentRoundLength();
+        // ADD Log: Value from DAO
+        System.out.println("AdminServiceImpl.get_round_duration: Value from DAO: " + value);
+        return value;
     }
 
     private boolean isTokenValid(String token) {

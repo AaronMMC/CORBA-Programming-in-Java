@@ -1,6 +1,8 @@
 // HomeViewInterface.java
 package com.cs9322.team05.client.player.interfaces;
 import ModifiedHangman.GamePlayer;
+import javafx.scene.Parent;
+
 import java.util.List;
 
 public interface HomeViewInterface {
@@ -8,4 +10,6 @@ public interface HomeViewInterface {
   void showLeaderboard(List<GamePlayer> top5);
   void returnToLogin();
   void showError(String msg);
+
+  Parent getRootPane();
 }

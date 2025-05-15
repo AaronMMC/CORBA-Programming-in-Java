@@ -55,6 +55,11 @@ public class HomeView implements HomeViewInterface {
         new Alert(Alert.AlertType.ERROR, msg).showAndWait();
     }
 
+    @Override
+    public Parent getRootPane() {
+        return null;
+    }
+
     public void setOnStartGame(Runnable cb) {
         this.onStartGame = cb;
     }
