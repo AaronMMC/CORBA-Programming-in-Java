@@ -7,4 +7,40 @@ public class PlayerGuessWordState {
     private int remainingGuess;
     private Map<Character, Boolean> attemptedLetters;
 
+    public PlayerGuessWordState(int wordLength) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < wordLength; i++)
+            stringBuilder.append("_");
+
+        currentMaskedWord = stringBuilder.toString();
+    }
+
+    public String getCurrentMaskedWord() {
+        return currentMaskedWord;
+    }
+
+    public void setCurrentMaskedWord(String currentMaskedWord) {
+        this.currentMaskedWord = currentMaskedWord;
+    }
+
+    public int getRemainingGuess() {
+        return remainingGuess;
+    }
+
+    public void setRemainingGuess(int remainingGuess) {
+        this.remainingGuess = remainingGuess;
+    }
+
+    public Map<Character, Boolean> getAttemptedLetters() {
+        return attemptedLetters;
+    }
+
+    public void setAttemptedLetters(Map<Character, Boolean> attemptedLetters) {
+        this.attemptedLetters = attemptedLetters;
+    }
+
+
+    public void addAttemptedLetter(char letter, boolean isItInTheWord) {
+        attemptedLetters.put(letter, isItInTheWord);
+    }
 }

@@ -1,33 +1,39 @@
 package com.cs9322.team05.server.impl;
 
-import ModifiedHangman.AuthenticationServicePOA;
-import ModifiedHangman.ClientCallback;
-import ModifiedHangman.LogInException;
-import ModifiedHangman.PlayerNotLoggedInException;
+import ModifiedHangman.*;
+import com.cs9322.team05.server.dao.PlayerDao;
 import com.cs9322.team05.server.manager.SessionManager;
 
-import java.util.Random;
 
 public class AuthenticationServiceImpl extends AuthenticationServicePOA {
-    private SessionManager sessionManager;
+    private final SessionManager sessionManager;
+    private final PlayerDao playerDao;
 
-    public AuthenticationServiceImpl(SessionManager sessionManager) {
+    public AuthenticationServiceImpl(SessionManager sessionManager, PlayerDao playerDao) {
         this.sessionManager = sessionManager;
+        this.playerDao = playerDao;
     }
 
 
     @Override
-    public String login(String username, String password) throws LogInException {
-        return System.currentTimeMillis() + "-" + new Random().nextInt(10000); // to be changed since this is the same as the generation of the id of the game in the GameService
+    public String login(String username, String password) throws LogInException { // it should throw PlayerNotFoundException
+        Player player = playerDao.getPlayerByUsername(username);
+
+        if (player == null)
+            throw new LogInException("Player " + username +  " not found. ");
+        if (!player.getPassword().equals(password))
+            throw new LogInException("Incorrect password. ");
+
+        return sessionManager.createSession(username);
     }
 
 
-    public void registerCallback(ClientCallback callback) {
-        sessionManager.addCallback(callback);
+    public void registerCallback(ClientCallback callback, String token) {
+        sessionManager.addCallback(callback, token);
     }
 
     @Override
     public void logout(String token) throws PlayerNotLoggedInException {
-
+        sessionManager.invalidateSession(token);
     }
 }

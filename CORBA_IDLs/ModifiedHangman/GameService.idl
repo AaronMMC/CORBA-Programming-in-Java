@@ -42,7 +42,7 @@ module ModifiedHangman {
 
 
   struct AttemptedLetter {
-    string letter;
+    char letter;
     boolean isLetterCorrect;
   };
 

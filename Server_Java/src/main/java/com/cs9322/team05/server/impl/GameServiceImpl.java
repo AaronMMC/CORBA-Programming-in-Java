@@ -6,6 +6,7 @@ import com.cs9322.team05.server.dao.PlayerDao;
 import com.cs9322.team05.server.model.Game;
 import com.cs9322.team05.server.manager.PendingGameManager;
 import com.cs9322.team05.server.manager.SessionManager;
+import com.cs9322.team05.server.model.GameRound;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,49 +31,55 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public GameInfo start_game(String username, String token) throws PlayerNotLoggedInException {
-        if (!sessionManager.isSessionValid(token))
+        if (isTokenNotValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
-        if (!pendingGameManager.isPendingGameExists()) {
-            String gameId = System.currentTimeMillis() + "-" + new Random().nextInt(10000);
+        if (pendingGameDoesNotExist()) {
+            String gameId = UUID.randomUUID().toString();
             int roundDuration = gameDao.getCurrentRoundLength();
             pendingGameManager.setPendingGame(new Game(gameId, roundDuration, username));
-            pendingGameManager.startCountdownToStartGame(gameDao.getCurrentRoundLength());
-        }
+            pendingGameManager.startCountdownToStartGame(roundDuration); }
         else
             pendingGameManager.addPlayer(new GamePlayer(username, 0));
 
         String gameId = pendingGameManager.getPendingGameId();
         int roundLength = pendingGameManager.getPendingGameRoundDuration();
-        int remainingWaitingTime = 0;
+        int remainingWaitingTime = pendingGameManager.getRemainingWaitingTimeInSeconds();
         return new GameInfo(gameId, roundLength, remainingWaitingTime);
     }
 
 
     @Override
     public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {
-        if (!sessionManager.isSessionValid(token))
+        if (isTokenNotValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
-        sessionManager.addCallback(callback);
+        sessionManager.addCallback(callback, token);
     }
 
 
 
     @Override
     public GuessResponse guessLetter(String username, String gameId, char letter, String token) throws GameNotFoundException, PlayerNotLoggedInException {
-        if (!sessionManager.isSessionValid(token))
+        if (isTokenNotValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
+        Game game = activeGames.get(gameId);
+        if (game == null)
+            throw new GameNotFoundException("Game with ID " + gameId + " not found.");
 
-        return null;
+        return game.guessLetter(username, letter);
     }
 
     @Override
     public Leaderboard get_leaderboard(String token) throws PlayerNotLoggedInException {
+        if (isTokenNotValid(token))
+            throw new PlayerNotLoggedInException("Player is not Logged in.");
+
         List<Player> players = playerDao.getAllPlayers();
 
         List<Player> sortedPlayers = players.stream()
+                .filter(player -> player.getWins() > 0)
                 .sorted(Comparator.comparingInt(Player::getWins).reversed())
                 .collect(Collectors.toList());
 
@@ -80,7 +87,17 @@ public class GameServiceImpl extends GameServicePOA {
     }
 
 
-    public void addActiveGame(Game pendingGame) { // TODO :  make this not exposed to the client side
+    // TODO :  make this not exposed to the client side (this method is used by another server class which is not in the same package so I can't use protected or the package protection)
+    public void addActiveGame(Game pendingGame) {
         activeGames.put(pendingGame.getGameId(), pendingGame);
+    }
+
+
+    private boolean pendingGameDoesNotExist() {
+        return !pendingGameManager.isPendingGameExists();
+    }
+
+    private boolean isTokenNotValid(String token) {
+        return !sessionManager.isSessionValid(token);
     }
 }

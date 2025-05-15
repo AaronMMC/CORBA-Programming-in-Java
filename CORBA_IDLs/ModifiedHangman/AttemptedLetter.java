@@ -10,14 +10,14 @@ package ModifiedHangman;
 
 public final class AttemptedLetter implements org.omg.CORBA.portable.IDLEntity
 {
-  public String letter = null;
+  public Character letter = null;
   public boolean isLetterCorrect = false;
 
   public AttemptedLetter ()
   {
   } // ctor
 
-  public AttemptedLetter (String _letter, boolean _isLetterCorrect)
+  public AttemptedLetter (Character _letter, boolean _isLetterCorrect)
   {
     letter = _letter;
     isLetterCorrect = _isLetterCorrect;

@@ -13,7 +13,7 @@ public class PendingGameManager {
     private Game pendingGame;
     private final ScheduledExecutorService scheduler;
     private ScheduledFuture<?> pendingGameTask;
-    private int remainingSeconds;
+    private int remainingWaitingTimeInSeconds;
     private GameServiceImpl gameService;
 
     public PendingGameManager() {
@@ -49,8 +49,12 @@ public class PendingGameManager {
         return pendingGame.getRoundDuration();
     }
 
+    public int getRemainingWaitingTimeInSeconds() {
+        return remainingWaitingTimeInSeconds;
+    }
+
     public void startCountdownToStartGame(int currentRoundLength) {
-        remainingSeconds = currentRoundLength;
+        remainingWaitingTimeInSeconds = currentRoundLength;
 
         if (pendingGameTask != null && !pendingGameTask.isDone())
             pendingGameTask.cancel(true);
@@ -58,10 +62,10 @@ public class PendingGameManager {
 
         pendingGameTask = scheduler.scheduleAtFixedRate(() -> {
             synchronized (this) {
-                if (remainingSeconds > 0)
-                    remainingSeconds -= 1;
+                if (remainingWaitingTimeInSeconds > 0)
+                    remainingWaitingTimeInSeconds -= 1;
                 else {
-                    remainingSeconds = 0;
+                    remainingWaitingTimeInSeconds = 0;
                     pendingGameTask.cancel(false);
 
                     gameService.addActiveGame(pendingGame);

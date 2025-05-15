@@ -7,14 +7,26 @@ import com.cs9322.team05.server.dao.PlayerDao;
 import java.util.List;
 
 public class AdminServiceImpl extends AdminServicePOA {
-    @Override
-    public void create_player(String username, String password, String token) {}
+    private final PlayerDao playerDao;
+
+    public AdminServiceImpl(PlayerDao playerDao) {
+        this.playerDao = playerDao;
+    }
 
     @Override
-    public void update_player(String username, String new_password, String token) {}
+    public boolean create_player(String username, String password, String token) {
+        return false;
+    }
 
     @Override
-    public void delete_player(String username, String token) {}
+    public boolean update_player(String username, String new_password, String token) {
+        return false;
+    }
+
+    @Override
+    public boolean delete_player(String username, String token) {
+        return false;
+    }
 
     @Override
     public Player search_player(String keyword, String token) {
@@ -22,8 +34,7 @@ public class AdminServiceImpl extends AdminServicePOA {
     }
 
     @Override
-    public List<Player> get_all_players(String token) {
-        PlayerDao playerDao = new PlayerDao();
+    public List<Player> get_all_players() {
         return playerDao.getAllPlayers();
     }
 
