@@ -179,8 +179,22 @@ public class AdminView {
 
     private void refreshPlayerTable() {
         List<Player> playerList = adminController.getAllPlayers(token);
-        ObservableList<Player> players = FXCollections.observableArrayList(playerList);
-        playerTable.setItems(players);
+        if (playerList != null) {
+            ObservableList<Player> players = FXCollections.observableArrayList(playerList);
+            if (playerTable != null) {
+                playerTable.setItems(players);
+            } else {
+                showAlert("UI Error", "Player table is not initialized.");
+                // You might want to log this error as well for debugging
+                System.err.println("Error: Player table is null during refresh.");
+            }
+        } else {
+            showAlert("Data Error", "Could not retrieve player list.");
+            // Optionally, you could also clear the table if it exists
+            if (playerTable != null) {
+                playerTable.getItems().clear();
+            }
+        }
     }
 
     private void fetchAndDisplayRules() {
