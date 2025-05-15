@@ -11,65 +11,129 @@ import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class ClientCallbackImpl extends ClientCallbackPOA {
+    private static final Logger logger = Logger.getLogger(ClientCallbackImpl.class.getName());
     private final ORB orb;
     private final GameService gameService;
     private final String token;
     private GameController controller;
+    private POA rootPoaInstance;
 
     public ClientCallbackImpl(ORB orb, GameService gameService, String token, GameController controller) {
         this.orb = orb;
         this.gameService = gameService;
         this.token = token;
         this.controller = controller;
+        try {
+            this.rootPoaInstance = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+            this.rootPoaInstance.the_POAManager().activate();
+        } catch (InvalidName | AdapterInactive e) {
+            logger.log(Level.SEVERE, "Failed to initialize or activate RootPOA in ClientCallbackImpl constructor", e);
+            throw new RuntimeException("POA initialization/activation failed", e);
+        }
     }
 
-    public void register() throws PlayerNotLoggedInException, ServantNotActive, WrongPolicy {
-        POA rootPoa = null;
-        try {
-            rootPoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-        } catch (InvalidName e) {
-            throw new RuntimeException(e);
+    public void register() throws PlayerNotLoggedInException, ServantNotActive, WrongPolicy, InvalidName, AdapterInactive {
+        if (rootPoaInstance == null) {
+            logger.severe("RootPOA is null in register method. Cannot proceed.");
+            throw new RuntimeException("RootPOA not initialized.");
         }
-        try {
-            rootPoa.the_POAManager().activate();
-        } catch (AdapterInactive e) {
-            throw new RuntimeException(e);
-        }
-
-        org.omg.CORBA.Object ref = rootPoa.servant_to_reference(this);
+        org.omg.CORBA.Object ref = rootPoaInstance.servant_to_reference(this);
         ClientCallback stub = ClientCallbackHelper.narrow(ref);
-
         gameService.registerCallback(stub, token);
+        logger.info("Client callback registered with the server. Token: " + token);
     }
-
 
     public void setController(GameController controller) {
         this.controller = controller;
     }
 
+    public GameController getController() {
+        return this.controller;
+    }
+
     @Override
     public void startRound(int wordLength, int roundNumber) {
-        Platform.runLater(() -> controller.onStartRound(wordLength));
+        logger.info("SERVER CALLBACK: startRound RECEIVED - wordLength: " + wordLength + ", roundNumber: " + roundNumber);
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        System.out.println("!!! SERVER CALLBACK: startRound RECEIVED !!!");
+        System.out.println("!!! wordLength: " + wordLength + ", roundNumber: " + roundNumber);
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        Platform.runLater(() -> {
+            logger.fine("Platform.runLater: Executing controller.onStartRound for round " + roundNumber);
+            System.out.println("!!! Platform.runLater executing for startRound !!!");
+            if (controller != null) {
+                controller.onStartRound(wordLength);
+            } else {
+                logger.severe("CRITICAL: GameController is NULL in startRound callback!");
+                System.err.println("!!! CRITICAL: controller is NULL in startRound callback !!!");
+            }
+        });
     }
 
     @Override
     public void proceedToNextRound(int wordLength) {
-        Platform.runLater(() -> controller.onProceedToNextRound(wordLength));
+        logger.info("SERVER CALLBACK: proceedToNextRound RECEIVED - nextWordLength: " + wordLength);
+        Platform.runLater(() -> {
+            logger.fine("Platform.runLater: Executing controller.onProceedToNextRound");
+            if (controller != null) {
+                controller.onProceedToNextRound(wordLength);
+            } else {
+                logger.severe("CRITICAL: GameController is NULL in proceedToNextRound callback!");
+            }
+        });
     }
 
     @Override
     public void endRound(RoundResult result) {
-        Platform.runLater(() -> controller.onEndRound(result));
+        String winnerUsername = "None";
+        if (result != null && result.roundWinner != null && result.roundWinner.username != null) {
+            winnerUsername = result.roundWinner.username;
+        }
+        logger.info("SERVER CALLBACK: endRound RECEIVED - Round: " + (result != null ? result.roundNumber : "N/A") + ", Winner: " + winnerUsername);
+        Platform.runLater(() -> {
+            logger.fine("Platform.runLater: Executing controller.onEndRound");
+            if (controller != null) {
+                controller.onEndRound(result);
+            } else {
+                logger.severe("CRITICAL: GameController is NULL in endRound callback!");
+            }
+        });
     }
 
     @Override
     public void endGame(GameResult result) {
-        Platform.runLater(() -> controller.onEndGame(result));
+        String winner = "N/A";
+        if (result != null && result.gameWinner != null) {
+            winner = result.gameWinner;
+        }
+        logger.info("SERVER CALLBACK: endGame RECEIVED - Game Winner: " + winner);
+        Platform.runLater(() -> {
+            logger.fine("Platform.runLater: Executing controller.onEndGame");
+            if (controller != null) {
+                controller.onEndGame(result);
+            } else {
+                logger.severe("CRITICAL: GameController is NULL in endGame callback!");
+            }
+        });
     }
 
     @Override
     public void startGameFailed() {
-        Platform.runLater(() -> controller.onEndGame(new GameResult(controller.getGameId(), "Error", /* empty leaderboard */ null)));
+        logger.info("SERVER CALLBACK: startGameFailed RECEIVED");
+        Platform.runLater(() -> {
+            logger.fine("Platform.runLater: Executing controller action for startGameFailed");
+            if (controller != null) {
+                String gameId = controller.getGameId() != null ? controller.getGameId() : "FAIL_NO_ID";
+                String failureMessage = "GAME_START_FAILED: Not enough players.";
+
+                logger.info("Processed startGameFailed: Ending game locally with failure state. Message: " + failureMessage);
+            } else {
+                logger.severe("CRITICAL: GameController is NULL in startGameFailed callback!");
+            }
+        });
     }
 }
