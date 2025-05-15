@@ -17,6 +17,7 @@ public class AuthenticationController {
     public String handleLogin(String username, String password) {
         try {
             String token = authModel.login(username, password);
+            System.out.println("authmodel.login did not throw an exception");
             if (token != null && !token.isEmpty()) {
                 if (onLoginSuccess != null) {
                     onLoginSuccess.accept(username, token);

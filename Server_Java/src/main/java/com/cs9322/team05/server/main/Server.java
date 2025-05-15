@@ -2,6 +2,7 @@ package com.cs9322.team05.server.main;
 
 import ModifiedHangman.*;
 import com.cs9322.team05.server.dao.DatabaseConnection;
+import com.cs9322.team05.server.dao.WordDao;
 import com.cs9322.team05.server.impl.AdminServiceImpl;
 import com.cs9322.team05.server.impl.AuthenticationServiceImpl;
 import com.cs9322.team05.server.impl.GameServiceImpl;
@@ -38,6 +39,7 @@ public class Server {
             Connection connection = DatabaseConnection.getConnection();
             UserDao userDao = new UserDao(connection);
             GameDao gameDao = new GameDao(connection);
+            WordDao.getInstance(connection);
             SessionManager sessionManager = SessionManager.getInstance();
             PendingGameManager pendingGameManager = new PendingGameManager();
 

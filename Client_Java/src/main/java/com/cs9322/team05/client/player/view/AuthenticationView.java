@@ -60,7 +60,7 @@ public class AuthenticationView {
 
         loginBtn.setOnAction(evt -> {
             String username = userField.getText().trim();
-            String password = passField.getText();
+            String password = passField.getText().trim();
             String result = controller.handleLogin(username, password);
             showAlert(result);
 

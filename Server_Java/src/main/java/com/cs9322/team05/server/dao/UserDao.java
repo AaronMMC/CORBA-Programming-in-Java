@@ -45,19 +45,18 @@ public class UserDao {
         System.out.println("UserDao.getAllPlayers: Attempting to fetch all players.");
         List<Player> players = new ArrayList<>();
         String query = "SELECT username, hashed_password, totalWins FROM player";
-        try (Connection conn = DatabaseConnection.getConnection(); // Assuming you get connection this way
-             PreparedStatement stmt = conn.prepareStatement(query);
+        try (PreparedStatement stmt = connection.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
 
             int count = 0;
             while (rs.next()) {
                 Player player = new Player();
                 player.username = rs.getString("username");
-                player.password = rs.getString("hashed_password"); // This is the HASH
+                player.password = rs.getString("hashed_password");
                 player.wins = rs.getInt("totalWins");
                 players.add(player);
                 count++;
-                System.out.println("UserDao.getAllPlayers: Fetched and added player - Username: " + player.username + ", Wins: " + player.wins); // ADD more detail
+                System.out.println("UserDao.getAllPlayers: Fetched and added player - Username: " + player.username + ", Wins: " + player.wins);
             }
             System.out.println("UserDao.getAllPlayers: Total players fetched from database: " + count);
         } catch (SQLException e) {
@@ -109,13 +108,13 @@ public class UserDao {
 
 
     public Admin getAdminByUsername(String username) {
-        String query = "SELECT username, hashed_password FROM admin WHERE username = ?";
+        String query = "SELECT * FROM admin WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String uname = rs.getString("username");
-                String password = rs.getString("hashed_password");
+                String password = rs.getString("password");
                 return new Admin(uname, password);
             }
         } catch (SQLException e) {

@@ -9,13 +9,9 @@ public class DatabaseConnection {
 
     public static Connection getConnection() throws SQLException {
         if (connection == null)
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/hangman", "root", "");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/hangman", "jimhendrix", "jimhendrix24");
 
         return connection;
     }
 
-    public static void closeConnection() throws SQLException {
-        if (connection != null)
-            connection.close();
-    }
 }

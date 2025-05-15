@@ -10,23 +10,28 @@ public class WordDao {
     private static WordDao instance;
     private static Connection connection;
 
-    private WordDao() {
-        if (connection == null) {
-            try {
-                connection = DatabaseConnection.getConnection();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                throw new RuntimeException("Failed to initialize WordDao, connection error.", e);
-            }
-        }
+    private WordDao(Connection connection) {
+        if (WordDao.connection == null)
+            WordDao.connection = connection;
+
     }
 
-    public static synchronized WordDao getInstance() {
-        if (instance == null) {
-            instance = new WordDao();
-        }
+    public static synchronized WordDao getInstance(Connection connection) {
+        if (instance == null)
+            instance = new WordDao(connection);
+
         return instance;
     }
+
+
+    public static synchronized WordDao getInstance() {
+        if (instance == null)
+            throw new RuntimeException("No connection established here. ");
+
+        return instance;
+    }
+
+
 
     public String getAWord() {
         String query = "SELECT word FROM Word ORDER BY RAND() LIMIT 1";
