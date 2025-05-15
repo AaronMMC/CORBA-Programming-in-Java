@@ -25,14 +25,15 @@ module ModifiedHangman {
 
   struct RoundResult {
       string gameId;
-      string roundWinner;
-      long roundWinnerTime;
+      long roundNumber;
+      GamePlayer roundWinner;
+      string wordToGuess;
       string statusMessage; // it can be "You've done it in 20 seconds" or "You did not guessed it" or "You won this round"
       sequence<GamePlayer> currentGameLeaderboard;
     };
 
   interface ClientCallback {
-    void startRound(in long wordLength);
+    void startRound(in long wordLength, in long roundNumber);
     void startGameFailed();
     void endGame(in GameResult gameResult);
     void endRound(in RoundResult roundResult);

@@ -49,7 +49,7 @@ public class ClientCallbackImpl extends ClientCallbackPOA {
     }
 
     @Override
-    public void startRound(int wordLength) {
+    public void startRound(int wordLength, int roundNumber) {
         Platform.runLater(() -> controller.onStartRound(wordLength));
     }
 

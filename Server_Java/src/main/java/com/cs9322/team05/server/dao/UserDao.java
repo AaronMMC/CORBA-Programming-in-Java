@@ -15,7 +15,7 @@ public class UserDao {
     }
 
     public void addPlayer(Player player) {
-        String query = " INSERT INTO players (username, password, total_wins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, total_wins = ? ";
+        String query = " INSERT INTO player (username, password, total_wins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, total_wins = ? ";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, player.username);
@@ -61,7 +61,7 @@ public class UserDao {
     }
 
     public Player getPlayerByUsername(String username) {
-        String query = "SELECT username, password, total_wins FROM players WHERE username = ?";
+        String query = "SELECT username, password, total_wins FROM player WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, username);
@@ -81,7 +81,7 @@ public class UserDao {
     }
 
     public void updatePlayer(Player player) {
-        String query = "UPDATE players SET password = ?, total_wins = ? WHERE username = ?";
+        String query = "UPDATE player SET password = ?, total_wins = ? WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, player.password);

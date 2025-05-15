@@ -18,7 +18,7 @@ public class ClientCallbackService implements ClientCallback {
     }
 
     @Override
-    public void startRound(int wordLength) {
+    public void startRound(int wordLength, int roundNumber) {
         controller.onStartRound(wordLength);
     }
 

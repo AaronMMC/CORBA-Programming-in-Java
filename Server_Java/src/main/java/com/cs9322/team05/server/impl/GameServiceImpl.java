@@ -124,8 +124,6 @@ public class GameServiceImpl extends GameServicePOA {
         else {
             activeGames.put(pendingGame.getGameId(), pendingGame);
             pendingGame.startGame();
-//            for (GamePlayer player : pendingGame.getPlayers())
-//                sessionManager.getCallback(player.username).startRound();
         }
     }
 
