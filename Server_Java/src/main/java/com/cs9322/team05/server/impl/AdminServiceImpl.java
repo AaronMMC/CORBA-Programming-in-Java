@@ -8,19 +8,13 @@ import java.util.List;
 
 public class AdminServiceImpl extends AdminServicePOA {
     @Override
-    public boolean create_player(String username, String password, String token) {
-        return false;
-    }
+    public void create_player(String username, String password, String token) {}
 
     @Override
-    public boolean update_player(String username, String new_password, String token) {
-        return false;
-    }
+    public void update_player(String username, String new_password, String token) {}
 
     @Override
-    public boolean delete_player(String username, String token) {
-        return false;
-    }
+    public void delete_player(String username, String token) {}
 
     @Override
     public Player search_player(String keyword, String token) {
@@ -28,7 +22,7 @@ public class AdminServiceImpl extends AdminServicePOA {
     }
 
     @Override
-    public List<Player> get_all_players() {
+    public List<Player> get_all_players(String token) {
         PlayerDao playerDao = new PlayerDao();
         return playerDao.getAllPlayers();
     }

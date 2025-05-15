@@ -43,10 +43,8 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
          String username = in.read_string ();
          String password = in.read_string ();
          String token = in.read_string ();
-         boolean $result = false;
-         $result = this.create_player (username, password, token);
+         this.create_player (username, password, token);
          out = $rh.createReply();
-         out.write_boolean ($result);
          break;
        }
 
@@ -55,10 +53,8 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
          String username = in.read_string ();
          String new_password = in.read_string ();
          String token = in.read_string ();
-         boolean $result = false;
-         $result = this.update_player (username, new_password, token);
+         this.update_player (username, new_password, token);
          out = $rh.createReply();
-         out.write_boolean ($result);
          break;
        }
 
@@ -66,10 +62,8 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
        {
          String username = in.read_string ();
          String token = in.read_string ();
-         boolean $result = false;
-         $result = this.delete_player (username, token);
+         this.delete_player (username, token);
          out = $rh.createReply();
-         out.write_boolean ($result);
          break;
        }
 
@@ -98,7 +92,8 @@ public abstract class AdminServicePOA extends org.omg.PortableServer.Servant
 
         case 5:  // ModifiedHangman/AdminService/get_all_players
         {
-            java.util.List<ModifiedHangman.Player> $result = this.get_all_players(); // Call the servant method
+            String token = in.read_string ();
+            java.util.List<ModifiedHangman.Player> $result = this.get_all_players(token); // Call the servant method
             out = $rh.createReply();
             // Use the helper to write the list of Players.
             // Iterate through the list and write each Player using PlayerHelper.write

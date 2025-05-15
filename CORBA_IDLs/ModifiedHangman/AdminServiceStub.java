@@ -14,7 +14,7 @@ import java.util.List;
 public class AdminServiceStub extends org.omg.CORBA.portable.ObjectImpl implements ModifiedHangman.AdminService
 {
 
-  public boolean create_player (String username, String password, String token)
+  public void create_player (String username, String password, String token)
   {
             org.omg.CORBA.portable.InputStream $in = null;
             try {
@@ -23,20 +23,19 @@ public class AdminServiceStub extends org.omg.CORBA.portable.ObjectImpl implemen
                 $out.write_string (password);
                 $out.write_string (token);
                 $in = _invoke ($out);
-                boolean $result = $in.read_boolean ();
-                return $result;
+                $in.read_boolean ();
             } catch (org.omg.CORBA.portable.ApplicationException $ex) {
                 $in = $ex.getInputStream ();
                 String _id = $ex.getId ();
                 throw new org.omg.CORBA.MARSHAL (_id);
             } catch (org.omg.CORBA.portable.RemarshalException $rm) {
-                return create_player (username, password, token        );
+                create_player (username, password, token        );
             } finally {
                 _releaseReply ($in);
             }
   } // create_player
 
-  public boolean update_player (String username, String new_password, String token)
+  public void update_player (String username, String new_password, String token)
   {
             org.omg.CORBA.portable.InputStream $in = null;
             try {
@@ -45,20 +44,19 @@ public class AdminServiceStub extends org.omg.CORBA.portable.ObjectImpl implemen
                 $out.write_string (new_password);
                 $out.write_string (token);
                 $in = _invoke ($out);
-                boolean $result = $in.read_boolean ();
-                return $result;
+                $in.read_boolean ();
             } catch (org.omg.CORBA.portable.ApplicationException $ex) {
                 $in = $ex.getInputStream ();
                 String _id = $ex.getId ();
                 throw new org.omg.CORBA.MARSHAL (_id);
             } catch (org.omg.CORBA.portable.RemarshalException $rm) {
-                return update_player (username, new_password, token        );
+                update_player (username, new_password, token        );
             } finally {
                 _releaseReply ($in);
             }
   } // update_player
 
-  public boolean delete_player (String username, String token)
+  public void delete_player (String username, String token)
   {
             org.omg.CORBA.portable.InputStream $in = null;
             try {
@@ -66,14 +64,13 @@ public class AdminServiceStub extends org.omg.CORBA.portable.ObjectImpl implemen
                 $out.write_string (username);
                 $out.write_string (token);
                 $in = _invoke ($out);
-                boolean $result = $in.read_boolean ();
-                return $result;
+                $in.read_boolean ();
             } catch (org.omg.CORBA.portable.ApplicationException $ex) {
                 $in = $ex.getInputStream ();
                 String _id = $ex.getId ();
                 throw new org.omg.CORBA.MARSHAL (_id);
             } catch (org.omg.CORBA.portable.RemarshalException $rm) {
-                return delete_player (username, token        );
+                delete_player (username, token        );
             } finally {
                 _releaseReply ($in);
             }
@@ -101,11 +98,12 @@ public class AdminServiceStub extends org.omg.CORBA.portable.ObjectImpl implemen
         }
     } // search_player
 
-    public java.util.List<Player> get_all_players()
+    public java.util.List<Player> get_all_players(String token)
     {
         org.omg.CORBA.portable.InputStream $in = null;
         try {
             org.omg.CORBA.portable.OutputStream $out = _request ("get_all_players", true); // Correct operation name
+            $out.write_string (token);
             $in = _invoke ($out);
             //  Use the generated helper class (PlayerListHelper) to read the sequence.
             java.util.List<Player> $result = new java.util.ArrayList<Player>();
@@ -119,7 +117,7 @@ public class AdminServiceStub extends org.omg.CORBA.portable.ObjectImpl implemen
             String _id = $ex.getId ();
             throw new org.omg.CORBA.MARSHAL (_id);
         } catch (org.omg.CORBA.portable.RemarshalException $rm) {
-            return get_all_players ();
+            return get_all_players (token);
         } finally {
             _releaseReply ($in);
         }
