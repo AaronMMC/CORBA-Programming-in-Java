@@ -15,7 +15,7 @@ public class UserDao {
     }
 
     public void addPlayer(Player player) {
-        String query = " INSERT INTO players (username, password, total_wins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, total_wins = ? ";
+        String query = " INSERT INTO player (username, hashed_password, totalWins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE hashed_password = ?, totalWins = ? ";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, player.username);
@@ -31,7 +31,7 @@ public class UserDao {
     }
 
     public void removePlayer(String username) {
-        String query = "DELETE FROM players WHERE username = ?";
+        String query = "DELETE FROM player WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, username);
@@ -43,15 +43,15 @@ public class UserDao {
 
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
-        String query = "SELECT username, password, total_wins FROM players";
+        String query = "SELECT username, hashed_password, totalWins FROM players";
         try (PreparedStatement stmt = connection.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Player player = new Player();
                 player.username = rs.getString("username");
-                player.password = rs.getString("password");
-                player.wins = rs.getInt("total_wins");
+                player.password = rs.getString("hashed_password");
+                player.wins = rs.getInt("totalWins");
                 players.add(player);
             }
         } catch (SQLException e) {
@@ -61,7 +61,7 @@ public class UserDao {
     }
 
     public Player getPlayerByUsername(String username) {
-        String query = "SELECT username, password, total_wins FROM players WHERE username = ?";
+        String query = "SELECT username, hashed_password, totalWins FROM player WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, username);
@@ -69,8 +69,8 @@ public class UserDao {
                 if (rs.next()) {
                     Player player = new Player();
                     player.username = rs.getString("username");
-                    player.password = rs.getString("password");
-                    player.wins = rs.getInt("total_wins");
+                    player.password = rs.getString("hashed_password");
+                    player.wins = rs.getInt("totalWins");
                     return player;
                 }
             }
@@ -81,7 +81,7 @@ public class UserDao {
     }
 
     public void updatePlayer(Player player) {
-        String query = "UPDATE players SET password = ?, total_wins = ? WHERE username = ?";
+        String query = "UPDATE player SET hashed_password = ?, totalWins = ? WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, player.password);
@@ -101,13 +101,13 @@ public class UserDao {
 
 
     public Admin getAdminByUsername(String username) {
-        String query = "SELECT username, password FROM admin WHERE username = ?";
+        String query = "SELECT username, hashed_password FROM admin WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String uname = rs.getString("username");
-                String password = rs.getString("password");
+                String password = rs.getString("hashed_password");
                 return new Admin(uname, password);
             }
         } catch (SQLException e) {

@@ -49,7 +49,7 @@ public class HomeView implements HomeViewInterface {
         new Alert(Alert.AlertType.INFORMATION, sb.toString()).showAndWait();
     }
 
-    public void returnToLogin() { /* swap back to LoginView scene */ }
+    public void returnToLogin() { /* swap back to AuthenticationView scene */ }
 
     public void showError(String msg) {
         new Alert(Alert.AlertType.ERROR, msg).showAndWait();

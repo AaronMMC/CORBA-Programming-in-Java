@@ -3,7 +3,7 @@ package com.cs9322.team05.client.main;
 import com.cs9322.team05.client.admin.view.AdminView;
 import com.cs9322.team05.client.player.services.HomeView;
 import com.cs9322.team05.client.player.view.GameView;
-import com.cs9322.team05.client.player.view.LoginView;
+import com.cs9322.team05.client.player.view.AuthenticationView;
 import com.cs9322.team05.client.player.view.MatchmakingView;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -21,8 +21,8 @@ public class ViewTestApp extends Application {
         TabPane tabs = new TabPane();
 
 
-        LoginView loginView = new LoginView(null);
-        tabs.getTabs().add(new Tab("Login", loginView.createLoginPane()));
+        AuthenticationView authenticationView = new AuthenticationView(null);
+        tabs.getTabs().add(new Tab("Login", authenticationView.createLoginPane()));
 
 
         HomeView homeView = new HomeView("dummy-token", null);
