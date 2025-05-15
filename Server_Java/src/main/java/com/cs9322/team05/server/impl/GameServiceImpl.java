@@ -87,6 +87,7 @@ public class GameServiceImpl extends GameServicePOA {
     }
 
 
+    // this ain't declared in the .idl file, so clients can't call it? should be //
     // TODO :  make this not exposed to the client side (this method is used by another server class which is not in the same package so I can't use protected or the package protection)
     public void addActiveGame(Game pendingGame) {
         activeGames.put(pendingGame.getGameId(), pendingGame);

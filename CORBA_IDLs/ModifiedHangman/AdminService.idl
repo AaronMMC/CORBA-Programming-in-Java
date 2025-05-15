@@ -1,16 +1,44 @@
 module ModifiedHangman {
+
+  exception AdminNotLoggedInException {
+    string message;
+  };
+
+  struct Player {
+    string username;
+    string password;
+    long wins;
+  };
+
+  typedef sequence<Player> PlayerList;
+
   interface AdminService {
 
-    void create_player(in string username, in string password, in string token);
-    void update_player(in string username, in string new_password, in string token);
-    void delete_player(in string username, in string token);
-    Player search_player(in string keyword, in string token);
-    List<Player> get_all_player (in string token);
+    void create_player(in string username, in string password, in string token)
+      raises (AdminNotLoggedInException);
 
-    void set_waiting_time(in long seconds, in string token);
-    void set_round_duration(in long seconds, in string token);
-    long get_waiting_time(in string token);
-    long get_round_duration(in string token);
+    void update_player(in string username, in string new_password, in string token)
+      raises (AdminNotLoggedInException);
 
+    void delete_player(in string username, in string token)
+      raises (AdminNotLoggedInException);
+
+    Player search_player(in string keyword, in string token)
+      raises (AdminNotLoggedInException);
+
+    PlayerList get_all_player(in string token)
+      raises (AdminNotLoggedInException);
+
+    void set_waiting_time(in long seconds, in string token)
+      raises (AdminNotLoggedInException);
+
+    void set_round_duration(in long seconds, in string token)
+      raises (AdminNotLoggedInException);
+
+    long get_waiting_time(in string token)
+      raises (AdminNotLoggedInException);
+
+    long get_round_duration(in string token)
+      raises (AdminNotLoggedInException);
   };
 };

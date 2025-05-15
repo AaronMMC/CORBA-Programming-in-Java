@@ -1,6 +1,12 @@
 module ModifiedHangman {
-  exception GameNotFoundException {};
-  exception PlayerNotLoggedInException {};
+  exception GameNotFoundException {
+    string message;
+  };
+
+  exception PlayerNotLoggedInException {
+    string message;
+  };
+
 
 
 
