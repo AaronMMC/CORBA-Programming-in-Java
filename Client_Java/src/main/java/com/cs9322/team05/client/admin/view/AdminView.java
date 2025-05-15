@@ -55,6 +55,10 @@ public class AdminView {
         addPlayerBtn.setOnAction(event -> {
             String username = usernameField.getText();
             String password = passwordField.getText();
+            if (username.isEmpty() || password.isEmpty()) {
+                showAlert("Empty Fields", "Please enter both username and password.");
+                return;
+            }
             adminController.create_player(username, password, token);
             usernameField.clear();
             passwordField.clear();
@@ -82,14 +86,18 @@ public class AdminView {
         GridPane.setConstraints(updatePlayerBtn, 2, 5);
         updatePlayerBtn.setOnAction(event -> {
             Player selectedPlayer = playerTable.getSelectionModel().getSelectedItem();
-            if (selectedPlayer != null) {
-                String newPassword = updatePasswordField.getText();
-                adminController.update_player(selectedPlayer.getUsername(), newPassword, token);
-                updatePasswordField.clear();
-                refreshPlayerTable();
-            } else {
+            if (selectedPlayer == null) {
                 showAlert("No Player Selected", "Please select a player to update.");
+                return;
             }
+            String newPassword = updatePasswordField.getText();
+            if (newPassword.isEmpty()) {
+                showAlert("Empty Field", "Please enter a new username.");
+                return;
+            }
+            adminController.update_player(selectedPlayer.getUsername(), newPassword, token);
+            updatePasswordField.clear();
+            refreshPlayerTable();
         });
 
         // Delete Player Section
@@ -99,14 +107,14 @@ public class AdminView {
         GridPane.setConstraints(deletePlayerBtn, 0, 7, 3, 1);
         deletePlayerBtn.setOnAction(event -> {
             Player selectedPlayer = playerTable.getSelectionModel().getSelectedItem();
-            if (selectedPlayer != null) {
+            if (selectedPlayer == null) {
+                showAlert("No Player Selected", "Please select a player to delete.");
+            } else {
                 boolean confirmed = showConfirmation("Confirm Delete", "Are you sure you want to delete player: " + selectedPlayer.getUsername() + "?");
                 if (confirmed) {
                     adminController.delete_player(selectedPlayer.getUsername(), token);
                     refreshPlayerTable();
                 }
-            } else {
-                showAlert("No Player Selected", "Please select a player to delete.");
             }
         });
 
@@ -121,8 +129,13 @@ public class AdminView {
         Button setWaitingTimeBtn = new Button("Set");
         GridPane.setConstraints(setWaitingTimeBtn, 2, 9);
         setWaitingTimeBtn.setOnAction(event -> {
+            String waitingTimeText = waitingTimeField.getText();
+            if (waitingTimeText.isEmpty()) {
+                showAlert("Empty Field", "Please enter a value for waiting time.");
+                return;
+            }
             try {
-                int newWaitingTime = Integer.parseInt(waitingTimeField.getText());
+                int newWaitingTime = Integer.parseInt(waitingTimeText);
                 adminController.set_waiting_time(newWaitingTime, token);
                 fetchAndDisplayRules();
             } catch (NumberFormatException e) {
@@ -137,8 +150,13 @@ public class AdminView {
         Button setRoundDurationBtn = new Button("Set");
         GridPane.setConstraints(setRoundDurationBtn, 2, 10);
         setRoundDurationBtn.setOnAction(event -> {
+            String roundDurationText = roundDurationField.getText();
+            if (roundDurationText.isEmpty()) {
+                showAlert("Empty Field", "Please enter a value for round duration.");
+                return;
+            }
             try {
-                int newRoundDuration = Integer.parseInt(roundDurationField.getText());
+                int newRoundDuration = Integer.parseInt(roundDurationText);
                 adminController.set_round_duration(newRoundDuration, token);
                 fetchAndDisplayRules();
             } catch (NumberFormatException e) {
