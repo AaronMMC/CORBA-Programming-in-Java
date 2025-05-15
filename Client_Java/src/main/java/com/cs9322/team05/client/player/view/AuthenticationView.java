@@ -1,6 +1,6 @@
 package com.cs9322.team05.client.player.view;
 
-import com.cs9322.team05.client.player.controller.LoginController;
+import com.cs9322.team05.client.player.controller.AuthenticationController;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
@@ -12,11 +12,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-public class LoginView {
-    private final LoginController controller;
+public class AuthenticationView {
+    private final AuthenticationController controller;
     private String currentToken = "";
 
-    public LoginView(LoginController controller) {
+    public AuthenticationView(AuthenticationController controller) {
         this.controller = controller;
     }
 

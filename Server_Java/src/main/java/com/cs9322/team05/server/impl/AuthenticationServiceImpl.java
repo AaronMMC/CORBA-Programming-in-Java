@@ -18,24 +18,31 @@ public class AuthenticationServiceImpl extends AuthenticationServicePOA {
 
 
     @Override
-    public String login(String username, String password) throws LogInException { // it should throw PlayerNotFoundException
+    public String login(String username, String password) throws LogInException {
+
         Player player = userDao.getPlayerByUsername(username);
         if (player != null) {
-            if (BCrypt.checkpw(password, player.password))
+            String storedHash = player.password;
+            if (BCrypt.checkpw(password, storedHash)) {
                 return sessionManager.createSession(username, "player");
-            else
-                throw new LogInException("Incorrect password. Please try again.");
+            } else {
+                throw new LogInException("Incorrect password.");
+            }
         }
 
         Admin admin = userDao.getAdminByUsername(username);
-        if (admin != null)
-            if (admin.getPassword().equals(password))
+        if (admin != null) {
+            String storedHash = admin.getPassword();
+            if (BCrypt.checkpw(password, storedHash)) {
                 return sessionManager.createSession(username, "admin");
-            else
-                throw new LogInException("Incorrect password. Please try again.");
+            } else {
+                throw new LogInException("Incorrect password.");
+            }
+        }
 
-        throw new LogInException("User not found. Please try again.");
+        throw new LogInException("User not found.");
     }
+
 
     @Override
     public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {

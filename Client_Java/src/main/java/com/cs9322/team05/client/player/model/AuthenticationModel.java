@@ -4,10 +4,10 @@ import ModifiedHangman.AuthenticationService;
 import ModifiedHangman.LogInException;
 import ModifiedHangman.PlayerNotLoggedInException;
 
-public class LoginModel {
+public class AuthenticationModel {
     private static AuthenticationService authServiceImpl;
-    public LoginModel(AuthenticationService authService){
-        LoginModel.authServiceImpl = authService;
+    public AuthenticationModel(AuthenticationService authService){
+        AuthenticationModel.authServiceImpl = authService;
     }
     public String login (String username, String password) throws LogInException {
         return authServiceImpl.login(username,password);

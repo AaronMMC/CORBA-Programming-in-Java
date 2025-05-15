@@ -2,15 +2,15 @@ package com.cs9322.team05.client.player.controller;
 
 import ModifiedHangman.LogInException;
 import ModifiedHangman.PlayerNotLoggedInException;
-import com.cs9322.team05.client.player.model.LoginModel;
+import com.cs9322.team05.client.player.model.AuthenticationModel;
 
 import java.util.function.BiConsumer;
 
-public class LoginController {
-    private final LoginModel authModel;
+public class AuthenticationController {
+    private final AuthenticationModel authModel;
     private BiConsumer<String, String> onLoginSuccess;
 
-    public LoginController(LoginModel authModel) {
+    public AuthenticationController(AuthenticationModel authModel) {
         this.authModel = authModel;
     }
 

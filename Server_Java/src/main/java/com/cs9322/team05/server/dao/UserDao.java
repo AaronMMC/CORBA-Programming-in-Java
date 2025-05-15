@@ -31,7 +31,7 @@ public class UserDao {
     }
 
     public void removePlayer(String username) {
-        String query = "DELETE FROM players WHERE username = ?";
+        String query = "DELETE FROM player WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, username);
@@ -50,8 +50,8 @@ public class UserDao {
             while (rs.next()) {
                 Player player = new Player();
                 player.username = rs.getString("username");
-                player.password = rs.getString("password");
-                player.wins = rs.getInt("total_wins");
+                player.password = rs.getString("hashed_password");
+                player.wins = rs.getInt("totalWins");
                 players.add(player);
             }
         } catch (SQLException e) {
@@ -69,8 +69,8 @@ public class UserDao {
                 if (rs.next()) {
                     Player player = new Player();
                     player.username = rs.getString("username");
-                    player.password = rs.getString("password");
-                    player.wins = rs.getInt("total_wins");
+                    player.password = rs.getString("hashed_password");
+                    player.wins = rs.getInt("totalWins");
                     return player;
                 }
             }
@@ -101,13 +101,13 @@ public class UserDao {
 
 
     public Admin getAdminByUsername(String username) {
-        String query = "SELECT username, password FROM admin WHERE username = ?";
+        String query = "SELECT username, hashed_password FROM admin WHERE username = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String uname = rs.getString("username");
-                String password = rs.getString("password");
+                String password = rs.getString("hashed_password");
                 return new Admin(uname, password);
             }
         } catch (SQLException e) {

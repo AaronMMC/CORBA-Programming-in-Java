@@ -1,18 +1,18 @@
 // HomeController.java
 package com.cs9322.team05.client.player.services;
 import ModifiedHangman.PlayerNotLoggedInException;
-import com.cs9322.team05.client.player.model.LoginModel;
+import com.cs9322.team05.client.player.model.AuthenticationModel;
 import com.cs9322.team05.client.player.model.LeaderboardModel;
 import com.cs9322.team05.client.player.model.GameModel;
 import com.cs9322.team05.client.player.interfaces.HomeViewInterface;
 
 public class HomeController {
-  private final LoginModel auth;
+  private final AuthenticationModel auth;
   private final GameModel gameModel;
   private final LeaderboardModel lbModel;
   private HomeViewInterface view;
 
-  public HomeController(LoginModel auth,
+  public HomeController(AuthenticationModel auth,
                         GameModel gameModel,
                         LeaderboardModel lbModel,
                         HomeViewInterface view) {
