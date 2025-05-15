@@ -5,7 +5,7 @@ import com.cs9322.team05.server.dao.DatabaseConnection;
 import com.cs9322.team05.server.impl.AdminServiceImpl;
 import com.cs9322.team05.server.impl.AuthenticationServiceImpl;
 import com.cs9322.team05.server.impl.GameServiceImpl;
-import com.cs9322.team05.server.dao.PlayerDao;
+import com.cs9322.team05.server.dao.UserDao;
 import com.cs9322.team05.server.dao.GameDao;
 import com.cs9322.team05.server.manager.SessionManager;
 import com.cs9322.team05.server.manager.PendingGameManager;
@@ -24,7 +24,7 @@ public class Server {
             Connection connection = DatabaseConnection.getConnection();
 
             // DAOs and Managers
-            PlayerDao playerDao = new PlayerDao(connection);
+            UserDao playerDao = new UserDao(connection);
             GameDao gameDao = new GameDao(connection);
             SessionManager sessionManager = new SessionManager();
             PendingGameManager pendingGameManager = new PendingGameManager();

@@ -2,7 +2,6 @@ package com.cs9322.team05.server.manager;
 
 import ModifiedHangman.ClientCallback;
 
-import javax.security.auth.callback.Callback;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -23,7 +22,7 @@ public class SessionManager {
     }
 
 
-    public String createSession(String username) {
+    public String createSession(String username, String player) {
         String token = UUID.randomUUID().toString();
         userSessions.put(token, username);
         return token;

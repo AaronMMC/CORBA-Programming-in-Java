@@ -2,27 +2,26 @@ package com.cs9322.team05.server.impl;
 
 import ModifiedHangman.*;
 import com.cs9322.team05.server.dao.GameDao;
-import com.cs9322.team05.server.dao.PlayerDao;
+import com.cs9322.team05.server.dao.UserDao;
 import com.cs9322.team05.server.model.Game;
 import com.cs9322.team05.server.manager.PendingGameManager;
 import com.cs9322.team05.server.manager.SessionManager;
-import com.cs9322.team05.server.model.GameRound;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class GameServiceImpl extends GameServicePOA {
     private GameDao gameDao;
-    private PlayerDao playerDao;
+    private UserDao userDao;
     private SessionManager sessionManager;
     private PendingGameManager pendingGameManager;
     private Map<String, Game> activeGames;
 
 
-    public GameServiceImpl(SessionManager sessionManager, GameDao gameDao, PlayerDao playerDao, PendingGameManager pendingGameManager) {
+    public GameServiceImpl(SessionManager sessionManager, GameDao gameDao, UserDao userDao, PendingGameManager pendingGameManager) {
         this.sessionManager = sessionManager;
         this.gameDao = gameDao;
-        this.playerDao = playerDao;
+        this.userDao = userDao;
         this.activeGames = new HashMap<>();
         this.pendingGameManager = pendingGameManager;
     }
@@ -31,7 +30,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public GameInfo start_game(String username, String token) throws PlayerNotLoggedInException {
-        if (isTokenValid(token))
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         if (pendingGameDoesNotExist()) {
@@ -51,7 +50,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {
-        if (isTokenValid(token))
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         sessionManager.addCallback(callback, token);
@@ -61,7 +60,7 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public GuessResponse guessLetter(String username, String gameId, char letter, String token) throws GameNotFoundException, PlayerNotLoggedInException {
-        if (isTokenValid(token))
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         Game game = activeGames.get(gameId);
@@ -73,10 +72,10 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public Leaderboard get_leaderboard(String token) throws PlayerNotLoggedInException {
-        if (isTokenValid(token))
+        if (!!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
-        List<Player> players = playerDao.getAllPlayers();
+        List<Player> players = userDao.getAllPlayers();
 
         List<Player> sortedPlayers = players.stream()
                 .filter(player -> player.wins > 0)
@@ -90,6 +89,15 @@ public class GameServiceImpl extends GameServicePOA {
         }
 
         return new Leaderboard(gamePlayers);
+    }
+    
+    
+    // TODO : add this to the IDL file
+    public Player getPlayerByUsername(String username, String token) throws PlayerNotLoggedInException {
+        if (!isTokenValid(token))
+            throw new PlayerNotLoggedInException("Player is not Logged in.");
+        
+        return userDao.getPlayerByUsername(username);
     }
 
 

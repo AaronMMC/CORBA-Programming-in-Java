@@ -1,15 +1,16 @@
 package com.cs9322.team05.server.dao;
 
 import ModifiedHangman.Player;
+import com.cs9322.team05.server.model.Admin;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlayerDao {
+public class UserDao {
     private final Connection connection;
 
-    public PlayerDao(Connection connection) {
+    public UserDao(Connection connection) {
         this.connection = connection;
     }
 
@@ -95,6 +96,24 @@ public class PlayerDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+
+    public Admin getAdminByUsername(String username) {
+        String query = "SELECT username, password FROM admin WHERE username = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String uname = rs.getString("username");
+                String password = rs.getString("password");
+                return new Admin(uname, password);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
