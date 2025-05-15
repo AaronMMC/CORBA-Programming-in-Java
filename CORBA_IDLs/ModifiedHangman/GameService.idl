@@ -7,39 +7,33 @@ module ModifiedHangman {
     string message;
   };
 
+  struct GamePlayer {
+    string username;
+    long wins; // can be used in a game (round wins) or leaderboards (game wins)
+  };
 
-
-
-    struct GamePlayer {
-      string username;
-      long wins; // can be used in a game (round wins) or leaderboards (game wins)
-    };
-
-
-    struct GameResult {
-      string gameId;
-      string gameWinner;
-      sequence<GamePlayer> leaderboard;
-    };
-
+  struct GameResult {
+    string gameId;
+    string gameWinner;
+    sequence<GamePlayer> leaderboard;
+  };
 
   struct RoundResult {
-      string gameId;
-      long roundNumber;
-      GamePlayer roundWinner;
-      string wordToGuess;
-      string statusMessage; // it can be "You've done it in 20 seconds" or "You did not guessed it" or "You won this round"
-      sequence<GamePlayer> currentGameLeaderboard;
-    };
+    string gameId;
+    long roundNumber;
+    GamePlayer roundWinner;
+    string wordToGuess;
+    string statusMessage; // it can be "You've done it in 20 seconds" or "You did not guessed it" or "You won this round"
+    sequence<GamePlayer> currentGameLeaderboard;
+  };
 
   interface ClientCallback {
     void startRound(in long wordLength, in long roundNumber);
     void startGameFailed();
-    void endGame(in GameResult gameResult);
-    void endRound(in RoundResult roundResult);
-    void proceedToNextRound(in long wordLength);
+    void endGame(in GameResult gameResultData);
+    void endRound(in RoundResult roundResultData);
+    void proceedToNextRound(in long wordLength, in long roundNUmber);
   };
-
 
   struct Player {
     string username;
@@ -47,12 +41,10 @@ module ModifiedHangman {
     long wins;
   };
 
-
   struct AttemptedLetter {
     char letter;
     boolean isLetterCorrect;
   };
-
 
   struct GuessResponse {
     boolean isWordGuessed;
@@ -60,7 +52,6 @@ module ModifiedHangman {
     sequence<AttemptedLetter> attemptedLetters;
     long remainingAttemptsLeft;
   };
-
 
   struct GameInfo {
     string gameId;
@@ -72,21 +63,18 @@ module ModifiedHangman {
     sequence<GamePlayer> players;
   };
 
-
   interface GameService {
+    void registerCallback(in ClientCallback callback, in string token) raises (PlayerNotLoggedInException);
 
-      void registerCallback(in ClientCallback callback, in string token) raises (PlayerNotLoggedInException);
-      GameInfo start_game(in string username, in string token) raises (PlayerNotLoggedInException);
+    GameInfo start_game(in string username, in string token) raises (PlayerNotLoggedInException);
 
-      GuessResponse guessLetter(
-        in string username,
-        in string gameId,
-        in char letter,
-        in string token
-      ) raises (GameNotFoundException, PlayerNotLoggedInException);
+    GuessResponse guessLetter(
+      in string username,
+      in string gameId,
+      in char letter,
+      in string token
+    ) raises (GameNotFoundException, PlayerNotLoggedInException);
 
-
-      Leaderboard get_leaderboard(in string token) raises (PlayerNotLoggedInException);
-    };
-
+    Leaderboard get_leaderboard(in string token) raises (PlayerNotLoggedInException);
+  };
 };
