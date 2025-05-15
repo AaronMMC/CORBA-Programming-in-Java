@@ -5,10 +5,11 @@ import ModifiedHangman.ClientCallback;
 import javax.security.auth.callback.Callback;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class SessionManager {
     private Map<String, String> userSessions;
-    private Map<String, Callback> clientCallbacks;
+    private Map<String, ClientCallback> clientCallbacks;
 
 
     public SessionManager() {
@@ -17,18 +18,20 @@ public class SessionManager {
     }
 
 
-    public void addCallback(ClientCallback clientCallback) {
-
+    public void addCallback(ClientCallback clientCallback, String token) {
+        clientCallbacks.put(token, clientCallback);
     }
 
 
     public String createSession(String username) {
-        return null;
+        String token = UUID.randomUUID().toString();
+        userSessions.put(token, username);
+        return token;
     }
 
 
     public void invalidateSession(String sessionId) {
-
+        userSessions.remove(sessionId);
     }
 
 
