@@ -24,8 +24,8 @@ public class Server {
             Connection connection = DatabaseConnection.getConnection();
 
             // DAOs and Managers
-            PlayerDao playerDao = new PlayerDao(connection); // Pass Connection here
-            GameDao gameDao = new GameDao(connection); // Pass Connection here
+            PlayerDao playerDao = new PlayerDao(connection);
+            GameDao gameDao = new GameDao(connection);
             SessionManager sessionManager = new SessionManager();
             PendingGameManager pendingGameManager = new PendingGameManager();
 

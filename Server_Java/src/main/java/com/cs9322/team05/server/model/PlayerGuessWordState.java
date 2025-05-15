@@ -5,7 +5,7 @@ import java.util.Map;
 public class PlayerGuessWordState {
     private String currentMaskedWord;
     private int remainingGuess;
-    private Map<Character, Boolean> attemptedLetters;
+    private Map<Character, Boolean> attemptedLetters; // Character is the letter and Boolean is whether it is in the word or not
 
     public PlayerGuessWordState(int wordLength) {
         StringBuilder stringBuilder = new StringBuilder();
