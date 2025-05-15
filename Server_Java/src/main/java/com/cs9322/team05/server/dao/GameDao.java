@@ -6,16 +6,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class GameDao {
-    private final DatabaseConnection databaseConnection;
+    private final Connection connection;
 
-    public GameDao(DatabaseConnection databaseConnection) {
-        this.databaseConnection = databaseConnection;
+    public GameDao(Connection connection) {
+        this.connection = connection;
     }
 
     public int getCurrentWaitingTimeLength() {
         String query = "SELECT waiting_time_length FROM game_settings WHERE id = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setInt(1, 1);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -30,8 +29,7 @@ public class GameDao {
 
     public int getCurrentRoundLength() {
         String query = "SELECT round_length FROM game_settings WHERE id = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setInt(1, 1);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -47,8 +45,7 @@ public class GameDao {
 
     public void setWaitingTimeLength(int length) {
         String query = "UPDATE game_settings SET waiting_time_length = ? WHERE id = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setInt(1, length);
             stmt.setInt(2, 1);
@@ -61,8 +58,7 @@ public class GameDao {
 
     public void setRoundLength(int length) {
         String query = "UPDATE game_settings SET round_length = ? WHERE id = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setInt(1, length);
             stmt.setInt(2, 1);

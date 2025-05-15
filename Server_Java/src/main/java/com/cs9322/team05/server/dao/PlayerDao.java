@@ -7,16 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerDao {
-    private final DatabaseConnection databaseConnection;
+    private final Connection connection;
 
-    public PlayerDao(DatabaseConnection databaseConnection) {
-        this.databaseConnection = databaseConnection;
+    public PlayerDao(Connection connection) {
+        this.connection = connection;
     }
 
     public void addPlayer(Player player) {
         String query = " INSERT INTO players (username, password, total_wins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, total_wins = ? ";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, player.username);
             stmt.setString(2, player.password);
@@ -32,8 +31,7 @@ public class PlayerDao {
 
     public void removePlayer(String username) {
         String query = "DELETE FROM players WHERE username = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, username);
             stmt.executeUpdate();
@@ -45,8 +43,7 @@ public class PlayerDao {
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
         String query = "SELECT username, password, total_wins FROM players";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
+        try (PreparedStatement stmt = connection.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
@@ -64,8 +61,7 @@ public class PlayerDao {
 
     public Player getPlayerByUsername(String username) {
         String query = "SELECT username, password, total_wins FROM players WHERE username = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -85,18 +81,17 @@ public class PlayerDao {
 
     public void updatePlayer(Player player) {
         String query = "UPDATE players SET password = ?, total_wins = ? WHERE username = ?";
-        try (Connection conn = databaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
 
-            stmt.setString(1, player.getPassword());
-            stmt.setInt(2, player.getWins());
-            stmt.setString(3, player.getUsername());
+            stmt.setString(1, player.password);
+            stmt.setInt(2, player.wins);
+            stmt.setString(3, player.username);
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0)
                 System.out.println("Player updated successfully.");
             else
-                System.out.println("No player found with username: " + player.getUsername());
+                System.out.println("No player found with username: " + player.username);
         } catch (SQLException e) {
             e.printStackTrace();
         }

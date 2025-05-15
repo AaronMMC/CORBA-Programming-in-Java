@@ -12,21 +12,24 @@ import com.cs9322.team05.server.manager.PendingGameManager;
 import org.omg.CORBA.*;
 import org.omg.PortableServer.*;
 
+import java.sql.Connection;
+
 public class Server {
     public static void main(String[] args) {
         try {
             // Initialize the ORB
             ORB orb = ORB.init(args, null);
 
-            DatabaseConnection databaseConnection = (DatabaseConnection) DatabaseConnection.getConnection();
+            // Get the database connection
+            Connection connection = DatabaseConnection.getConnection();
 
             // DAOs and Managers
-            PlayerDao playerDao = new PlayerDao(databaseConnection);
-            GameDao gameDao = new GameDao(databaseConnection);
+            PlayerDao playerDao = new PlayerDao(connection); // Pass Connection here
+            GameDao gameDao = new GameDao(connection); // Pass Connection here
             SessionManager sessionManager = new SessionManager();
             PendingGameManager pendingGameManager = new PendingGameManager();
 
-            // servants (service implementations)
+            // Servants (service implementations)
             AdminServiceImpl adminServiceImpl = new AdminServiceImpl(sessionManager, playerDao, gameDao);
             AuthenticationServiceImpl authServiceImpl = new AuthenticationServiceImpl(sessionManager, playerDao);
             GameServiceImpl gameServiceImpl = new GameServiceImpl(sessionManager, gameDao, playerDao, pendingGameManager);
