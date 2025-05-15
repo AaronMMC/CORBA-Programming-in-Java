@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: May 15, 2025 at 02:16 PM
+-- Generation Time: May 15, 2025 at 05:46 PM
 -- Server version: 8.0.36
 -- PHP Version: 8.3.14
 
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `admin` (
 --
 
 INSERT INTO `admin` (`username`, `password`) VALUES
-('admin', 'admin');
+('admin', '$2a$12$KH4wPmFwzRuZR3zR6rAT.uexWrPHoKsH/W4uwFB6acRFYroF5H.Ue');
 
 -- --------------------------------------------------------
 
@@ -54,6 +54,13 @@ CREATE TABLE IF NOT EXISTS `game_settings` (
   `waiting_time_length` int NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `game_settings`
+--
+
+INSERT INTO `game_settings` (`id`, `round_length`, `waiting_time_length`) VALUES
+(1, 30, 20);
 
 -- --------------------------------------------------------
 
@@ -74,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `player` (
 --
 
 INSERT INTO `player` (`username`, `hashed_password`, `totalWins`) VALUES
+('jim', '$2a$10$L6vpMWmFIpmhth36JbZePu1EWKggNzc6UIGL1CbOVdNr5EnS3johS', 0),
 ('player', '$2a$12$gP0ru96qox86w6Sm52GNn.Enz3gh66kji7LoEvxi3fXBMj5ZSHGbG', 0);
 COMMIT;
 
