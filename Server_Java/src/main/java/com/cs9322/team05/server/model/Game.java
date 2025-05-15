@@ -1,6 +1,7 @@
 package com.cs9322.team05.server.model;
 
 import ModifiedHangman.GamePlayer;
+import ModifiedHangman.GuessResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,5 +72,14 @@ public class Game {
 
     public void addRounds(GameRound round) {
         this.rounds.add(round);
+    }
+
+    public GuessResponse guessLetter(String username, char letter) {
+        boolean playerExists = players.stream().anyMatch(player -> player.username.equals(username));
+        if (!playerExists) // TODO : change the exception type to a more appropriate one
+            throw new RuntimeException("Player " + username + " is not part of the game.");
+
+        GameRound currentRound = rounds.get(rounds.size() - 1);
+        return currentRound.guessLetter(username, letter);
     }
 }
