@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: May 15, 2025 at 03:26 AM
+-- Generation Time: May 15, 2025 at 11:19 AM
 -- Server version: 8.0.36
 -- PHP Version: 8.3.14
 
@@ -20,6 +20,19 @@ SET time_zone = "+00:00";
 --
 -- Database: `hangman`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin`
+--
+
+DROP TABLE IF EXISTS `admin`;
+CREATE TABLE IF NOT EXISTS `admin` (
+  `username` varchar(20) NOT NULL,
+  `hashed_password` varchar(100) NOT NULL,
+  PRIMARY KEY (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
