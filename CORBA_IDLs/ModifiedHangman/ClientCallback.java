@@ -8,6 +8,6 @@ package ModifiedHangman;
 * Saturday, April 26, 2025 3:25:42 AM SGT
 */
 
-public interface ClientCallback extends ClientCallbackOperations, org.omg.CORBA.Object, org.omg.CORBA.portable.IDLEntity 
+public interface ClientCallback extends ClientCallbackOperations, org.omg.CORBA.Object, org.omg.CORBA.portable.IDLEntity
 {
 } // interface ClientCallback

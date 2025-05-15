@@ -2,23 +2,24 @@ package com.cs9322.team05.client.player.controller;
 
 import ModifiedHangman.GameInfo;
 import ModifiedHangman.PlayerNotLoggedInException;
-import com.cs9322.team05.client.player.callback.ClientCallbackService;
+import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
 import com.cs9322.team05.client.player.model.GameModel;
 import com.cs9322.team05.client.player.view.MatchmakingView;
 
 public class MatchmakingController {
     private final GameModel gameModel;
-    private final ClientCallbackService callback;
+    private final ClientCallbackImpl callback;
     private final MatchmakingView view;
 
     private Runnable onMatchFound;
     private Runnable onCancel;
 
-    public MatchmakingController(GameModel gameModel, ClientCallbackService callback) {
+    public MatchmakingController(GameModel gameModel, ClientCallbackImpl callback) {
         this.gameModel = gameModel;
         this.callback = callback;
         this.view = new MatchmakingView();
-        this.view.setOnCancel(() -> {
+
+        view.setOnCancel(() -> {
             if (onCancel != null) onCancel.run();
         });
     }
@@ -26,6 +27,8 @@ public class MatchmakingController {
     public void startMatchmaking() {
         new Thread(() -> {
             try {
+
+                callback.register();
 
 
                 GameInfo info = gameModel.startGame();

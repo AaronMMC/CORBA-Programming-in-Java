@@ -1,15 +1,14 @@
-
 package com.cs9322.team05.client.player.controller;
 
-import com.cs9322.team05.client.player.model.LoginModel;
 import ModifiedHangman.LogInException;
 import ModifiedHangman.PlayerNotLoggedInException;
+import com.cs9322.team05.client.player.model.LoginModel;
 
 import java.util.function.BiConsumer;
 
 public class LoginController {
     private final LoginModel authModel;
-    private BiConsumer<String,String> onLoginSuccess;
+    private BiConsumer<String, String> onLoginSuccess;
 
     public LoginController(LoginModel authModel) {
         this.authModel = authModel;
@@ -40,7 +39,7 @@ public class LoginController {
         }
     }
 
-    public void setOnLoginSuccess(BiConsumer<String,String> callback) {
+    public void setOnLoginSuccess(BiConsumer<String, String> callback) {
         this.onLoginSuccess = callback;
     }
 }

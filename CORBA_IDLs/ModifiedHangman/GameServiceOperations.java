@@ -11,7 +11,7 @@ package ModifiedHangman;
 public interface GameServiceOperations 
 {
   void registerCallback (ModifiedHangman.ClientCallback callback, String token) throws ModifiedHangman.PlayerNotLoggedInException;
-  ModifiedHangman.GameInfo start_game (String username, String token) throws ModifiedHangman.PlayerNotLoggedInException;
-  ModifiedHangman.GuessResponse guessLetter (String username, String gameId, char letter, String token) throws ModifiedHangman.GameNotFoundException, ModifiedHangman.PlayerNotLoggedInException;
-  ModifiedHangman.Leaderboard get_leaderboard (String token) throws ModifiedHangman.PlayerNotLoggedInException;
+  GameInfo start_game (String username, String token) throws ModifiedHangman.PlayerNotLoggedInException;
+  GuessResponse guessLetter (String username, String gameId, char letter, String token) throws ModifiedHangman.GameNotFoundException, ModifiedHangman.PlayerNotLoggedInException;
+  Leaderboard get_leaderboard (String token) throws ModifiedHangman.PlayerNotLoggedInException;
 } // interface GameServiceOperations
