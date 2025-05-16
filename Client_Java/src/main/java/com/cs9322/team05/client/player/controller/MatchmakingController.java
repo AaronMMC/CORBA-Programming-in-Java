@@ -119,7 +119,7 @@ public class MatchmakingController {
                         throw new IllegalStateException("GameController not available.");
                     }
 
-                    String message = "Game Found! Session ID: " + info.gameId + ". Starting in...";
+                    String message = "Game Found!. Starting in...";
                     Platform.runLater(() -> view.startCountdown(info.remainingWaitingTime, message));
 
                     long delayToProceedMs = info.remainingWaitingTime * 1000L;
