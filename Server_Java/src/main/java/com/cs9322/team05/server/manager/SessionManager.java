@@ -79,7 +79,7 @@ public class SessionManager {
     }
 
     public boolean isUserLoggedIn(String username) {
-        boolean isLoggedIn = clientCallbacks.containsKey(username) && userSessions.containsValue(username) ;
+        boolean isLoggedIn = clientCallbacks.containsKey(username);
         System.out.println("SessionManager.isUserLoggedIn: Checking if user '" + username + "' is logged in (has session and callback): " + isLoggedIn);
         return isLoggedIn;
     }
