@@ -188,7 +188,7 @@ public class GameView implements GameViewInterface {
                 masked.append("_");
             }
             animateLabelUpdate(maskedWordLabel, masked.toString().replaceAll(".(?!$)", "$0 "));
-            animateLabelUpdate(attemptsLeftLabel, "Attempts left: 6");
+            animateLabelUpdate(attemptsLeftLabel, "Attempts left: 5");
             guessedLettersList.getItems().clear();
             guessInput.clear();
             guessInput.setDisable(false);

@@ -6,7 +6,6 @@ import com.cs9322.team05.client.player.model.GameModel;
 import javafx.application.Platform;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,7 +16,6 @@ public class GameController {
     private String gameId;
     private int expectedRoundDurationSeconds;
     private int currentRoundNumber = 0;
-    private Consumer<String> onGameStartFailedForNavigation;
 
     public GameController(GameModel gameModel, GameViewInterface view) {
         this.gameModel = gameModel;
@@ -54,29 +52,18 @@ public class GameController {
             });
         }
     }
-    public void setOnGameStartFailedForNavigation(Consumer<String> callback) {
-        this.onGameStartFailedForNavigation = callback;
-    }
+
     public void handleGameStartFailed(String message) {
-        logger.info("Controller: handleGameStartFailed called with server message: " + message);
-        if (onGameStartFailedForNavigation != null) {
-            
-            String userFriendlyMessage;
-            if (message != null && message.toLowerCase().contains("not enough players")) {
-                userFriendlyMessage = "Not enough players available to start the game. Please try again later.";
-            } else if (message != null && !message.isEmpty()){
-                userFriendlyMessage = "Failed to start game: " + message;
-            } else {
-                userFriendlyMessage = "Could not start game: Not enough players found. Returning to home.";
-            }
-            logger.info("Invoking onGameStartFailedForNavigation callback to MainApp with message: " + userFriendlyMessage);
-            Platform.runLater(() -> onGameStartFailedForNavigation.accept(userFriendlyMessage));
+        logger.info("Controller: handleGameStartFailed called with message: " + message);
+        if (view != null) {
+            Platform.runLater(() -> {
+                view.clearAll();
+                view.showError(message);
+                view.showStatusMessage(message);
+                view.disableGuessing();
+            });
         } else {
-            logger.warning("GameController: onGameStartFailedForNavigation callback is not set. Cannot navigate back to Home for startGameFailed event.");
-            
-            if (view != null) {
-                Platform.runLater(() -> view.showError("Failed to start game: " + message + " (Navigation to home failed)"));
-            }
+            logger.warning("handleGameStartFailed called but view is null.");
         }
     }
 

@@ -9,22 +9,23 @@ import com.cs9322.team05.client.player.model.AuthenticationModel;
 import com.cs9322.team05.client.player.model.GameModel;
 import com.cs9322.team05.client.player.model.LeaderboardModel;
 import com.cs9322.team05.client.player.services.HomeController;
-import com.cs9322.team05.client.player.services.HomeView;     // Your styled HomeView
-import com.cs9322.team05.client.player.view.GameView;         // Your GameView
-import com.cs9322.team05.client.player.view.AuthenticationView; // Your NEW styled AuthenticationView
+import com.cs9322.team05.client.player.services.HomeView; // Your styled HomeView
+import com.cs9322.team05.client.player.view.GameView;     // Your GameView
+import com.cs9322.team05.client.player.view.AuthenticationView; // Your NEW AuthenticationView
 import com.cs9322.team05.client.admin.controller.AdminController;
 import com.cs9322.team05.client.admin.model.AdminModel;
-import com.cs9322.team05.client.admin.view.AdminView;         // Your NEW styled AdminView
+import com.cs9322.team05.client.admin.view.AdminView; // Your NEW AdminView
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.Region; // For setting min height on alerts
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import org.omg.CORBA.ORB;
-// import org.omg.CORBA.Object; // Can be ambiguous, qualify if needed
+// Explicitly use org.omg.CORBA.Object to avoid ambiguity if java.lang.Object is also meant
+// import org.omg.CORBA.Object;
 import org.omg.CosNaming.NamingContextExt;
 import org.omg.CosNaming.NamingContextExtHelper;
 
@@ -43,13 +44,12 @@ public class MainApp extends Application {
     private HomeController homeControllerInstance;
     private GameController gameControllerInstance;
     private ClientCallbackImpl clientCallbackInstance;
-    private boolean isMatchmakingEffectivelyActive;
 
 
     public static void main(String[] args) {
-        // Optional: Configure logger for better output if not already done elsewhere
-        // System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %n");
-        logger.info("Launching Hangman Client Application...");
+        System.setProperty("java.util.logging.SimpleFormatter.format",
+                "[%1$tF %1$tT] [%4$-7s] %5$s %n"); // Optional: More detailed log format
+        logger.info("Launching Hangman Client Application");
         launch(args);
     }
 
@@ -57,30 +57,32 @@ public class MainApp extends Application {
     public void init() throws Exception {
         logger.info("Initializing ORB connection properties.");
         Properties props = new Properties();
-        props.put("org.omg.CORBA.ORBInitialHost", "localhost"); // Ensure this matches your server
-        props.put("org.omg.CORBA.ORBInitialPort", "1050");    // Ensure this matches your server
+        // Ensure these match your ORB server configuration
+        props.put("org.omg.CORBA.ORBInitialHost", "localhost");
+        props.put("org.omg.CORBA.ORBInitialPort", "1050");
         orb = ORB.init(new String[0], props);
-        logger.info("ORB initialized. Target Host: " + props.getProperty("org.omg.CORBA.ORBInitialHost") +
-                ", Port: " + props.getProperty("org.omg.CORBA.ORBInitialPort"));
+        logger.info("ORB initialized successfully. Host: " +
+                props.getProperty("org.omg.CORBA.ORBInitialHost") + ", Port: " +
+                props.getProperty("org.omg.CORBA.ORBInitialPort"));
     }
 
     @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
         logger.info("Application start: Setting up primary stage.");
-        showLogin(); // Initial view
+        showLogin();
         primaryStage.setTitle("What's The Word - Hangman Challenge");
         primaryStage.setOnCloseRequest(event -> {
-            logger.info("Application window close requested. Initiating shutdown sequence...");
-            performUserLogout(true); // Attempt server logout for graceful exit
+            logger.info("Application window close requested. Performing shutdown sequence.");
+            performUserLogout(true); // Attempt server logout if user was logged in
             if (orb != null) {
                 logger.info("Shutting down ORB connection.");
-                orb.shutdown(true); // true to wait for completion
+                orb.shutdown(true); // true indicates wait for shutdown completion
                 orb.destroy();
-                logger.info("ORB shutdown finalized.");
+                logger.info("ORB shutdown complete.");
             }
             Platform.exit(); // Gracefully exits JavaFX application thread
-            System.exit(0);  // Ensures JVM terminates if other non-daemon threads are active
+            System.exit(0);  // Ensures JVM terminates if other non-daemon threads are running
         });
         primaryStage.show();
         logger.info("Primary stage is now visible.");
@@ -88,40 +90,38 @@ public class MainApp extends Application {
 
     private void cleanupGameResources() {
         if (this.gameControllerInstance != null) {
-            logger.info("Cleaning up active game controller resources and state.");
-            this.gameControllerInstance.cleanupControllerState(); // Ensures view is also reset
+            logger.info("Cleaning up active game controller state.");
+            this.gameControllerInstance.cleanupControllerState();
         }
         this.gameControllerInstance = null;
-        this.clientCallbackInstance = null; // Callback tied to game session
-        logger.fine("Game-specific resources have been cleaned up.");
+        this.clientCallbackInstance = null; // Callback instance is tied to a game session
+        logger.fine("Game resources cleaned up.");
     }
 
-    // Central method to handle navigation to login screen after any logout event
     private void processLogoutNavigation() {
-        logger.info("Processing logout navigation: Clearing local user session, game resources, and returning to login screen.");
+        logger.info("Processing logout: Clearing local session and navigating to login screen.");
         this.username = null;
         this.token = null;
-        cleanupGameResources();
+        cleanupGameResources(); // Clear any active game state
         this.homeControllerInstance = null; // Clear reference to home controller
-        // authControllerInstance will be re-created by showLogin() for a fresh login attempt
+        // authControllerInstance is handled by showLogin (re-initialized)
         showLogin();
     }
 
-    // Attempts server-side logout; primarily for app exit or explicit user action
-    private void performUserLogout(boolean appIsExiting) {
+    private void performUserLogout(boolean appExiting) {
         if (this.token != null && this.authControllerInstance != null) {
-            logger.info("Attempting server-side logout for token: " + this.token + ". Application exiting: " + appIsExiting);
+            logger.info("Attempting server-side logout. App exiting: " + appExiting);
             try {
-                // AuthenticationController.handleLogout will make the server call.
-                // Its onLogoutSuccess callback (set by MainApp) will trigger processLogoutNavigation.
+                // authController.handleLogout will trigger its onLogoutSuccess callback
+                // which in turn calls processLogoutNavigation().
                 this.authControllerInstance.handleLogout(this.token);
             } catch (Exception e) {
-                logger.log(Level.WARNING, "Exception encountered during server-side logout attempt.", e);
+                logger.log(Level.WARNING, "Exception during server-side logout attempt.", e);
             }
         }
         // If application is exiting, ensure local state is cleared regardless of server call success.
-        // For user-initiated logouts from views, processLogoutNavigation handles clearing state after server call.
-        if (appIsExiting) {
+        // For user-initiated logout, processLogoutNavigation handles clearing state.
+        if (appExiting) {
             this.username = null;
             this.token = null;
             cleanupGameResources();
@@ -131,91 +131,88 @@ public class MainApp extends Application {
 
     private void showLogin() {
         logger.info("Navigating to Login View.");
-        // Ensure any previous session data is thoroughly cleared before showing login
         this.username = null;
         this.token = null;
         cleanupGameResources();
-        this.homeControllerInstance = null; // Reset home controller
+        this.homeControllerInstance = null;
 
-        org.omg.CORBA.Object authServiceObj = getNamingRef("AuthenticationService");
-        if (authServiceObj == null) {
-            // getNamingRef now handles exit on critical failure
+        AuthenticationService authSvc = AuthenticationServiceHelper.narrow(getNamingRef("AuthenticationService"));
+        if (authSvc == null) {
+            showErrorAlertAndExit("Critical Service Error", "Authentication Service is unavailable. Application cannot continue.");
             return;
         }
-        AuthenticationService authSvc = AuthenticationServiceHelper.narrow(authServiceObj);
 
         AuthenticationModel authModel = new AuthenticationModel(authSvc);
-        // Create a new AuthenticationController instance for a fresh login session
         this.authControllerInstance = new AuthenticationController(authModel);
-        AuthenticationView authenticationView = new AuthenticationView(this.authControllerInstance); // Your styled view
+        AuthenticationView authenticationView = new AuthenticationView(this.authControllerInstance);
 
-        this.authControllerInstance.setOnLoginSuccess((loggedInUser, receivedToken) -> {
-            this.username = loggedInUser;
+        this.authControllerInstance.setOnLoginSuccess((user, receivedToken) -> {
+            this.username = user;
             this.token = receivedToken;
-            logger.info("Login successful for user: " + this.username + ". Token acquired. Navigating to appropriate view.");
-            // CRITICAL: Set the onLogoutSuccess for this authenticated session's controller
+            logger.info("Login successful for user: " + this.username + ". Token acquired.");
+            // Critical: Set the onLogoutSuccess for the now authenticated session's controller
             this.authControllerInstance.setOnLogoutSuccess(this::processLogoutNavigation);
-
             if ("admin".equalsIgnoreCase(this.username)) {
                 showAdminView();
             } else {
-                showHome(null, null); // No special message on fresh login
+                showHome(null, null); // No special message on fresh login to home
             }
         });
-        // Optional: Set onLoginFailure if MainApp needs to react beyond AuthenticationView's internal error display
-        this.authControllerInstance.setOnLoginFailure(errMsg -> {
-            logger.warning("MainApp's AuthController onLoginFailure: " + errMsg + ". AuthenticationView should display this.");
-        });
+        // Login failure messages are handled by AuthenticationView calling controller.handleLogin
+        // and displaying the returned string, or via onLoginFailure if implemented.
 
-        setScene(authenticationView.createLoginPane()); // Using method from your styled AuthenticationView
+        setScene(authenticationView.createLoginPane());
     }
 
     private void showAdminView() {
         logger.info("Navigating to Admin Dashboard for user: " + username);
-        cleanupGameResources(); // Clean player game state if any
+        cleanupGameResources();
         this.homeControllerInstance = null;
 
         if (this.authControllerInstance == null || this.token == null) {
-            logger.severe("AdminView: Critical authentication context missing. Redirecting to login.");
+            logger.severe("AdminView: Authentication context is missing. Redirecting to login.");
             showLogin();
             return;
         }
 
-        org.omg.CORBA.Object adminServiceObj = getNamingRef("AdminService");
-        if (adminServiceObj == null) return;
-        AdminService adminSvc = AdminServiceHelper.narrow(adminServiceObj);
-
+        AdminService adminSvc = AdminServiceHelper.narrow(getNamingRef("AdminService"));
+        if (adminSvc == null) {
+            showErrorAlert("Service Unavailable", "Admin service is not reachable. Please try again later.", this::showLogin);
+            return;
+        }
         AdminModel adminModel = new AdminModel(adminSvc);
-        AdminController adminCtrl = new AdminController(adminModel); // Admin-specific tasks controller
+        AdminController adminCtrl = new AdminController(adminModel);
 
-        AdminView adminView = new AdminView(token, adminCtrl, this.authControllerInstance); // Your styled view
+        AdminView adminView = new AdminView(token, adminCtrl, this.authControllerInstance);
         // AdminView's internal logout button calls authControllerInstance.handleLogout.
-        // The onLogoutSuccess callback on authControllerInstance (set during/after login)
-        // will trigger processLogoutNavigation(), leading back to the login screen.
-        // AdminView also has its own onLogout callback that MainApp sets.
+        // The onLogoutSuccess callback on authControllerInstance (set during login)
+        // will then trigger processLogoutNavigation -> showLogin.
+        // We can also set AdminView's specific onLogout if it has one for other cleanup.
         adminView.setOnLogout(this::processLogoutNavigation);
+
 
         setScene(adminView.getRootPane());
     }
 
     private void showHome(String initialMessage, AlertType alertType) {
         logger.info("Navigating to Home View for user: " + username +
-                (initialMessage != null ? ". Initial message: '" + initialMessage + "'" : ""));
+                (initialMessage != null ? ". Initial message: " + initialMessage : ""));
         cleanupGameResources();
 
         if (this.authControllerInstance == null || this.token == null) {
-            logger.warning("HomeView: User not properly authenticated or token is missing. Redirecting to login.");
+            logger.warning("HomeView: User is not properly authenticated. Redirecting to login.");
             showLogin();
             return;
         }
 
-        org.omg.CORBA.Object gameServiceObj = getNamingRef("GameService");
-        if (gameServiceObj == null) return;
-        GameService gameSvc = GameServiceHelper.narrow(gameServiceObj);
-
+        GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
+        if (gameSvc == null) {
+            showErrorAlert("Service Unavailable", "Game service is not reachable. Cannot proceed to Home.", this::showLogin);
+            return;
+        }
         AuthenticationModel currentAuthModel = this.authControllerInstance.getModel();
         if (currentAuthModel == null) {
-            logger.severe("HomeView: AuthenticationModel is null via authControllerInstance. Cannot proceed.");
+            logger.severe("HomeView: AuthenticationModel unavailable. Critical error.");
             showLogin();
             return;
         }
@@ -223,293 +220,257 @@ public class MainApp extends Application {
         GameModel tempGameModelForLeaderboard = new GameModel(gameSvc, username, token);
         LeaderboardModel lbModel = new LeaderboardModel(tempGameModelForLeaderboard);
 
-        // Create or reuse HomeController
         this.homeControllerInstance = new HomeController(currentAuthModel, tempGameModelForLeaderboard, lbModel, null);
-        HomeView homeView = new HomeView(token, this.homeControllerInstance); // Your styled HomeView
-        this.homeControllerInstance.setHomeView(homeView); // Link controller to view
+        HomeView homeView = new HomeView(token, this.homeControllerInstance);
+        this.homeControllerInstance.setHomeView(homeView);
 
         if (this.username != null) {
-            homeView.setWelcomeMessage(this.username); // Set personalized welcome message
+            homeView.setWelcomeMessage(this.username);
         }
 
-        homeView.setOnStartGame(() -> showMatchmaking(gameSvc));
+        homeView.setOnStartGame(this::showMatchmaking);
         homeView.setOnViewLeaderboard(() -> {
             try {
-                logger.info("HomeView: Leaderboard view requested by user.");
+                logger.info("HomeView: Leaderboard requested by user.");
                 if (lbModel != null) {
                     homeView.showLeaderboard(lbModel.fetchTop5());
                 } else {
-                    logger.warning("HomeView: LeaderboardModel is null. Cannot show leaderboard.");
                     homeView.showError("Leaderboard data service is currently unavailable.");
                 }
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "HomeView: Error occurred while fetching/displaying leaderboard.", e);
+                logger.log(Level.SEVERE, "HomeView: Error fetching leaderboard data.", e);
                 Platform.runLater(() -> homeView.showError("Failed to display leaderboard: " + e.getMessage()));
             }
         });
         homeView.setOnLogout(() -> {
             logger.info("HomeView: Logout action initiated by user.");
             if (this.authControllerInstance != null) {
-                // This call will trigger AuthenticationController's onLogoutSuccess,
-                // which in turn calls processLogoutNavigation() in MainApp.
-                this.authControllerInstance.handleLogout(this.token);
+                this.authControllerInstance.handleLogout(this.token); // Triggers onLogoutSuccess
             } else {
                 logger.warning("HomeView: authControllerInstance is null during logout. Forcing navigation to login.");
                 processLogoutNavigation(); // Fallback
             }
         });
-        // Ensure onLogoutSuccess of the central authControllerInstance is correctly set
+        // Ensure onLogoutSuccess is set for the current authControllerInstance
         this.authControllerInstance.setOnLogoutSuccess(this::processLogoutNavigation);
 
-        setScene(homeView.getRootPane()); // Use getRootPane from your styled HomeView
+        setScene(homeView.getRootPane());
 
         // Display initial message/alert if provided (e.g., from matchmaking failure)
         if (initialMessage != null && this.homeControllerInstance != null) {
-            final String finalMessage = initialMessage; // For use in lambda
-            Platform.runLater(() -> { // Ensure UI update is on FX thread and after scene is shown
-                if (this.homeControllerInstance != null) { // Check instance again inside lambda
+            final String finalMessage = initialMessage;
+            Platform.runLater(() -> { // Ensure runs after scene is set
+                if (this.homeControllerInstance != null) { // Check again as it's in a lambda
                     if (alertType == AlertType.ERROR || alertType == AlertType.WARNING) {
                         this.homeControllerInstance.displayMatchmakingFailureMessage(finalMessage);
-                    } else { // For INFORMATION or other types, show a generic alert
+                    } else { // For INFORMATION or other types
                         Alert infoAlert = new Alert(alertType != null ? alertType : AlertType.INFORMATION);
                         infoAlert.setTitle("Notification");
                         infoAlert.setHeaderText(null);
                         infoAlert.setContentText(finalMessage);
-                        infoAlert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
                         infoAlert.showAndWait();
                     }
-                } else {
-                    logger.warning("Could not display initial message on HomeView as homeControllerInstance was null in lambda. Message: " + finalMessage);
                 }
             });
         }
     }
-
-    // Convenience overload for showHome without a message
+    // Overload for convenience
     private void showHome() {
         showHome(null, null);
     }
 
-    private void showMatchmaking(GameService gameSvc) {
+    private void showMatchmaking() {
         logger.info("Navigating to Matchmaking View for user: " + username);
-        // ... (setup as before) ...
-        // Create new instances for a new game/matchmaking session
+        cleanupGameResources();
+
+        if (this.token == null) {
+            logger.warning("Matchmaking: No user token. Redirecting to login.");
+            showLogin();
+            return;
+        }
+        GameService gameSvc = GameServiceHelper.narrow(getNamingRef("GameService"));
+        if (gameSvc == null) {
+            showErrorAlert("Service Error", "Game service is unavailable for matchmaking.", this::showHome);
+            return;
+        }
+
         GameModel gameModel = new GameModel(gameSvc, username, token);
-        this.gameControllerInstance = new GameController(gameModel, null); // View will be set later
-
-        // Crucially, set the navigation callback on GameController *before* ClientCallback can invoke startGameFailed
-        this.gameControllerInstance.setOnGameStartFailedForNavigation(reason -> {
-            logger.info("MainApp: Received onGameStartFailedForNavigation from GameController (likely during/after matchmaking setup). Reason: " + reason);
-            cleanupGameResources();
-            // If matchmaking view is still active, this will navigate away from it to home.
-            showHome(reason, AlertType.WARNING);
-        });
-
+        this.gameControllerInstance = new GameController(gameModel, null);
         this.clientCallbackInstance = new ClientCallbackImpl(orb, gameSvc, token, this.gameControllerInstance);
+
         MatchmakingController mmCtrl = new MatchmakingController(gameModel, this.clientCallbackInstance, this.gameControllerInstance);
-        // ... (setOnMatchReadyToProceed and setOnMatchmakingCancelledOrFailed for mmCtrl as before) ...
-
+        mmCtrl.setOnMatchReadyToProceed(this::showGame);
         mmCtrl.setOnMatchmakingCancelledOrFailed(reason -> {
-            // ... (existing logic for timeout, server error, etc.) ...
-            // If REASON_USER_CANCELLED, this part won't be hit due to button removal,
-            // unless controller's cancelMatchmakingProcess is called by MainApp (e.g. on logout).
-            // The timeout (REASON_TIMEOUT) or server error (REASON_SERVER_ERROR) from matchmaking itself
-            // should lead here.
-            logger.info("Matchmaking process concluded without finding a match. Reason: " + reason);
-            isMatchmakingEffectivelyActive = false;
-            cleanupGameResources(); // Clean game controller as game won't start from this path
-
+            logger.info("Matchmaking concluded. Reason: " + reason + ". Navigating from matchmaking.");
+            cleanupGameResources();
             String userMessage;
             AlertType alertType = AlertType.INFORMATION;
 
-
-            // ... (rest of the switch for other reasons like TIMEOUT, SERVER_ERROR)
             switch (reason) {
                 case MatchmakingController.REASON_TIMEOUT:
-                    userMessage = "No players found to start a game at this time. Please try again later.";
+                    userMessage = "No players found to start a game. Please try again later.";
                     alertType = AlertType.WARNING;
                     break;
-                // ... other cases
+                case MatchmakingController.REASON_SERVER_ERROR:
+                    userMessage = "The server couldn't create or find a game for you at this moment.";
+                    alertType = AlertType.ERROR;
+                    break;
+                case MatchmakingController.REASON_LOGIN_EXPIRED:
+                    userMessage = "Your session has expired. Please log in again to continue.";
+                    alertType = AlertType.ERROR;
+                    showLogin(); // Critical: Go to login for expired session
+                    return;
+                case MatchmakingController.REASON_UNEXPECTED_ERROR:
                 default:
-                    userMessage = "Matchmaking did not complete successfully. Please try again.";
-                    alertType = AlertType.WARNING;
+                    userMessage = "An unexpected error occurred during matchmaking. Please try again.";
+                    alertType = AlertType.ERROR;
                     break;
             }
-            showHome(userMessage, alertType);
+            showHome(userMessage, alertType); // Show HomeView with the determined message and alert type
         });
-
 
         setScene(mmCtrl.getView().getRootPane());
         mmCtrl.startMatchmaking();
     }
 
-    private void showGame(GameService gameSvc) {
+    private void showGame() {
         if (this.gameControllerInstance == null) {
-            logger.severe("Attempted to show Game View, but GameController instance is null! Returning to Home.");
+            logger.severe("GameController instance is null when trying to show Game View. Critical error. Returning to Home.");
             cleanupGameResources();
             showHome();
             return;
         }
 
-        GameView gameView = new GameView();
+        GameView gameView = new GameView(); // Your styled GameView from previous steps
         this.gameControllerInstance.setGameView(gameView);
 
-        // Set the callback for when startGameFailed needs to navigate back to Home
-        this.gameControllerInstance.setOnGameStartFailedForNavigation(reason -> {
-            logger.info("MainApp: Received onGameStartFailedForNavigation from GameController. Reason: " + reason);
-            cleanupGameResources(); // Clean up the failed game attempt
-            showHome(reason, AlertType.WARNING); // Show HomeView with a warning popup
-        });
-
-
-        // If gameId is null (e.g., due to startGameFailed being called *before* this showGame method),
-        // the setOnGameStartFailedForNavigation callback would be triggered by GameController when it processes the server event.
-        // If showGame is called and gameId is already null due to an earlier startGameFailed,
-        // the GameController's handleGameStartFailed will trigger the navigation.
         if (this.gameControllerInstance.getGameId() == null || this.gameControllerInstance.getGameId().isEmpty()) {
-            logger.warning("GameID is not set in GameController when MainApp.showGame() is called. " +
-                    "This indicates startGameFailed might have already been processed or will be shortly. " +
-                    "Awaiting GameController to trigger navigation if needed.");
-            // We still set the scene, and GameController's callbacks will handle the state.
-            // If startGameFailed comes after this, the callback above will handle it.
+            logger.warning("GameID is not set in GameController when showing GameView. " +
+                    "This usually means startGameFailed was called (e.g. not enough players). " +
+                    "GameController should update GameView to an error state.");
+            // GameController's handleGameStartFailed (triggered by ClientCallbackImpl.startGameFailed)
+            // should have already updated the gameView instance (e.g., view.showError(...)).
+            // So, MainApp just needs to set the scene.
         } else {
             logger.info("Displaying Game View for user=" + username + ", GameID: " + this.gameControllerInstance.getGameId());
         }
 
         gameView.setOnBackToMenu(() -> {
-            logger.info("GameView: 'Back to Menu' action triggered.");
+            logger.info("GameView: 'Back to Menu' requested.");
             cleanupGameResources();
             showHome();
         });
         gameView.setOnPlayAgain(() -> {
-            logger.info("GameView: 'Play Again' action triggered.");
+            logger.info("GameView: 'Play Again' requested.");
             cleanupGameResources();
-            showMatchmaking(gameSvc);
+            showMatchmaking(); // Go back to matchmaking for a new game
         });
 
         setScene(gameView.getRootPane());
         logger.info("Game View scene is now set. Awaiting server callbacks or user interaction.");
     }
 
-    // Helper to resolve CORBA object references
-    private org.omg.CORBA.Object getNamingRef(String serviceName) {
-        logger.fine("Attempting to resolve Naming Service reference for: '" + serviceName + "'");
+    private org.omg.CORBA.Object getNamingRef(String name) {
+        logger.fine("Attempting to resolve Naming Service reference for: " + name);
         try {
-            org.omg.CORBA.Object initialRef = orb.resolve_initial_references("NameService");
-            NamingContextExt nceh = NamingContextExtHelper.narrow(initialRef);
+            org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+            NamingContextExt nceh = NamingContextExtHelper.narrow(objRef);
             if (nceh == null) {
-                String errorMsg = "Failed to narrow NamingContextExt from 'NameService' reference. Naming Service might be misconfigured or unavailable.";
+                String errorMsg = "Failed to narrow NamingContextExt from 'NameService' reference.";
                 logger.severe(errorMsg);
-                Platform.runLater(() -> showErrorAlertAndExit("Critical Naming Service Error", errorMsg));
-                throw new RuntimeException(errorMsg); // Halt execution
+                Platform.runLater(() -> showErrorAlertAndExit("Critical Naming Error", errorMsg));
+                throw new RuntimeException(errorMsg);
             }
-            org.omg.CORBA.Object serviceObj = nceh.resolve_str(serviceName);
+            org.omg.CORBA.Object obj = nceh.resolve_str(name);
 
-            if (serviceObj == null) {
-                String errorMsg = "Naming Service resolved a null object for service: '" + serviceName + "'. The service may be down, not registered, or misnamed.";
+            if (obj == null) {
+                String errorMsg = "Naming Service resolved a null object for service: '" + name + "'. Service may be down or not registered.";
                 logger.severe(errorMsg);
-                Platform.runLater(() -> showErrorAlertAndExit("Critical Service Resolution Error", errorMsg));
-                throw new RuntimeException(errorMsg); // Halt execution
+                Platform.runLater(() -> showErrorAlertAndExit("Critical Service Error", errorMsg));
+                throw new RuntimeException(errorMsg);
             }
-            logger.info("Successfully resolved Naming Service reference for: '" + serviceName + "'.");
-            return serviceObj;
-        } catch (org.omg.CORBA.ORBPackage.InvalidName e_orb) { // Specific exception for "NameService" not found
-            String errorMsg = "ORB  Error: 'NameService' reference not found. ORB may not be configured correctly, or the Naming Service is not running at the expected location.";
-            logger.log(Level.SEVERE, errorMsg, e_orb);
-            Platform.runLater(() -> showErrorAlertAndExit("ORB Configuration/Naming Error", errorMsg));
-            throw new RuntimeException(errorMsg, e_orb); // Halt execution
-        } catch (Exception e_cos) { // Catches org.omg.CosNaming.NamingContextPackage.NotFound, .CannotProceed, .InvalidName
-            String errorMsg = "Failed to resolve service '" + serviceName + "' from the Naming Service. Ensure the service is running and correctly registered with the expected name.";
-            logger.log(Level.SEVERE, errorMsg, e_cos);
-            Platform.runLater(() -> showErrorAlertAndExit("Service Name Resolution Error", errorMsg));
-            throw new RuntimeException(errorMsg, e_cos); // Halt execution
+            logger.info("Successfully resolved service: '" + name + "'.");
+            return obj;
+        } catch (org.omg.CORBA.ORBPackage.InvalidName e) {
+            String errorMsg = "'NameService' not found. ORB may not be configured correctly or Naming Service is down.";
+            logger.log(Level.SEVERE, errorMsg, e);
+            Platform.runLater(() -> showErrorAlertAndExit("ORB Configuration Error", errorMsg));
+            throw new RuntimeException(errorMsg, e);
+        } catch (Exception e) { // org.omg.CosNaming.NamingContextPackage.NotFound, CannotProceed, InvalidName
+            String errorMsg = "Failed to resolve '" + name + "' from Naming Service. Ensure service is running and correctly named.";
+            logger.log(Level.SEVERE, errorMsg, e);
+            Platform.runLater(() -> showErrorAlertAndExit("Service Resolution Error", errorMsg));
+            throw new RuntimeException(errorMsg, e);
         }
     }
 
-    // Helper to show an error alert that allows continuing to a fallback action
+
+
     private void showErrorAlert(String title, String header, Runnable onOkAction) {
         Platform.runLater(() -> {
             Alert alert = new Alert(AlertType.ERROR);
             alert.setTitle(title);
             alert.setHeaderText(header);
-            alert.setContentText("Please try again. If the problem persists, check server status or contact support.");
+            alert.setContentText("Please try again. If the problem persists, please check the server status or contact support.");
             alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE); // Ensure content fits
             if (onOkAction != null) {
-                // Use setOnCloseRequest if you want action on 'X' button too,
-                // setOnHidden for after dialog is closed by any means (button, X)
                 alert.setOnHidden(evt -> onOkAction.run());
             }
-            alert.showAndWait(); // Use showAndWait for modal behavior
+            alert.showAndWait();
         });
     }
 
-    // Helper to show a critical error alert and then exit the application
     private void showErrorAlertAndExit(String title, String header) {
         Runnable task = () -> {
             Alert alert = new Alert(AlertType.ERROR);
-            alert.setTitle("Critical Error - Application Exit");
-            alert.setHeaderText(title + (header != null ? ": " + header : ""));
-            alert.setContentText("The application encountered a critical error and will now exit. Please check logs for details.");
+            alert.setTitle(title);
+            alert.setHeaderText(header);
+            alert.setContentText("The application will now exit due to a critical error.");
             alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-            alert.setOnHidden(evt -> { // Action after dialog is closed
+            alert.setOnHidden(evt -> {
                 if (orb != null) {
                     try {
                         orb.shutdown(true);
                         orb.destroy();
-                    } catch (Exception e_orb_shutdown) {
-                        logger.log(Level.WARNING, "Exception during ORB shutdown on critical error exit.", e_orb_shutdown);
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Exception during ORB shutdown on critical exit.", e);
                     }
                 }
                 Platform.exit();
-                System.exit(1); // Non-zero exit code indicates an error
+                System.exit(1); // Indicate error exit
             });
-            alert.show(); // Show and let onHidden handle exit. Using showAndWait() here would block until closed by user.
+            alert.show(); // Use show() instead of showAndWait() if Platform.exit() is called inside onHidden
         };
-
-        if (Platform.isFxApplicationThread()) {
-            task.run();
-        } else {
-            Platform.runLater(task);
-        }
+        if (Platform.isFxApplicationThread()) task.run(); else Platform.runLater(task);
     }
 
-    // Helper to set the root of the primary stage's scene
     private void setScene(Parent rootPane) {
         if (rootPane == null) {
-            logger.severe("CRITICAL: Attempted to set scene with a null root pane. Application integrity compromised.");
-            showErrorAlertAndExit("Fatal UI Error", "Cannot display screen due to missing content (null root pane).");
+            logger.severe("CRITICAL: Attempted to set scene with a null root pane. Application cannot proceed.");
+            showErrorAlertAndExit("Fatal UI Error", "A critical error occurred while preparing the display (null content).");
             return;
         }
         Runnable task = () -> {
             if (primaryStage == null) {
-                logger.severe("CRITICAL: PrimaryStage is null in setScene. UI cannot be updated. This indicates a severe application lifecycle issue.");
-                // Cannot show alert if primaryStage is null. Log and exit.
-                System.exit(2); // Different exit code for this specific failure
+                logger.severe("CRITICAL: PrimaryStage is null in setScene. UI cannot be updated.");
                 return;
             }
             Scene scene = primaryStage.getScene();
-            double currentWidth = (scene != null && scene.getWidth() > 0) ? scene.getWidth() : 1024;  // Default width
-            double currentHeight = (scene != null && scene.getHeight() > 0) ? scene.getHeight() : 768; // Default height
+            double currentWidth = (scene != null && scene.getWidth() > 0) ? scene.getWidth() : 1024;
+            double currentHeight = (scene != null && scene.getHeight() > 0) ? scene.getHeight() : 768;
 
             if (scene == null) {
                 primaryStage.setScene(new Scene(rootPane, currentWidth, currentHeight));
             } else {
                 scene.setRoot(rootPane);
-                // Maintain current window size if a scene already exists
+                // If you want to maintain the current window size after changing root:
                 primaryStage.setWidth(currentWidth);
                 primaryStage.setHeight(currentHeight);
             }
-            // primaryStage.sizeToScene(); // Optional: Resizes stage to fit the preferred size of the new root.
-            // Can be useful, but might also shrink window unexpectedly.
-            // If views have good preferred sizes, this is okay.
-            primaryStage.centerOnScreen(); // Center the window on the screen
+            // primaryStage.sizeToScene(); // This can shrink the window if the new root is smaller.
+            // Remove if you prefer to maintain size or set explicit sizes.
+            primaryStage.centerOnScreen(); // Center the window
         };
-
-        // Ensure UI updates happen on the JavaFX Application Thread
-        if (Platform.isFxApplicationThread()) {
-            task.run();
-        } else {
-            Platform.runLater(task);
-        }
+        if (Platform.isFxApplicationThread()) task.run(); else Platform.runLater(task);
     }
 }
