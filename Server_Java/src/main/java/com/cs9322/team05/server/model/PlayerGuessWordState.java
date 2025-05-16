@@ -1,5 +1,6 @@
 package com.cs9322.team05.server.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class PlayerGuessWordState {
@@ -13,6 +14,7 @@ public class PlayerGuessWordState {
             stringBuilder.append("_");
 
         currentMaskedWord = stringBuilder.toString();
+        attemptedLetters = new HashMap<>();
     }
 
     public String getCurrentMaskedWord() {
@@ -41,6 +43,8 @@ public class PlayerGuessWordState {
 
 
     public void addAttemptedLetter(char letter, boolean isItInTheWord) {
+        System.out.println();
         attemptedLetters.put(letter, isItInTheWord);
+
     }
 }

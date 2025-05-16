@@ -122,13 +122,12 @@ public class Game {
 
         System.out.println("Game.startGame: Word selected for gameId " + this.gameId + " (length: " + wordForRound.length() + ")");
         GameRound gameRound = new GameRound(new ArrayList<>(players), wordForRound, ++roundCount);
+        rounds.add(gameRound);
         System.out.println("Game.startGame: New GameRound created for gameId: " + this.gameId + ", roundNumber: " + roundCount);
 
         try {
             System.out.println("Game.startGame: Attempting to call gameRound.startRound for gameId: " + this.gameId + " with duration: " + this.roundDuration);
             gameRound.startRound(this.roundDuration, this.gameId, () -> {
-                rounds.add(gameRound); // round completed, add it to the list
-
                 boolean isGameOver = false;
                 GamePlayer potentialGameWinner = null;
 
