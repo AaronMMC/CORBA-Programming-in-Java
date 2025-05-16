@@ -107,36 +107,21 @@ public class Game {
     }
 
     public void startGame() {
-        System.out.println("Game.startGame: Initiating for gameId: " + this.gameId + ". Current roundCount (before increment): " + this.roundCount + ". Players: " + players.size());
-
-        if (players.isEmpty()) {
-            System.out.println("Game.startGame: No players in game " + this.gameId + ". Cannot start round.");
-            return;
-        }
-
         String wordForRound = WordDao.getInstance().getAWord();
-        if (wordForRound == null || wordForRound.isEmpty()) {
-            System.out.println("Game.startGame: ERROR - Failed to get a word for gameId: " + this.gameId + ". Cannot start round.");
-            return;
-        }
 
-        System.out.println("Game.startGame: Word selected for gameId " + this.gameId + " (length: " + wordForRound.length() + ")");
+        System.out.println("Game.startGame: Word selected for gameId " + wordForRound);
         GameRound gameRound = new GameRound(new ArrayList<>(players), wordForRound, ++roundCount);
         rounds.add(gameRound);
-        System.out.println("Game.startGame: New GameRound created for gameId: " + this.gameId + ", roundNumber: " + roundCount);
 
         try {
-            System.out.println("Game.startGame: Attempting to call gameRound.startRound for gameId: " + this.gameId + " with duration: " + this.roundDuration);
             gameRound.startRound(this.roundDuration, this.gameId, () -> {
                 boolean isGameOver = false;
                 GamePlayer potentialGameWinner = null;
 
-                System.out.println("Game.startGame: Checking for game over condition in gameId: " + this.gameId);
                 for (GamePlayer player : players) {
                     if (player.wins >= 3) {
                         potentialGameWinner = player;
                         isGameOver = true;
-                        System.out.println("Game.startGame: Game over condition met for gameId: " + this.gameId + ". Player " + player.username + " has " + player.wins + " wins.");
                         break;
                     }
                 }
@@ -155,30 +140,21 @@ public class Game {
 
                         try {
                             ClientCallback callback = sessionManager.getCallback(player.username);
-                            if (callback != null) {
-                                System.out.println("Game.startGame: Sending endGame callback to " + player.username + " for gameId: " + this.gameId);
-                                callback.endGame(gameResult);
-                            } else {
-                                System.out.println("Game.startGame: No callback found for player " + player.username + " in gameId: " + this.gameId + " during endGame.");
-                            }
+                            callback.endGame(gameResult);
                         } catch (Exception e) {
                             System.out.println("Game.startGame: EXCEPTION sending endGame callback to " + player.username + " - " + e.getMessage());
                             e.printStackTrace();
                         }
                     }
                 } else {
-                    System.out.println("Game.startGame: Game " + this.gameId + " is NOT over. Scheduling next round.");
                     ScheduledExecutorService delayScheduler = Executors.newSingleThreadScheduledExecutor();
                     delayScheduler.schedule(() -> {
-                        System.out.println("Game.startGame (Delayed Task): Triggering next round for gameId: " + this.gameId);
                         startGame();
                         delayScheduler.shutdown();
                     }, 7, TimeUnit.SECONDS);
                 }
             });
-            System.out.println("Game.startGame: gameRound.startRound called for gameId: " + this.gameId);
         } catch (Exception e) {
-            System.out.println("Game.startGame: EXCEPTION during gameRound.startRound for gameId: " + this.gameId + " - " + e.getMessage());
             e.printStackTrace();
         }
     }
