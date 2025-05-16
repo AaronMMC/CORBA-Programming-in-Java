@@ -1,104 +1,140 @@
+
 package com.cs9322.team05.client.player.view;
 
 import com.cs9322.team05.client.player.controller.AuthenticationController;
+
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
+
+
+import java.util.logging.Logger;
 
 public class AuthenticationView {
+    private static final Logger logger = Logger.getLogger(AuthenticationView.class.getName());
     private final AuthenticationController controller;
-    private String currentToken = "";
+    private String viewInternalToken = "";
+    private Button loginBtn;
+    private Button logoutBtnInternal;
+    private TextField usernameField;
+    private PasswordField passwordField;
 
     public AuthenticationView(AuthenticationController controller) {
         this.controller = controller;
+
+
+        this.controller.setOnLoginFailure(this::showLoginErrorAlert);
     }
 
-    /**
-     * Creates and returns the login pane.
-     */
+    private void showLoginErrorAlert(String message) {
+        showAlert("Login Failed", message, AlertType.ERROR);
+    }
+
     public Parent createLoginPane() {
+        BorderPane root = new BorderPane();
+        root.setStyle("-fx-background-color: #eef1f5;");
 
-        VBox root = new VBox(20);
-        root.setPadding(new Insets(50));
+        HBox header = new HBox();
+        header.setPadding(new Insets(15, 20, 15, 20));
+        header.setStyle("-fx-background-color: #34495e;");
+        header.setAlignment(Pos.CENTER);
 
+        Label title = new Label("Player Login");
+        title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white;");
+        header.getChildren().add(title);
+        root.setTop(header);
 
-        Text title = new Text("Player Login");
-        title.setFont(Font.font(24));
+        VBox content = new VBox(30);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new Insets(40));
 
+        GridPane form = new GridPane();
+        form.setHgap(15);
+        form.setVgap(15);
+        form.setAlignment(Pos.CENTER);
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(15);
-
-        Label userLabel = new Label("Username:");
-        TextField userField = new TextField();
-        userField.setPromptText("Enter your username");
-
-        Label passLabel = new Label("Password:");
-        PasswordField passField = new PasswordField();
-        passField.setPromptText("Enter your password");
-
-        grid.add(userLabel, 0, 0);
-        grid.add(userField, 1, 0);
-        grid.add(passLabel, 0, 1);
-        grid.add(passField, 1, 1);
+        form.setStyle("-fx-padding: 30px; -fx-background-color: white; -fx-border-color: #bdc3c7; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 2, 2);");
 
 
-        Button loginBtn = new Button("Login");
-        Button logoutBtn = new Button("Logout");
-        logoutBtn.setDisable(true);
+        Label usernameLabel = new Label("Username:");
+        usernameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        usernameField = new TextField();
+        usernameField.setPromptText("Enter your username");
+        usernameField.setPrefWidth(300);
+        usernameField.setStyle("-fx-font-size: 14px; -fx-padding: 8px;");
 
-        HBox buttons = new HBox(15, loginBtn, logoutBtn);
+
+        Label passwordLabel = new Label("Password:");
+        passwordLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        passwordField = new PasswordField();
+        passwordField.setPromptText("Enter your password");
+        passwordField.setPrefWidth(300);
+        passwordField.setStyle("-fx-font-size: 14px; -fx-padding: 8px;");
+
+        form.add(usernameLabel, 0, 0);
+        form.add(usernameField, 1, 0);
+        form.add(passwordLabel, 0, 1);
+        form.add(passwordField, 1, 1);
+
+        loginBtn = new Button("🔓 Login");
+        loginBtn.setStyle("-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 10px 20px; -fx-font-size: 14px;");
+
+        HBox buttonBox = new HBox(20, loginBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+        GridPane.setColumnSpan(buttonBox,2);
+        form.add(buttonBox,0,2);
+
+        Label hangmanBannerLabel = new Label("Hangman Challenge");
+        hangmanBannerLabel.setStyle(
+                "-fx-font-size: 36px;" +
+                        "-fx-font-family: 'Arial Black';" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #2c3e50;" +
+                        "-fx-padding: 20px;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);"
+        );
+        VBox.setMargin(hangmanBannerLabel, new Insets(20,0,0,0));
 
 
-        loginBtn.setOnAction(evt -> {
-            String username = userField.getText().trim();
-            String password = passField.getText().trim();
-            String result = controller.handleLogin(username, password);
-            showAlert(result);
+        content.getChildren().addAll(hangmanBannerLabel, form);
 
-            if (result.startsWith("Login successful")) {
+        StackPane centerPane = new StackPane(content);
+        centerPane.setAlignment(Pos.CENTER);
+        root.setCenter(centerPane);
 
-                currentToken = result.substring(result.indexOf("Token:") + 6).trim();
-                loginBtn.setDisable(true);
-                logoutBtn.setDisable(false);
+        loginBtn.setOnAction(event -> {
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+
+
+            String resultMessage = controller.handleLogin(username, password);
+
+
+
+            if (resultMessage.toLowerCase().contains("successful")) {
+
+
+
+
+
+
+
+
+            } else {
+                showAlert("Login Attempt", resultMessage, AlertType.WARNING);
             }
         });
-
-        logoutBtn.setOnAction(evt -> {
-            String result = controller.handleLogout(currentToken);
-            showAlert(result);
-            if (result.startsWith("Logout successful")) {
-
-                userField.clear();
-                passField.clear();
-                currentToken = "";
-                loginBtn.setDisable(false);
-                logoutBtn.setDisable(true);
-            }
-        });
+        passwordField.setOnAction(e -> loginBtn.fire());
 
 
-        root.getChildren().addAll(title, grid, buttons);
-        VBox.setVgrow(grid, Priority.ALWAYS);
+
+
+
         return root;
     }
 
-    /**
-     * Utility to pop up a simple alert dialog.
-     */
-    private void showAlert(String message) {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Authentication");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-}
+
