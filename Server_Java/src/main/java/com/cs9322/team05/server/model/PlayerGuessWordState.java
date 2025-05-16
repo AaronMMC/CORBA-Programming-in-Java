@@ -44,7 +44,6 @@ public class PlayerGuessWordState {
 
 
     public void addAttemptedLetter(char letter, boolean isItInTheWord) {
-        System.out.println();
         attemptedLetters.put(letter, isItInTheWord);
 
     }

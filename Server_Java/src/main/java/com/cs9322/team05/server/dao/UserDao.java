@@ -56,7 +56,6 @@ public class UserDao {
     }
 
     public List<Player> getAllPlayers() {
-        System.out.println("UserDao.getAllPlayers: Attempting to fetch all players.");
         List<Player> players = new ArrayList<>();
         String query = "SELECT username, hashed_password, totalWins FROM player";
         try (PreparedStatement stmt = connection.prepareStatement(query);
@@ -70,14 +69,11 @@ public class UserDao {
                 player.wins = rs.getInt("totalWins");
                 players.add(player);
                 count++;
-                System.out.println("UserDao.getAllPlayers: Fetched and added player - Username: " + player.username + ", Wins: " + player.wins);
             }
-            System.out.println("UserDao.getAllPlayers: Total players fetched from database: " + count);
         } catch (SQLException e) {
             System.err.println("UserDao.getAllPlayers: SQLException occurred: " + e.getMessage());
             e.printStackTrace(); // Crucial for seeing DB errors
         }
-        System.out.println("UserDao.getAllPlayers: Returning list with " + players.size() + " players.");
         return players;
     }
 
