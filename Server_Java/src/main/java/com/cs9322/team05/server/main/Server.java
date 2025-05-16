@@ -14,13 +14,27 @@ import org.omg.CORBA.*;
 import org.omg.CosNaming.*;
 import org.omg.CosNaming.NamingContextPackage.*;
 import org.omg.PortableServer.*;
+import java.util.logging.Logger;
 
 import java.sql.Connection;
 
 public class Server {
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
+    private static final long startTime = System.currentTimeMillis();
 
     public static void main(String[] args) {
         try {
+            if (args.length > 0){
+                try{
+                    int port = Integer.parseInt(args[0]);
+                    if (port < 1024 || port > 65535){
+                        logger.warning("Invalid port range: "+port);
+
+                    }
+                } catch (NumberFormatException e){
+                    logger.warning("Invalid port number format");
+                }
+            }
             // 1) Initialize ORB
             ORB orb = ORB.init(args, null);
 
@@ -34,6 +48,11 @@ public class Server {
             NamingContextExt nameRoot = NamingContextExtHelper.narrow(
                     orb.resolve_initial_references("NameService")
             );
+            // Connection validation
+            Connection databaseConnection = DatabaseConnection.getConnection();
+            if (databaseConnection == null || databaseConnection.isClosed()){
+                throw new IllegalStateException("Database connection failed");
+            }
 
             // 4) Database connection, DAOs, managers
             Connection connection = DatabaseConnection.getConnection();
@@ -64,17 +83,20 @@ public class Server {
             AuthenticationService authService = AuthenticationServiceHelper.narrow(authRef);
             GameService gameService = GameServiceHelper.narrow(gameRef);
 
+            // Service registration log
+            logger.info("Registering CORBA services...");
+
             // 7) Bind each service in the Naming Service
             bindService(nameRoot, "AdminService", adminService);
             bindService(nameRoot, "AuthenticationService", authService);
             bindService(nameRoot, "GameService", gameService);
 
+            logger.info("Server initialied in " + (System.currentTimeMillis() - startTime + "ms"));
             // 8) Print startup confirmation
-            System.out.println("=== Server is up and running ===");
-            System.out.println("Bound services in NameService:");
-            System.out.println("  • AdminService");
-            System.out.println("  • AuthenticationService");
-            System.out.println("  • GameService");
+            System.out.println("\n===== SERVER STATUS =====");
+            System.out.println("Status: RUNNING");
+            System.out.println("Port: " + (args.length > 0 ? args[0] : "default"));
+            System.out.println("=====================\n");
 
             // 9) Wait for client invocations
             orb.run();
