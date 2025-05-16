@@ -87,4 +87,53 @@ public class HomeView implements HomeViewInterface {
 
 
     }
+    @Override
+    public void showLeaderboard(List<GamePlayer> top5) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Overall Leaderboard");
+        alert.setHeaderText("Top 5 Players (by Wins)");
+        alert.initModality(Modality.APPLICATION_MODAL);
+
+        if (top5 == null || top5.isEmpty()) {
+            alert.setContentText("The leaderboard is currently empty or could not be retrieved.");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            int rank = 1;
+            for (GamePlayer p : top5) {
+                sb.append(rank++).append(". ").append(p.username).append(" – Wins: ").append(p.wins).append("\n");
+            }
+            alert.setContentText(sb.toString());
+        }
+        alert.showAndWait();
+    }
+
+    @Override
+    public void returnToLogin() {
+
+
+    }
+
+    @Override
+    public void showError(String msg) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+
+    public void setOnStartGame(Runnable cb) {
+        this.onStartGame = cb;
+    }
+
+    public void setOnViewLeaderboard(Runnable cb) {
+        this.onViewLeaderboard = cb;
+    }
+
+    public void setOnLogout(Runnable cb) {
+        this.onLogout = cb;
+    }
+
+}
 
