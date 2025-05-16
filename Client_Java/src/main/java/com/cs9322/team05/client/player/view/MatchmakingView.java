@@ -1,3 +1,4 @@
+
 package com.cs9322.team05.client.player.view;
 
 import javafx.animation.KeyFrame;
@@ -6,27 +7,32 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.input.InputMethodTextRun;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
+import java.util.logging.Logger; 
+
 
 public class MatchmakingView {
+    private static final Logger logger = Logger.getLogger(MatchmakingView.class.getName()); 
 
     private final VBox root = new VBox(20);
     private final Label titleLabel = new Label("Matchmaking");
     private final Label statusLabel = new Label("Looking for an opponent...");
     private final Label timerLabel = new Label("");
     private final ProgressIndicator progressIndicator = new ProgressIndicator(-1.0);
-    private final Button cancelBtn = new Button("Cancel Search");
-    private Runnable onCancel;
+    public InputMethodTextRun cancelBtn;
+    
+    
     private Timeline countdownTimeline;
 
     public MatchmakingView() {
         setupUI();
-        wireActions();
+        
     }
 
     private void setupUI() {
@@ -36,18 +42,10 @@ public class MatchmakingView {
 
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(50));
-        root.getChildren().addAll(titleLabel, progressIndicator, statusLabel, timerLabel, cancelBtn);
+        
+        root.getChildren().addAll(titleLabel, progressIndicator, statusLabel, timerLabel);
         timerLabel.setVisible(false);
         timerLabel.setManaged(false);
-    }
-
-    private void wireActions() {
-        cancelBtn.setOnAction(e -> {
-            stopCountdown();
-            if (onCancel != null) {
-                onCancel.run();
-            }
-        });
     }
 
     public Parent getRootPane() {
@@ -60,8 +58,8 @@ public class MatchmakingView {
             progressIndicator.setVisible(true);
             timerLabel.setVisible(false);
             timerLabel.setManaged(false);
-            cancelBtn.setText("Cancel Search");
-            cancelBtn.setVisible(true);
+            
+            
         });
     }
 
@@ -72,8 +70,6 @@ public class MatchmakingView {
             timerLabel.setText(String.valueOf(seconds) + "s");
             timerLabel.setVisible(true);
             timerLabel.setManaged(true);
-            cancelBtn.setText("Cancel Game Start");
-
             if (countdownTimeline != null) {
                 countdownTimeline.stop();
             }
@@ -109,22 +105,7 @@ public class MatchmakingView {
             statusLabel.setText("Matchmaking Failed: " + reason);
             progressIndicator.setVisible(false);
             stopCountdown();
-            cancelBtn.setText("Back to Menu");
-            cancelBtn.setVisible(true);
+            logger.info("MatchmakingView displaying failure: " + reason + ". Awaiting navigation by controller.");
         });
-    }
-
-    public void showMatchmakingCancelled() {
-        Platform.runLater(() -> {
-            statusLabel.setText("Matchmaking Cancelled.");
-            progressIndicator.setVisible(false);
-            stopCountdown();
-            cancelBtn.setText("Back to Menu");
-            cancelBtn.setVisible(true);
-        });
-    }
-
-    public void setOnCancel(Runnable onCancel) {
-        this.onCancel = onCancel;
     }
 }

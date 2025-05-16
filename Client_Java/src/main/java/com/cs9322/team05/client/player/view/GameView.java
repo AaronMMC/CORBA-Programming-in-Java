@@ -5,7 +5,6 @@ import ModifiedHangman.GamePlayer;
 import ModifiedHangman.GameResult;
 import ModifiedHangman.RoundResult;
 import com.cs9322.team05.client.player.interfaces.GameViewInterface;
-import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -21,16 +20,16 @@ import javafx.util.Duration;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class GameView implements GameViewInterface {
     private static final Logger logger = Logger.getLogger(GameView.class.getName());
 
     private final Label systemMessageLabel = new Label("Waiting for game to initialize...");
-    private final Label matchmakingCountdownLabel = new Label(); 
-    private final Label roundInfoLabel = new Label(); 
+    private final Label matchmakingCountdownLabel = new Label();
+    private final Label roundInfoLabel = new Label();
     private final Label maskedWordLabel = new Label("---");
     private final Label attemptsLeftLabel = new Label();
     private final ListView<String> guessedLettersList = new ListView<>();
@@ -38,7 +37,7 @@ public class GameView implements GameViewInterface {
     private final Button leaderboardBtn = new Button("Overall Leaderboard");
     private final Button playAgainBtn = new Button("Play Again");
     private final Button backToMenuBtn = new Button("Back to Menu");
-    private final VBox root = new VBox(10); 
+    private final VBox root = new VBox(10);
 
     private Consumer<Character> onGuess;
     private Runnable onLeaderboard;
@@ -54,13 +53,12 @@ public class GameView implements GameViewInterface {
         matchmakingCountdownLabel.setFont(new Font("Arial", 18));
         matchmakingCountdownLabel.setStyle("-fx-font-weight: bold;");
         roundInfoLabel.setFont(new Font("Arial", 16));
-        maskedWordLabel.setFont(new Font("Arial", 32)); 
+        maskedWordLabel.setFont(new Font("Arial", 32));
         maskedWordLabel.setStyle("-fx-font-weight: bold; -fx-letter-spacing: 5px;");
         attemptsLeftLabel.setFont(new Font("Arial", 14));
         guessedLettersList.setMaxHeight(100);
         guessedLettersList.setMinWidth(200);
         guessedLettersList.setMaxWidth(250);
-
 
         guessInput.setPromptText("Enter letter & press ENTER");
         guessInput.setMaxWidth(200);
@@ -69,10 +67,8 @@ public class GameView implements GameViewInterface {
                 String text = guessInput.getText().trim();
                 if (!text.isEmpty() && Character.isLetter(text.charAt(0))) {
                     onGuess.accept(Character.toLowerCase(text.charAt(0)));
-                    guessInput.clear();
-                } else {
-                    guessInput.clear();
                 }
+                guessInput.clear();
             }
         });
 
@@ -89,7 +85,6 @@ public class GameView implements GameViewInterface {
         root.setAlignment(Pos.TOP_CENTER);
         root.getChildren().addAll(systemMessageLabel, topInfoBox, mainGameArea, controls);
 
-        
         leaderboardBtn.setOnAction(e -> {
             if (onLeaderboard != null) onLeaderboard.run();
         });
@@ -107,10 +102,14 @@ public class GameView implements GameViewInterface {
     private void animateLabelUpdate(Label label, String newText) {
         Platform.runLater(() -> {
             if (label.getText() == null || !label.getText().equals(newText)) {
-                
                 label.setText(newText);
             }
         });
+    }
+
+    @Override
+    public Parent getRootPane() {
+        return root;
     }
 
     @Override
@@ -119,13 +118,18 @@ public class GameView implements GameViewInterface {
         Platform.runLater(() -> {
             animateLabelUpdate(systemMessageLabel, "Game will start soon...");
             animateLabelUpdate(matchmakingCountdownLabel, "Starting in: " + seconds + "s");
-            animateLabelUpdate(roundInfoLabel, ""); 
+            animateLabelUpdate(roundInfoLabel, "");
 
             if (matchmakingTimerTimeline != null) {
                 matchmakingTimerTimeline.stop();
             }
+            if (seconds <= 0) {
+                animateLabelUpdate(matchmakingCountdownLabel, "");
+                animateLabelUpdate(systemMessageLabel, "Waiting for server to start the first round...");
+                return;
+            }
             matchmakingTimerTimeline = new Timeline();
-            matchmakingTimerTimeline.setCycleCount(seconds +1);
+            matchmakingTimerTimeline.setCycleCount(seconds + 1);
             final int[] remainingSeconds = {seconds};
             matchmakingTimerTimeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1), e -> {
                 remainingSeconds[0]--;
@@ -133,9 +137,9 @@ public class GameView implements GameViewInterface {
                     animateLabelUpdate(matchmakingCountdownLabel, "Starting in: " + remainingSeconds[0] + "s");
                 } else if (remainingSeconds[0] == 0) {
                     animateLabelUpdate(matchmakingCountdownLabel, "Starting now!");
-                } else { 
+                } else {
                     matchmakingTimerTimeline.stop();
-                    animateLabelUpdate(matchmakingCountdownLabel, ""); 
+                    animateLabelUpdate(matchmakingCountdownLabel, "");
                     animateLabelUpdate(systemMessageLabel, "Waiting for server to start the first round...");
                 }
             }));
@@ -147,25 +151,25 @@ public class GameView implements GameViewInterface {
     public void showRoundDuration(int totalSeconds) {
         logger.info("GameView: Displaying round duration: " + totalSeconds + "s");
         Platform.runLater(() -> {
-            animateLabelUpdate(matchmakingCountdownLabel, ""); 
+            animateLabelUpdate(matchmakingCountdownLabel, "");
             if (roundTimerTimeline != null) {
                 roundTimerTimeline.stop();
             }
             roundTimerTimeline = new Timeline();
-            roundTimerTimeline.setCycleCount(totalSeconds + 1); 
+            roundTimerTimeline.setCycleCount(totalSeconds + 1);
             final int[] remainingSeconds = {totalSeconds};
 
-            animateLabelUpdate(roundInfoLabel, "Time Left: " + remainingSeconds[0] + "s"); 
+            animateLabelUpdate(roundInfoLabel, "Time Left: " + remainingSeconds[0] + "s");
 
             roundTimerTimeline.getKeyFrames().add(new KeyFrame(Duration.seconds(1), event -> {
                 remainingSeconds[0]--;
                 if (remainingSeconds[0] >= 0) {
                     animateLabelUpdate(roundInfoLabel, "Time Left: " + remainingSeconds[0] + "s");
                 }
-                if (remainingSeconds[0] < 0) { 
+                if (remainingSeconds[0] < 0) {
                     roundTimerTimeline.stop();
                     animateLabelUpdate(roundInfoLabel, "Time's Up!");
-                    disableGuessing(); 
+                    disableGuessing();
                 }
             }));
             roundTimerTimeline.playFromStart();
@@ -177,19 +181,14 @@ public class GameView implements GameViewInterface {
         logger.info("GameView: Preparing new round " + roundNumber + " with word length " + wordLength);
         Platform.runLater(() -> {
             animateLabelUpdate(systemMessageLabel, "Round " + roundNumber + " - Guess the word!");
-            animateLabelUpdate(matchmakingCountdownLabel, ""); 
+            animateLabelUpdate(matchmakingCountdownLabel, "");
 
             StringBuilder masked = new StringBuilder();
             for (int i = 0; i < wordLength; i++) {
                 masked.append("_");
             }
             animateLabelUpdate(maskedWordLabel, masked.toString().replaceAll(".(?!$)", "$0 "));
-            animateLabelUpdate(attemptsLeftLabel, ""); 
-            
-            
-            
-            
-            animateLabelUpdate(attemptsLeftLabel, "Attempts left: 6"); 
+            animateLabelUpdate(attemptsLeftLabel, "Attempts left: 6");
             guessedLettersList.getItems().clear();
             guessInput.clear();
             guessInput.setDisable(false);
@@ -203,10 +202,9 @@ public class GameView implements GameViewInterface {
             leaderboardBtn.setVisible(true);
             leaderboardBtn.setManaged(true);
 
-            if (roundTimerTimeline != null) { 
+            if (roundTimerTimeline != null) {
                 roundTimerTimeline.stop();
             }
-            
         });
     }
 
@@ -223,10 +221,12 @@ public class GameView implements GameViewInterface {
     @Override
     public void showAttemptedLetters(List<AttemptedLetter> letters) {
         Platform.runLater(() -> {
-            List<String> items = letters.stream()
-                    .map(a -> a.letter + (a.isLetterCorrect ? " [✓]" : " [✗]"))
-                    .collect(Collectors.toList());
-            guessedLettersList.getItems().setAll(items);
+            if (letters != null) {
+                List<String> items = letters.stream().map(a -> a.letter + (a.isLetterCorrect ? " [✓]" : " [✗]")).collect(Collectors.toList());
+                guessedLettersList.getItems().setAll(items);
+            } else {
+                guessedLettersList.getItems().clear();
+            }
         });
     }
 
@@ -248,23 +248,31 @@ public class GameView implements GameViewInterface {
 
     @Override
     public void showRoundResult(RoundResult r) {
-        logger.info("GameView: Showing round result. Status: " + r.statusMessage);
+        logger.info("GameView: Showing round result. Status: " + r.statusMessage + ". Correct Word: " + r.wordToGuess);
         Platform.runLater(() -> {
             disableGuessing();
             if (roundTimerTimeline != null) {
                 roundTimerTimeline.stop();
             }
             animateLabelUpdate(roundInfoLabel, "Round " + r.roundNumber + " Over");
+            animateLabelUpdate(maskedWordLabel, r.wordToGuess != null ? r.wordToGuess.replaceAll(".(?!$)", "$0 ") : "N/A");
 
-            StringBuilder sb = new StringBuilder("Round " + r.roundNumber + " Result:\n");
-            sb.append(r.statusMessage).append("\n");
+
+            StringBuilder sb = new StringBuilder();
+            String titleText = "Round " + r.roundNumber + " Over";
+            String headerText = r.statusMessage != null && !r.statusMessage.isEmpty() ? r.statusMessage : "Round Concluded";
+
+            sb.append("The correct word was: ").append(r.wordToGuess != null ? r.wordToGuess : "N/A").append("\n\n");
+
             if (r.roundWinner != null && r.roundWinner.username != null && !r.roundWinner.username.isEmpty()) {
-                sb.append("Round Winner: ").append(r.roundWinner.username).append("\n");
+                sb.append("Round Winner: ").append(r.roundWinner.username).append("\n\n");
+            } else {
+                sb.append("No winner for this round.\n\n");
             }
-            sb.append("Correct Word: ").append(r.statusMessage).append("\n\n");
+
             sb.append("Current Game Standings (Rounds Won):\n");
-            if (r.currentGameLeaderboard != null) {
-                for(GamePlayer p : r.currentGameLeaderboard) {
+            if (r.currentGameLeaderboard != null && r.currentGameLeaderboard.length > 0) {
+                for (GamePlayer p : r.currentGameLeaderboard) {
                     sb.append(p.username).append(": ").append(p.wins).append("\n");
                 }
             } else {
@@ -272,8 +280,8 @@ public class GameView implements GameViewInterface {
             }
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Round " + r.roundNumber + " Over");
-            alert.setHeaderText(r.statusMessage != null && !r.statusMessage.isEmpty() ? r.statusMessage : "Round Concluded");
+            alert.setTitle(titleText);
+            alert.setHeaderText(headerText);
             alert.setContentText(sb.toString());
             alert.getButtonTypes().setAll(ButtonType.OK);
             alert.showAndWait();
@@ -283,12 +291,11 @@ public class GameView implements GameViewInterface {
 
     @Override
     public void showFinalResult(GameResult g) {
-        logger.info("GameView: Showing final game result. Winner: " + g.gameWinner);
+        logger.info("GameView: Showing final game result. Winner: " + (g != null ? g.gameWinner : "N/A"));
         Platform.runLater(() -> {
             disableGuessing();
             if (roundTimerTimeline != null) roundTimerTimeline.stop();
             if (matchmakingTimerTimeline != null) matchmakingTimerTimeline.stop();
-
             animateLabelUpdate(systemMessageLabel, "Game Over!");
             animateLabelUpdate(matchmakingCountdownLabel, "");
             animateLabelUpdate(roundInfoLabel, "");
@@ -296,14 +303,23 @@ public class GameView implements GameViewInterface {
             animateLabelUpdate(attemptsLeftLabel, "");
             guessedLettersList.getItems().clear();
 
+            if (g == null) {
+                logger.severe("GameResult object is null in showFinalResult.");
+                showError("Could not display final results (data missing).");
+                return;
+            }
+
             StringBuilder sb = new StringBuilder();
             String headerText;
 
-            if (g.gameWinner != null && !g.gameWinner.isEmpty() && !g.gameWinner.equalsIgnoreCase("N/A")) {
+            if (g.gameWinner != null && !g.gameWinner.isEmpty() && !g.gameWinner.equalsIgnoreCase("N/A") && !g.gameWinner.equalsIgnoreCase("DRAW")) {
                 headerText = g.gameWinner + " wins the game!";
                 sb.append("Congratulations to ").append(g.gameWinner).append("!\n");
+            } else if (g.gameWinner != null && g.gameWinner.equalsIgnoreCase("DRAW")) {
+                headerText = "The game is a DRAW!";
+                sb.append(headerText).append("\n");
             } else {
-                headerText = g.gameWinner != null && !g.gameWinner.isEmpty() ? g.gameWinner : "The game has concluded.";
+                headerText = "The game has concluded.";
                 sb.append(headerText).append("\n");
             }
 
@@ -327,7 +343,7 @@ public class GameView implements GameViewInterface {
             playAgainBtn.setManaged(true);
             backToMenuBtn.setVisible(true);
             backToMenuBtn.setManaged(true);
-            leaderboardBtn.setDisable(false); 
+            leaderboardBtn.setDisable(false);
             leaderboardBtn.setVisible(true);
             leaderboardBtn.setManaged(true);
         });
@@ -336,10 +352,10 @@ public class GameView implements GameViewInterface {
     @Override
     public void showError(String msg) {
         Platform.runLater(() -> {
-            logger.log(Level.SEVERE, "GameView showError: " + msg);
+            logger.log(Level.WARNING, "GameView showError: " + msg);
             Alert alert = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
             alert.setTitle("Error");
-            alert.setHeaderText("An error occurred");
+            alert.setHeaderText("An Error Occurred");
             alert.showAndWait();
         });
     }
@@ -355,8 +371,10 @@ public class GameView implements GameViewInterface {
             } else {
                 sb.append("No overall leaderboard data available yet.");
             }
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, sb.toString(), ButtonType.OK);
-            alert.setHeaderText("Overall Leaderboard");
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Overall Leaderboard");
+            alert.setHeaderText(null);
+            alert.setContentText(sb.toString());
             alert.showAndWait();
         });
     }
@@ -374,7 +392,7 @@ public class GameView implements GameViewInterface {
             guessInput.clear();
             guessInput.setDisable(true);
 
-            leaderboardBtn.setDisable(true); 
+            leaderboardBtn.setDisable(true);
             leaderboardBtn.setVisible(true);
             leaderboardBtn.setManaged(true);
 
@@ -404,11 +422,6 @@ public class GameView implements GameViewInterface {
     public void setOnGuess(Consumer<Character> onGuess) {
         this.onGuess = onGuess;
     }
-
-    
-    
-    
-    
 
     @Override
     public void setOnLeaderboard(Runnable onLeaderboard) {

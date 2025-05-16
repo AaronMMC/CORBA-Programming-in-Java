@@ -4,17 +4,20 @@ import ModifiedHangman.AttemptedLetter;
 import ModifiedHangman.GamePlayer;
 import ModifiedHangman.GameResult;
 import ModifiedHangman.RoundResult;
+import javafx.scene.Parent;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 public interface GameViewInterface {
 
-    void showWaitingTimer(int seconds); 
+    Parent getRootPane();
 
-    void showRoundDuration(int seconds); 
+    void showWaitingTimer(int seconds);
 
-    void prepareNewRound(int wordLength, int roundNumber); 
+    void showRoundDuration(int seconds);
+
+    void prepareNewRound(int wordLength, int roundNumber);
 
     void updateMaskedWord(String maskedWord);
 
@@ -22,9 +25,9 @@ public interface GameViewInterface {
 
     void showAttemptedLetters(List<AttemptedLetter> attempted);
 
-    void disableGuessing(); 
+    void disableGuessing();
 
-    void showStatusMessage(String message); 
+    void showStatusMessage(String message);
 
     void showRoundResult(RoundResult result);
 
@@ -32,15 +35,11 @@ public interface GameViewInterface {
 
     void showError(String message);
 
-    void showLeaderboard(List<GamePlayer> leaderboard); 
+    void showLeaderboard(List<GamePlayer> leaderboard);
 
     void clearAll();
 
-    void onReturnToMenu(); 
-
-    
-    
-    
+    void onReturnToMenu();
 
     void setOnGuess(Consumer<Character> onGuess);
 

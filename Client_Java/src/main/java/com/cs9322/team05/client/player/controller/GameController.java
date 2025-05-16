@@ -6,6 +6,7 @@ import com.cs9322.team05.client.player.model.GameModel;
 import javafx.application.Platform;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,8 +15,9 @@ public class GameController {
     private final GameModel gameModel;
     private GameViewInterface view;
     private String gameId;
-    private int expectedRoundDurationSeconds; 
+    private int expectedRoundDurationSeconds;
     private int currentRoundNumber = 0;
+    private Consumer<String> onGameStartFailedForNavigation;
 
     public GameController(GameModel gameModel, GameViewInterface view) {
         this.gameModel = gameModel;
@@ -32,8 +34,6 @@ public class GameController {
             return;
         }
         logger.fine("Binding view actions for GameController.");
-        
-        
         view.setOnGuess(this::submitGuess);
         view.setOnLeaderboard(this::fetchLeaderboard);
         view.setOnPlayAgain(this::requestPlayAgain);
@@ -43,24 +43,59 @@ public class GameController {
     public void setGameContext(String gameId, int roundDurationSeconds) {
         this.gameId = gameId;
         this.expectedRoundDurationSeconds = roundDurationSeconds;
-        this.currentRoundNumber = 0; 
+        this.currentRoundNumber = 0;
         logger.info("GameController context set - GameID: " + this.gameId + ", ExpectedRoundDuration: " + this.expectedRoundDurationSeconds + "s");
+        if (view != null) {
+            Platform.runLater(() -> {
+                if (this.gameId != null && !this.gameId.isEmpty()){
+                    view.clearAll();
+                    view.showStatusMessage("Game context set. Waiting for server...");
+                }
+            });
+        }
+    }
+    public void setOnGameStartFailedForNavigation(Consumer<String> callback) {
+        this.onGameStartFailedForNavigation = callback;
+    }
+    public void handleGameStartFailed(String message) {
+        logger.info("Controller: handleGameStartFailed called with server message: " + message);
+        if (onGameStartFailedForNavigation != null) {
+            
+            String userFriendlyMessage;
+            if (message != null && message.toLowerCase().contains("not enough players")) {
+                userFriendlyMessage = "Not enough players available to start the game. Please try again later.";
+            } else if (message != null && !message.isEmpty()){
+                userFriendlyMessage = "Failed to start game: " + message;
+            } else {
+                userFriendlyMessage = "Could not start game: Not enough players found. Returning to home.";
+            }
+            logger.info("Invoking onGameStartFailedForNavigation callback to MainApp with message: " + userFriendlyMessage);
+            Platform.runLater(() -> onGameStartFailedForNavigation.accept(userFriendlyMessage));
+        } else {
+            logger.warning("GameController: onGameStartFailedForNavigation callback is not set. Cannot navigate back to Home for startGameFailed event.");
+            
+            if (view != null) {
+                Platform.runLater(() -> view.showError("Failed to start game: " + message + " (Navigation to home failed)"));
+            }
+        }
     }
 
-    public void onStartRound(int wordLength) {
-        currentRoundNumber++;
-        logger.info("Controller: Server initiated onStartRound for round " + currentRoundNumber + " with wordLength: " + wordLength);
+    public void onStartRound(int wordLength, int roundNumber) {
+        this.currentRoundNumber = roundNumber;
+        logger.info("Controller: Server initiated onStartRound for round " + this.currentRoundNumber + " with wordLength: " + wordLength);
         if (view == null) {
             logger.severe("View is null in onStartRound! Cannot prepare round.");
             return;
         }
         if (this.gameId == null || this.gameId.isEmpty()) {
             logger.severe("GameId is null or empty in onStartRound! This is critical.");
+            Platform.runLater(() -> view.showError("Critical Error: Game ID not set for round start."));
+            return;
         }
 
         Platform.runLater(() -> {
-            view.prepareNewRound(wordLength, currentRoundNumber);
-            view.showRoundDuration(this.expectedRoundDurationSeconds); 
+            view.prepareNewRound(wordLength, this.currentRoundNumber);
+            view.showRoundDuration(this.expectedRoundDurationSeconds);
         });
     }
 
@@ -77,7 +112,7 @@ public class GameController {
         logger.info("Submitting guess '" + letter + "' for gameId: " + gameId + ", round: " + currentRoundNumber);
         try {
             GuessResponse resp = gameModel.guessLetter(this.gameId, letter);
-            logger.fine("GuessResponse received: wordGuessed=" + resp.isWordGuessed + ", attemptsLeft=" + resp.remainingAttemptsLeft);
+            logger.fine("GuessResponse received: wordGuessed=" + resp.isWordGuessed + ", attemptsLeft=" + resp.remainingAttemptsLeft + ", maskedWord=" + resp.maskedWord);
             Platform.runLater(() -> {
                 view.updateMaskedWord(resp.maskedWord);
                 view.updateAttemptsLeft(resp.remainingAttemptsLeft);
@@ -85,7 +120,7 @@ public class GameController {
                 if (resp.isWordGuessed) {
                     logger.info("Word guessed correctly by player " + gameModel.getUsername());
                     view.disableGuessing();
-                    view.showStatusMessage("Word Guessed! Waiting for round to end...");
+                    view.showStatusMessage("Correct! Waiting for round to end...");
                 } else if (resp.remainingAttemptsLeft <= 0) {
                     logger.info("No attempts left for player " + gameModel.getUsername());
                     view.disableGuessing();
@@ -99,7 +134,7 @@ public class GameController {
             logger.log(Level.SEVERE, "PlayerNotLoggedInException while guessing.", e);
             Platform.runLater(() -> view.showError("Error: You are not logged in."));
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unexpected exception while submitting guess.", e);
+            logger.log(Level.SEVERE, "Unexpected exception while submitting guess: " + e.getMessage(), e);
             Platform.runLater(() -> view.showError("Error during guess: " + e.getMessage()));
         }
     }
@@ -112,7 +147,12 @@ public class GameController {
         logger.info("Fetching overall leaderboard.");
         try {
             Leaderboard lb = gameModel.getLeaderboard();
-            Platform.runLater(() -> view.showLeaderboard(Arrays.asList(lb.players)));
+            if (lb != null && lb.players != null) {
+                Platform.runLater(() -> view.showLeaderboard(Arrays.asList(lb.players)));
+            } else {
+                Platform.runLater(() -> view.showLeaderboard(Arrays.asList())); 
+                logger.warning("Fetched leaderboard or its players array is null.");
+            }
         } catch (PlayerNotLoggedInException e) {
             logger.log(Level.WARNING, "PlayerNotLoggedInException for leaderboard.", e);
             Platform.runLater(() -> view.showError("Cannot fetch leaderboard: Not logged in."));
@@ -134,7 +174,7 @@ public class GameController {
     }
 
     public void onEndRound(RoundResult result) {
-        logger.info("Controller: Server signaled onEndRound for round " + result.roundNumber);
+        logger.info("Controller: Server signaled onEndRound for round " + result.roundNumber + ". Correct word: " + result.wordToGuess);
         if (view == null) {
             logger.warning("onEndRound called but view is null.");
             return;
@@ -143,7 +183,7 @@ public class GameController {
     }
 
     public void onEndGame(GameResult result) {
-        logger.info("Controller: Server signaled onEndGame. Winner: " + result.gameWinner);
+        logger.info("Controller: Server signaled onEndGame. Winner: " + (result != null ? result.gameWinner : "N/A"));
         if (view == null) {
             logger.warning("onEndGame called but view is null.");
             return;
@@ -161,9 +201,6 @@ public class GameController {
     private void requestBackToMenu() {
         logger.info("Controller: Back to Menu requested by user. Triggering view's onReturnToMenu.");
         if (view == null) return;
-        
-        
-        
         view.onReturnToMenu();
     }
 
@@ -183,5 +220,17 @@ public class GameController {
 
     public GameModel getGameModel() {
         return gameModel;
+    }
+
+    public void cleanupControllerState() {
+        logger.info("GameController: Cleaning up controller state for gameId: " + this.gameId);
+        this.gameId = null;
+        this.currentRoundNumber = 0;
+        this.expectedRoundDurationSeconds = 0;
+        if (view != null) {
+            view.clearAll();
+            logger.fine("GameView instructed to clearAll.");
+        }
+        logger.info("GameController: Cleanup complete.");
     }
 }

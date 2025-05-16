@@ -6,10 +6,15 @@ import com.cs9322.team05.client.player.callback.ClientCallbackImpl;
 import com.cs9322.team05.client.player.model.GameModel;
 import com.cs9322.team05.client.player.view.MatchmakingView;
 import javafx.application.Platform;
+import org.omg.CORBA.ORBPackage.InvalidName;
+import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
+import org.omg.PortableServer.POAPackage.ServantNotActive;
+import org.omg.PortableServer.POAPackage.WrongPolicy;
 
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer; 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,16 +22,23 @@ public class MatchmakingController {
     private static final Logger logger = Logger.getLogger(MatchmakingController.class.getName());
     private final GameModel gameModel;
     private final ClientCallbackImpl clientCallback;
-    private final GameController gameController;
+    private final GameController gameController; 
     private final MatchmakingView view;
 
     private Runnable onMatchReadyToProceed;
-    private Runnable onMatchmakingCancelledOrFailed;
+    
+    private Consumer<String> onMatchmakingCancelledOrFailed;
 
     private Thread matchmakingThread;
     private final AtomicBoolean cancellationRequested = new AtomicBoolean(false);
-    private static final long CLIENT_SIDE_MATCHMAKING_TIMEOUT_MS = 300000;
+    private static final long CLIENT_SIDE_MATCHMAKING_TIMEOUT_MS = 30000; 
     private Timer timeoutTimer = null;
+
+    public static final String REASON_TIMEOUT = "NO_GAME_FOUND_TIMEOUT";
+    public static final String REASON_SERVER_ERROR = "SERVER_ASSIGN_ERROR";
+    public static final String REASON_LOGIN_EXPIRED = "LOGIN_EXPIRED";
+    public static final String REASON_UNEXPECTED_ERROR = "UNEXPECTED_ERROR";
+
 
     public MatchmakingController(GameModel gameModel, ClientCallbackImpl clientCallback, GameController gameController) {
         this.gameModel = gameModel;
@@ -34,20 +46,13 @@ public class MatchmakingController {
         this.gameController = gameController;
         this.view = new MatchmakingView();
 
-        this.view.setOnCancel(() -> {
-            logger.info("Matchmaking cancellation requested by user via UI.");
-            cancellationRequested.set(true);
-            cleanupTimeoutTimer();
-            if (matchmakingThread != null && matchmakingThread.isAlive()) {
-                matchmakingThread.interrupt();
-            }
-        });
+
     }
 
     private void cleanupTimeoutTimer() {
         if (timeoutTimer != null) {
             timeoutTimer.cancel();
-            timeoutTimer.purge();
+            timeoutTimer.purge(); 
             timeoutTimer = null;
             logger.fine("Matchmaking client-side timeout timer cleaned up.");
         }
@@ -60,69 +65,70 @@ public class MatchmakingController {
 
         matchmakingThread = new Thread(() -> {
             boolean registrationSuccessful = false;
+            String failureReason = null;
+            
+            
+            
             try {
                 logger.fine("Matchmaking thread started.");
-                cleanupTimeoutTimer();
-                timeoutTimer = new Timer("MatchmakingTimeoutTimer", true);
+                cleanupTimeoutTimer(); 
+                timeoutTimer = new Timer("MatchmakingTimeoutTimer", true); 
                 timeoutTimer.schedule(new TimerTask() {
                     @Override
                     public void run() {
+                        
                         if (matchmakingThread != null && matchmakingThread.isAlive() && !cancellationRequested.get()) {
                             logger.warning("Client-side matchmaking timeout (" + CLIENT_SIDE_MATCHMAKING_TIMEOUT_MS + "ms) reached.");
                             Platform.runLater(() -> {
-                                if (!cancellationRequested.get()) {
+                                if (!cancellationRequested.get()) { 
                                     view.showMatchmakingFailed("No game found in time.");
                                     if (onMatchmakingCancelledOrFailed != null) {
-                                        onMatchmakingCancelledOrFailed.run();
+                                        onMatchmakingCancelledOrFailed.accept(REASON_TIMEOUT);
                                     }
                                 }
                             });
-                            if (matchmakingThread != null) matchmakingThread.interrupt();
+                            if (matchmakingThread != null) matchmakingThread.interrupt(); 
                         }
                     }
                 }, CLIENT_SIDE_MATCHMAKING_TIMEOUT_MS);
 
                 logger.fine("Attempting to register client callback with server...");
-                clientCallback.register();
+                clientCallback.register(); 
                 registrationSuccessful = true;
                 logger.info("Client callback successfully registered with server.");
 
-                if (cancellationRequested.get()) {
-                    logger.info("Matchmaking cancelled by user before calling gameModel.startGame().");
-                    return;
-                }
+
 
                 logger.fine("Calling gameModel.startGame() to find or create a game session...");
-                GameInfo info = gameModel.startGame();
-                logger.info("Received GameInfo from server: gameId=" + info.gameId +
-                        ", remainingWaitingTime=" + info.remainingWaitingTime +
-                        ", roundLength (for game rounds)=" + info.roundLength);
+                GameInfo info = gameModel.startGame(); 
+                logger.info("Received GameInfo from server: gameId=" + (info != null ? info.gameId : "null") +
+                        ", remainingWaitingTime=" + (info != null ? info.remainingWaitingTime : "N/A") +
+                        ", roundLength (for game rounds)=" + (info != null ? info.roundLength : "N/A"));
 
-                cleanupTimeoutTimer();
+                cleanupTimeoutTimer(); 
 
-                if (cancellationRequested.get()) {
-                    logger.info("Matchmaking cancelled by user after gameModel.startGame() returned.");
-                    return;
-                }
 
-                if (info.gameId != null && !info.gameId.isEmpty()) {
+
+                if (info != null && info.gameId != null && !info.gameId.isEmpty()) {
                     logger.info("Game session found/created: " + info.gameId + ". Setting game context in GameController.");
 
                     if (this.gameController != null) {
                         this.gameController.setGameContext(info.gameId, info.roundLength);
                     } else {
-                        logger.severe("CRITICAL: GameController instance is null in MatchmakingController. Cannot set game context!");
-                        throw new IllegalStateException("GameController not available to set context from MatchmakingController.");
+                        logger.severe("CRITICAL: GameController instance is null. Cannot set game context!");
+                        throw new IllegalStateException("GameController not available.");
                     }
 
-                    String message = "Game Found! Preparing your session...";
+                    String message = "Game Found! Session ID: " + info.gameId + ". Starting in...";
                     Platform.runLater(() -> view.startCountdown(info.remainingWaitingTime, message));
 
                     long delayToProceedMs = info.remainingWaitingTime * 1000L;
                     if (delayToProceedMs < 0) delayToProceedMs = 0;
 
                     logger.fine("Scheduled UI transition to game view in " + delayToProceedMs + "ms.");
-                    new Timer("ProceedToGameViewTimer", true).schedule(new TimerTask() {
+                    
+                    Timer proceedTimer = new Timer("ProceedToGameViewTimer", true);
+                    proceedTimer.schedule(new TimerTask() {
                         @Override
                         public void run() {
                             Platform.runLater(() -> {
@@ -130,52 +136,47 @@ public class MatchmakingController {
                                     logger.info("Matchmaking countdown/wait finished. Invoking onMatchReadyToProceed.");
                                     onMatchReadyToProceed.run();
                                 } else if (cancellationRequested.get()) {
-                                    logger.info("Matchmaking countdown finished, but cancellation was requested during this period.");
+                                    logger.info("Matchmaking countdown finished, but cancellation was requested.");
+                                    
                                 }
                             });
                         }
                     }, delayToProceedMs);
 
-                } else {
-                    logger.warning("gameModel.startGame() returned null or empty gameId. Server failed to assign game.");
-                    Platform.runLater(() -> {
-                        view.showMatchmakingFailed("Server could not assign to a game.");
-                        if (onMatchmakingCancelledOrFailed != null) {
-                            onMatchmakingCancelledOrFailed.run();
-                        }
-                    });
+                } else { 
+                    logger.warning("gameModel.startGame() indicated no game assigned. Server failed to assign game.");
+                    failureReason = REASON_SERVER_ERROR;
+                    Platform.runLater(() -> view.showMatchmakingFailed("Server could not assign to a game."));
                 }
 
             } catch (PlayerNotLoggedInException e) {
                 logger.log(Level.WARNING, "PlayerNotLoggedInException during matchmaking.", e);
-                cleanupTimeoutTimer();
-                Platform.runLater(() -> {
-                    view.showMatchmakingFailed("Login session expired or invalid. Please log in again.");
-                    if (onMatchmakingCancelledOrFailed != null) {
-                        onMatchmakingCancelledOrFailed.run();
-                    }
-                });
-            } catch (Exception e) {
+                failureReason = REASON_LOGIN_EXPIRED;
+                Platform.runLater(() -> view.showMatchmakingFailed("Login session expired or invalid. Please log in again."));
+            } catch (IllegalStateException e) { 
                 logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
-                cleanupTimeoutTimer();
-                Platform.runLater(() -> {
-                    view.showMatchmakingFailed("An error occurred: " + e.getMessage());
-                    if (onMatchmakingCancelledOrFailed != null) {
-                        onMatchmakingCancelledOrFailed.run();
-                    }
-                });
+                failureReason = REASON_UNEXPECTED_ERROR;
+                Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
+            } catch (InvalidName e) { 
+                logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
+                failureReason = REASON_UNEXPECTED_ERROR;
+                Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
+            } catch (AdapterInactive e) { 
+                logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
+                failureReason = REASON_UNEXPECTED_ERROR;
+                Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
+            } catch (ServantNotActive e) { 
+                logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
+                failureReason = REASON_UNEXPECTED_ERROR;
+                Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
+            } catch (WrongPolicy e) { 
+                logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
+                failureReason = REASON_UNEXPECTED_ERROR;
+                Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
             } finally {
-                logger.fine("Matchmaking thread finished execution. Cancellation requested: " + cancellationRequested.get());
-                if (cancellationRequested.get() && !registrationSuccessful) {
-                    
-                    
-                    Platform.runLater(() -> {
-                        view.showMatchmakingCancelled();
-                        if (onMatchmakingCancelledOrFailed != null) {
-                            onMatchmakingCancelledOrFailed.run();
-                        }
-                    });
-                }
+                logger.fine("Matchmaking thread finished execution. Cancellation: " + cancellationRequested.get() + ", FailureReason: " + failureReason);
+                cleanupTimeoutTimer();
+                logger.info("Matchmaking thread ending.");
             }
         });
         matchmakingThread.setDaemon(true);
@@ -190,7 +191,7 @@ public class MatchmakingController {
         this.onMatchReadyToProceed = onMatchReadyToProceed;
     }
 
-    public void setOnMatchmakingCancelledOrFailed(Runnable onMatchmakingCancelledOrFailed) {
+    public void setOnMatchmakingCancelledOrFailed(Consumer<String> onMatchmakingCancelledOrFailed) {
         this.onMatchmakingCancelledOrFailed = onMatchmakingCancelledOrFailed;
     }
 }
