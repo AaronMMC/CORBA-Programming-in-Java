@@ -34,14 +34,14 @@ public class WordDao {
 
 
     public String getAWord() {
-        String query = "SELECT word FROM Word ORDER BY RAND() LIMIT 1";
+        String query = "SELECT word_text FROM Word ORDER BY RAND() LIMIT 1";
         String word = null;
 
         try (PreparedStatement stmt = connection.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
 
             if (rs.next()) {
-                word = rs.getString("word");
+                word = rs.getString("word_text");
             }
         } catch (SQLException e) {
             e.printStackTrace();
