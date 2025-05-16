@@ -8,12 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDao {
+    private static UserDao instance;
     private final Connection connection;
 
-    public UserDao(Connection connection) {
+    private UserDao(Connection connection) {
         this.connection = connection;
     }
 
+    public static synchronized UserDao getInstance(Connection connection) {
+        if (instance == null) {
+            instance = new UserDao(connection);
+        }
+        return instance;
+    }
+
+    public static UserDao getInstance() {
+        if (instance == null)
+            throw new IllegalStateException("UserDao has not been initialized. Call getInstance(Connection) first.");
+
+        return instance;
+    }
     public void addPlayer(Player player) {
         String query = " INSERT INTO player (username, hashed_password, totalWins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE hashed_password = ?, totalWins = ? ";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -122,5 +136,17 @@ public class UserDao {
         }
         return null;
     }
+
+
+    public void addGameWinsOfPlayer(String username) {
+        String sql = "UPDATE Player SET totalWins = totalWins + 1 WHERE username = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }

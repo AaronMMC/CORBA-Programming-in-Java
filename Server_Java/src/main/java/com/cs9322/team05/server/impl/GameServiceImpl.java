@@ -46,9 +46,8 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public GameInfo start_game(String username, String token) throws PlayerNotLoggedInException {
-        if (!isTokenValid(token)) {
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
-        }
 
         synchronized (pendingGameManager) {
             if (!pendingGameManager.isPendingGameExists()) {
@@ -58,9 +57,9 @@ public class GameServiceImpl extends GameServicePOA {
 
                 int matchmakingWaitDuration = gameDao.getCurrentWaitingTimeLength();
                 pendingGameManager.startCountdownToStartGame(matchmakingWaitDuration);
-            } else {
+            } else
                 pendingGameManager.addPlayer(new GamePlayer(username, 0));
-            }
+
 
             String gameId = pendingGameManager.getPendingGameId();
             int roundLength = pendingGameManager.getPendingGameRoundDuration();
@@ -71,30 +70,29 @@ public class GameServiceImpl extends GameServicePOA {
 
     @Override
     public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {
-        if (!isTokenValid(token)) {
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
-        }
+
         sessionManager.addCallback(callback, token);
     }
 
     @Override
     public GuessResponse guessLetter(String username, String gameId, char letter, String token) throws GameNotFoundException, PlayerNotLoggedInException {
-        if (!isTokenValid(token)) {
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
-        }
+
 
         Game game = activeGames.get(gameId);
-        if (game == null) {
+        if (game == null)
             throw new GameNotFoundException("Game with ID " + gameId + " not found.");
-        }
+
         return game.guessLetter(username, letter);
     }
 
     @Override
     public Leaderboard get_leaderboard(String token) throws PlayerNotLoggedInException {
-        if (!isTokenValid(token)) {
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
-        }
 
         List<Player> players = userDao.getAllPlayers();
 
@@ -113,9 +111,9 @@ public class GameServiceImpl extends GameServicePOA {
     }
 
     public Player getPlayerByUsername(String username, String token) throws PlayerNotLoggedInException {
-        if (!isTokenValid(token)) {
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
-        }
+
         return userDao.getPlayerByUsername(username);
     }
 

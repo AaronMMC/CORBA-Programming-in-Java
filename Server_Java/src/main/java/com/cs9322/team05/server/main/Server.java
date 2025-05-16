@@ -37,7 +37,7 @@ public class Server {
 
             // 4) Database connection, DAOs, managers
             Connection connection = DatabaseConnection.getConnection();
-            UserDao userDao = new UserDao(connection);
+            UserDao userDao = UserDao.getInstance(connection);
             GameDao gameDao = new GameDao(connection);
             WordDao.getInstance(connection);
             SessionManager sessionManager = SessionManager.getInstance();

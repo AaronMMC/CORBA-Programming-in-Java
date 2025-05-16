@@ -1,6 +1,7 @@
 package com.cs9322.team05.server.model;
 
 import ModifiedHangman.*;
+import com.cs9322.team05.server.dao.UserDao;
 import com.cs9322.team05.server.dao.WordDao;
 import com.cs9322.team05.server.manager.SessionManager;
 
@@ -134,6 +135,7 @@ public class Game {
                 for (GamePlayer player : players) {
                     if (player.wins >= 3) {
                         potentialGameWinner = player;
+                        UserDao.getInstance().addGameWinsOfPlayer(player.username);
                         isGameOver = true;
                         System.out.println("Game.startGame: Game over condition met for gameId: " + this.gameId + ". Player " + player.username + " has " + player.wins + " wins.");
                         break;
