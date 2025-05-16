@@ -25,8 +25,7 @@ public class MatchmakingView {
     private final Label statusLabel = new Label("Looking for an opponent...");
     private final Label timerLabel = new Label("");
     private final ProgressIndicator progressIndicator = new ProgressIndicator(-1.0);
-    public InputMethodTextRun cancelBtn;
-    
+
     
     private Timeline countdownTimeline;
 

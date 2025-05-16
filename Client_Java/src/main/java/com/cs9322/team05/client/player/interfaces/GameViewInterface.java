@@ -48,4 +48,6 @@ public interface GameViewInterface {
     void setOnPlayAgain(Runnable onPlayAgain);
 
     void setOnBackToMenu(Runnable onBackToMenu);
+
+    void showGameStartFailedError(String message);
 }
