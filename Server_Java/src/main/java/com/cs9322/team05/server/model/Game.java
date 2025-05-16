@@ -6,6 +6,7 @@ import com.cs9322.team05.server.dao.WordDao;
 import com.cs9322.team05.server.manager.SessionManager;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -98,14 +99,10 @@ public class Game {
     }
 
     public void startGame() {
-        if (players.isEmpty())
-            return;
-
+        if (players.isEmpty()) return;
 
         String wordForRound = WordDao.getInstance().getAWord();
-        if (wordForRound == null || wordForRound.isEmpty())
-            return;
-
+        if (wordForRound == null || wordForRound.isEmpty()) return;
 
         System.out.println("Game.startGame: Word selected for gameId " + wordForRound);
         GameRound gameRound = new GameRound(new ArrayList<>(players), wordForRound, ++roundCount);
@@ -113,49 +110,54 @@ public class Game {
 
         try {
             gameRound.startRound(this.roundDuration, this.gameId, () -> {
-                boolean isGameOver = false;
-                GamePlayer potentialGameWinner = null;
+                GamePlayer potentialWinner = checkIfGameOver();
 
-                for (GamePlayer player : players) {
-                    if (player.wins >= 3) {
-                        potentialGameWinner = player;
-                        UserDao.getInstance().addGameWinsOfPlayer(player.username);
-                        isGameOver = true;
-                        break;
-                    }
-                }
-
-                GamePlayer[] finalLeaderboardArray = players.stream()
-                        .sorted((p1, p2) -> Integer.compare(p2.wins, p1.wins))
+                GamePlayer[] leaderboard = players.stream()
+                        .sorted(Comparator.comparingInt(p -> -p.wins))
                         .toArray(GamePlayer[]::new);
 
-                if (isGameOver) {
-                    System.out.println("Game.startGame: Game " + this.gameId + " IS OVER. Winner: " + (potentialGameWinner != null ? potentialGameWinner.username : "N/A") + ". Notifying players.");
-                    this.winner = potentialGameWinner;
-
-                    for (GamePlayer player : players) {
-                        String gameWinnerUsername = (this.winner != null) ? this.winner.username : "";
-                        GameResult gameResult = new GameResult(this.gameId, gameWinnerUsername, finalLeaderboardArray);
-
-                        try {
-                            ClientCallback callback = sessionManager.getCallback(player.username);
-                            if (callback != null)
-                                callback.endGame(gameResult);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else {
-                    ScheduledExecutorService delayScheduler = Executors.newSingleThreadScheduledExecutor();
-                    delayScheduler.schedule(() -> {
-                        startGame();
-                        delayScheduler.shutdown();
-                    }, 7, TimeUnit.SECONDS);
-                }
+                if (potentialWinner != null) {
+                    this.winner = potentialWinner;
+                    System.out.printf("Game.startGame: Game %s IS OVER. Winner: %s. Notifying players.%n", this.gameId, winner.username);
+                    notifyPlayersGameOver(winner, leaderboard);
+                } else
+                    scheduleNextRound();
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    private GamePlayer checkIfGameOver() {
+        for (GamePlayer player : players) {
+            if (player.wins >= 3) {
+                UserDao.getInstance().addGameWinsOfPlayer(player.username);
+                return player;
+            }
+        }
+        return null;
+    }
+
+    private void notifyPlayersGameOver(GamePlayer winner, GamePlayer[] leaderboard) {
+        for (GamePlayer player : players) {
+            GameResult result = new GameResult(this.gameId, winner.username, leaderboard);
+            try {
+                ClientCallback callback = sessionManager.getCallback(player.username);
+                if (callback != null)
+                    callback.endGame(result);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void scheduleNextRound() {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.schedule(() -> {
+            startGame();
+            scheduler.shutdown();
+        }, 7, TimeUnit.SECONDS);
+    }
+
 
 }

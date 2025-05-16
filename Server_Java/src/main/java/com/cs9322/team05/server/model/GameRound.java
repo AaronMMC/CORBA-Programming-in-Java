@@ -31,89 +31,35 @@ public class GameRound {
             return;
         }
 
-        for (GamePlayer player : playersList) {
+        for (GamePlayer player : playersList)
             if (player != null && player.username != null) {
                 System.out.println("  - " + player.username);
                 playerGuessStates.put(player.username, new PlayerGuessWordState(wordToGuessLength));
                 this.players.put(player.username, player);
-            } else {
+            } else
                 System.out.println("  - Warning: Null player or player with null username in list for round " + this.roundNumber);
-            }
-        }
     }
 
-    public void startRound(int seconds, String gameId, Runnable onRoundComplete) {
+
+
+    public void startRound(int roundDuration, String gameId, Runnable onRoundComplete) {
         if (playerGuessStates.isEmpty()) {
-            System.out.println("GameRound.startRound: No players in playerGuessStates for round " + this.roundNumber + ", gameId: " + gameId + ". Cannot start round callbacks.");
+            System.out.printf("GameRound.startRound: No players for round %d, gameId: %s. Cannot start round.%n", roundNumber, gameId);
             return;
         }
 
         for (String username : playerGuessStates.keySet()) {
-            ClientCallback clientCallback;
-            try {
-                clientCallback = sessionManager.getCallback(username);
-            } catch (Exception e) {
-                System.out.println("GameRound.startRound: EXCEPTION while getting callback for " + username + " - " + e.getMessage());
-                e.printStackTrace();
-                continue;
-            }
+            ClientCallback callback = getClientCallback(username, gameId);
+            if (callback == null) continue;
 
-            if (clientCallback == null) {
-                System.out.println("GameRound.startRound: ERROR - ClientCallback is NULL for player " + username + " in gameId: " + gameId + ", round " + this.roundNumber);
-                continue;
-            }
-
-            try {
-                int wordLength = (wordToGuess != null) ? wordToGuess.length() : 0;
-                clientCallback.startRound(wordLength, this.roundNumber);
-            } catch (org.omg.CORBA.SystemException se) {
-                System.out.println("GameRound.startRound: CORBA SystemException while calling startRound for " + username + " (gameId: " + gameId + ", round " + this.roundNumber + "): " + se.getMessage());
-                se.printStackTrace();
-            } catch (Exception e) {
-                System.out.println("GameRound.startRound: GENERAL Exception while calling startRound for " + username + " (gameId: " + gameId + ", round " + this.roundNumber + "): " + e.getMessage());
-                e.printStackTrace();
-            }
-
-            final String playerUsernameForTask = username;
-            ScheduledFuture<?> task = scheduler.schedule(() -> {
-                String statusMessage;
-                GamePlayer roundWinnerForCallback = this.winner;
-
-                if (roundWinnerForCallback == null) {
-                    statusMessage = "No one guessed the word this round.";
-                    roundWinnerForCallback = new GamePlayer("no_winner", 0);
-                }
-                else if (roundWinnerForCallback.username.equals(playerUsernameForTask))
-                    statusMessage = "You won this Round!";
-                else
-                    statusMessage = "You lost this round. Winner was " + roundWinnerForCallback.username;
-
-                GamePlayer[] leaderboardArray = players.values()
-                        .stream()
-                        .sorted((p1, p2) -> Integer.compare(p2.wins, p1.wins))
-                        .toArray(GamePlayer[]::new);
-
-                RoundResult roundResult = new RoundResult(gameId, this.roundNumber, roundWinnerForCallback, this.wordToGuess, statusMessage, leaderboardArray);
-
-                ClientCallback cbToEnd = sessionManager.getCallback(playerUsernameForTask);
-                if (cbToEnd != null)
-                    try {
-                        cbToEnd.endRound(roundResult);
-                    } catch (org.omg.CORBA.SystemException se) {
-                        se.printStackTrace();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                else
-                    System.out.println("GameRound (EndRoundTask): Callback was null for player " + playerUsernameForTask + ". Cannot send endRound.");
-
-            }, seconds, TimeUnit.SECONDS);
+            notifyClientStartRound(callback, username, gameId);
+            ScheduledFuture<?> task = scheduleEndRoundTask(roundDuration, username, gameId);
             countdownTasks.put(username, task);
-
         }
 
-        scheduler.schedule(() -> onRoundComplete.run(), seconds, TimeUnit.SECONDS);
+        scheduler.schedule(onRoundComplete, roundDuration, TimeUnit.SECONDS);
     }
+
 
 
     public synchronized void cancelCountdownForPlayer(String username) {
@@ -121,6 +67,8 @@ public class GameRound {
         if (task == null)
             System.out.println("GameRound.cancelCountdownForPlayer: No task found for " + username);
     }
+
+
 
     public synchronized void stopAllCountdowns() {
         for (Map.Entry<String, ScheduledFuture<?>> entry : countdownTasks.entrySet())
@@ -130,50 +78,65 @@ public class GameRound {
         countdownTasks.clear();
     }
 
+
+
     public synchronized GuessResponse guessLetter(String username, char letter) {
-        PlayerGuessWordState playerGuessWordState = playerGuessStates.get(username);
-        if (playerGuessWordState == null)
+        PlayerGuessWordState state = playerGuessStates.get(username);
+        if (state == null)
             throw new IllegalArgumentException("Player " + username + " is not in this game round or has no state.");
 
-        boolean isTheLetterInTheWord = (wordToGuess != null) && wordToGuess.indexOf(Character.toLowerCase(letter)) >= 0;
-        playerGuessWordState.addAttemptedLetter(Character.toLowerCase(letter), isTheLetterInTheWord);
+        char lowerLetter = Character.toLowerCase(letter);
+        boolean isLetterInWord = wordToGuess != null && wordToGuess.indexOf(lowerLetter) >= 0;
+        updatePlayerGuessState(state, lowerLetter, isLetterInWord);
+        String maskedWord = updateMaskedWord(state, lowerLetter);
+        boolean isWordGuessed = !maskedWord.contains("_");
 
-        if (!isTheLetterInTheWord)
-            playerGuessWordState.setRemainingGuess(playerGuessWordState.getRemainingGuess() - 1);
+        if (isWordGuessed)
+            checkAndSetWinner(username);
 
-        StringBuilder updatedMasked = getUpdatedMaskedWord(playerGuessWordState, Character.toLowerCase(letter));
-        playerGuessWordState.setCurrentMaskedWord(updatedMasked.toString());
-        boolean isWordGuessed = !updatedMasked.toString().contains("_");
-
-        if (isWordGuessed) {
-            cancelCountdownForPlayer(username);
-            if (this.winner == null) {
-                this.winner = players.get(username);
-                if (this.winner != null)
-                    this.winner.wins++; }
-            else
-                System.out.println("GameRound.guessLetter: Word was guessed by " + username + " but round winner was already " + this.winner.username);
-        }
-
-        AttemptedLetter[] attemptedLetters = playerGuessWordState.getAttemptedLetters()
-                .entrySet()
-                .stream()
-                .map(chEntry -> new AttemptedLetter(chEntry.getKey(), chEntry.getValue()))
+        AttemptedLetter[] attemptedLetters = state.getAttemptedLetters().entrySet().stream()
+                .map(entry -> new AttemptedLetter(entry.getKey(), entry.getValue()))
                 .toArray(AttemptedLetter[]::new);
 
-        return new GuessResponse(
-                isWordGuessed,
-                playerGuessWordState.getCurrentMaskedWord(),
-                attemptedLetters,
-                playerGuessWordState.getRemainingGuess()
-        );
+        return new GuessResponse(isWordGuessed, maskedWord, attemptedLetters, state.getRemainingGuess());
     }
+
+
+
+    private void updatePlayerGuessState(PlayerGuessWordState state, char letter, boolean isCorrect) {
+        state.addAttemptedLetter(letter, isCorrect);
+        if (!isCorrect)
+            state.setRemainingGuess(state.getRemainingGuess() - 1);
+    }
+
+
+
+    private String updateMaskedWord(PlayerGuessWordState state, char letter) {
+        StringBuilder updatedMasked = getUpdatedMaskedWord(state, letter);
+        state.setCurrentMaskedWord(updatedMasked.toString());
+        return updatedMasked.toString();
+    }
+
+
+
+    private void checkAndSetWinner(String username) {
+        cancelCountdownForPlayer(username);
+        if (this.winner == null) {
+            this.winner = players.get(username);
+            if (this.winner != null)
+                this.winner.wins++;
+        } else
+            System.out.printf("GameRound.guessLetter: Word guessed by %s but winner already %s%n", username, this.winner.username);
+    }
+
+
 
     private StringBuilder getUpdatedMaskedWord(PlayerGuessWordState playerGuessWordState, char letter) {
         if (wordToGuess == null || playerGuessWordState == null || playerGuessWordState.getCurrentMaskedWord() == null) {
             System.out.println("GameRound.getUpdatedMaskedWord: Error - wordToGuess or player state is null. Returning empty/current masked word.");
             return new StringBuilder(playerGuessWordState != null && playerGuessWordState.getCurrentMaskedWord() != null ? playerGuessWordState.getCurrentMaskedWord() : "");
         }
+
 
         StringBuilder updatedMasked = new StringBuilder(playerGuessWordState.getCurrentMaskedWord());
 
@@ -182,6 +145,72 @@ public class GameRound {
                 updatedMasked.setCharAt(i, wordToGuess.charAt(i));
 
         return updatedMasked;
+    }
+
+
+
+    private ClientCallback getClientCallback(String username, String gameId) {
+        try {
+            ClientCallback callback = sessionManager.getCallback(username);
+            if (callback == null)
+                System.out.printf("GameRound.startRound: NULL callback for player %s (gameId: %s, round %d)%n", username, gameId, roundNumber);
+
+            return callback;
+        } catch (Exception e) {
+            System.out.printf("GameRound.startRound: EXCEPTION getting callback for %s - %s%n", username, e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+
+    private void notifyClientStartRound(ClientCallback callback, String username, String gameId) {
+        try {
+            int wordLength = (wordToGuess != null) ? wordToGuess.length() : 0;
+            callback.startRound(wordLength, roundNumber);
+        } catch (org.omg.CORBA.SystemException se) {
+            System.out.printf("GameRound.startRound: CORBA SystemException for %s (gameId: %s, round %d): %s%n", username, gameId, roundNumber, se.getMessage());
+            se.printStackTrace();
+        } catch (Exception e) {
+            System.out.printf("GameRound.startRound: Exception for %s (gameId: %s, round %d): %s%n", username, gameId, roundNumber, e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+
+    private ScheduledFuture<?> scheduleEndRoundTask(int roundDuration, String username, String gameId) {
+        return scheduler.schedule(() -> {
+            GamePlayer roundWinner = (this.winner != null) ? this.winner : new GamePlayer("no_winner", 0);
+            String message = determineStatusMessage(username, roundWinner);
+
+            GamePlayer[] leaderboard = players.values().stream()
+                    .sorted(Comparator.comparingInt((GamePlayer p) -> p.wins).reversed())
+                    .toArray(GamePlayer[]::new);
+
+            RoundResult result = new RoundResult(gameId, roundNumber, roundWinner, wordToGuess, message, leaderboard);
+
+            try {
+                ClientCallback callback = sessionManager.getCallback(username);
+                if (callback != null)
+                    callback.endRound(result);
+                else
+                    System.out.printf("GameRound (EndRoundTask): NULL callback for %s. Cannot send endRound.%n", username);
+            } catch (Exception e) {
+                System.out.printf("GameRound (EndRoundTask): Exception for %s - %s%n", username, e.getMessage());
+                e.printStackTrace();
+            }
+        }, roundDuration, TimeUnit.SECONDS);
+    }
+
+
+
+    private String determineStatusMessage(String username, GamePlayer winner) {
+        if (winner.username.equals("no_winner"))
+            return "No one guessed the word this round.";
+
+        return winner.username.equals(username) ? "You won this Round!" : "You lost this round. Winner was " + winner.username;
     }
 
 }

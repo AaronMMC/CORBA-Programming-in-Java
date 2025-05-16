@@ -131,16 +131,15 @@ public class GameServiceImpl extends GameServicePOA {
         if (pendingGame.getPlayers().size() == 1) {
             String lonePlayerUsername = pendingGame.getPlayers().get(0).username;
             ClientCallback callback = sessionManager.getCallback(lonePlayerUsername);
-            if (callback != null) {
+            if (callback != null)
                 try {
                     callback.startGameFailed();
                 } catch (Exception e) {
                     System.out.println("GameServiceImpl.addActiveGame: Exception while calling startGameFailed for " + lonePlayerUsername + ": " + e.getMessage());
                     e.printStackTrace();
                 }
-            } else {
+            else
                 System.out.println("GameServiceImpl.addActiveGame: ERROR - Callback not found for lone player " + lonePlayerUsername + ". Cannot notify startGameFailed.");
-            }
         } else {
             activeGames.put(pendingGame.getGameId(), pendingGame);
             try {
