@@ -49,7 +49,7 @@ public class MainApp extends Application {
         logger.info("Initializing ORB");
         Properties props = new Properties();
         props.put("org.omg.CORBA.ORBInitialHost", "localhost");
-        props.put("org.omg.CORBA.ORBInitialPort", "2634");
+        props.put("org.omg.CORBA.ORBInitialPort", "1050");
         orb = ORB.init(new String[0], props);
         logger.info("ORB initialized successfully: host=" +
                 props.getProperty("org.omg.CORBA.ORBInitialHost") + ", port=" +
@@ -313,7 +313,7 @@ public class MainApp extends Application {
             }
             Scene scene = primaryStage.getScene();
             if (scene == null) {
-                primaryStage.setScene(new Scene(root, 1000, 900));
+                primaryStage.setScene(new Scene(root, 1000, 600));
             } else {
                 scene.setRoot(root);
             }
