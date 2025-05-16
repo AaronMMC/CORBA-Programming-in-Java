@@ -122,7 +122,6 @@ public class GameServiceImpl extends GameServicePOA {
             System.out.println("GameServiceImpl.addActiveGame: FATAL - pendingGame parameter is null. Cannot proceed.");
             return;
         }
-        System.out.println("GameServiceImpl.addActiveGame: Invoked for gameId: " + pendingGame.getGameId() + ". Current player count: " + pendingGame.getPlayers().size());
 
         if (pendingGame.getPlayers().isEmpty()) {
             System.out.println("GameServiceImpl.addActiveGame: No players in pendingGame (gameId: " + pendingGame.getGameId() + "). Aborting game start.");
@@ -131,7 +130,6 @@ public class GameServiceImpl extends GameServicePOA {
 
         if (pendingGame.getPlayers().size() == 1) {
             String lonePlayerUsername = pendingGame.getPlayers().get(0).username;
-            System.out.println("GameServiceImpl.addActiveGame: Only one player (" + lonePlayerUsername + ") in game " + pendingGame.getGameId() + ". Notifying player via startGameFailed().");
             ClientCallback callback = sessionManager.getCallback(lonePlayerUsername);
             if (callback != null) {
                 try {
@@ -144,11 +142,9 @@ public class GameServiceImpl extends GameServicePOA {
                 System.out.println("GameServiceImpl.addActiveGame: ERROR - Callback not found for lone player " + lonePlayerUsername + ". Cannot notify startGameFailed.");
             }
         } else {
-            System.out.println("GameServiceImpl.addActiveGame: Sufficient players (" + pendingGame.getPlayers().size() + ") for game " + pendingGame.getGameId() + ". Adding to activeGames and starting.");
             activeGames.put(pendingGame.getGameId(), pendingGame);
             try {
                 pendingGame.startGame();
-                System.out.println("GameServiceImpl.addActiveGame: pendingGame.startGame() successfully called for gameId: " + pendingGame.getGameId());
             } catch (Exception e) {
                 System.out.println("GameServiceImpl.addActiveGame: Exception during pendingGame.startGame() for gameId: " + pendingGame.getGameId() + ": " + e.getMessage());
                 e.printStackTrace();

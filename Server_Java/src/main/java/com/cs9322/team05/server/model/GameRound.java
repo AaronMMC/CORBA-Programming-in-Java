@@ -26,13 +26,11 @@ public class GameRound {
         this.wordToGuess = wordToGuess;
         int wordToGuessLength = (wordToGuess != null) ? wordToGuess.length() : 0;
 
-        System.out.println("GameRound Constructor: Initializing round " + this.roundNumber + " with word length: " + wordToGuessLength);
         if (playersList == null || playersList.isEmpty()) {
             System.out.println("GameRound Constructor: WARNING - playersList is null or empty for round " + this.roundNumber);
             return;
         }
 
-        System.out.println("GameRound Constructor: Players for round " + this.roundNumber + ":");
         for (GamePlayer player : playersList) {
             if (player != null && player.username != null) {
                 System.out.println("  - " + player.username);
@@ -45,15 +43,12 @@ public class GameRound {
     }
 
     public void startRound(int seconds, String gameId, Runnable onRoundComplete) {
-        System.out.println("GameRound.startRound: Called for gameId: " + gameId + ", roundNumber: " + this.roundNumber + ", duration: " + seconds + "s, wordLength: " + (wordToGuess != null ? wordToGuess.length() : "N/A"));
-
         if (playerGuessStates.isEmpty()) {
             System.out.println("GameRound.startRound: No players in playerGuessStates for round " + this.roundNumber + ", gameId: " + gameId + ". Cannot start round callbacks.");
             return;
         }
 
         for (String username : playerGuessStates.keySet()) {
-            System.out.println("GameRound.startRound: Processing player: " + username + " for gameId: " + gameId + ", round " + this.roundNumber);
             ClientCallback clientCallback;
             try {
                 clientCallback = sessionManager.getCallback(username);
@@ -71,7 +66,6 @@ public class GameRound {
             try {
                 int wordLength = (wordToGuess != null) ? wordToGuess.length() : 0;
                 clientCallback.startRound(wordLength, this.roundNumber);
-                System.out.println("GameRound.startRound: Successfully called clientCallback.startRound() for player " + username + " (gameId: " + gameId + ", round " + this.roundNumber + ")");
             } catch (org.omg.CORBA.SystemException se) {
                 System.out.println("GameRound.startRound: CORBA SystemException while calling startRound for " + username + " (gameId: " + gameId + ", round " + this.roundNumber + "): " + se.getMessage());
                 se.printStackTrace();
@@ -117,30 +111,24 @@ public class GameRound {
             }, seconds, TimeUnit.SECONDS);
             countdownTasks.put(username, task);
 
-            System.out.println("GameRound.startRound: Scheduled endRound task for player " + username + " in " + seconds + "s (gameId: " + gameId + ", round " + this.roundNumber + ")");
         }
 
-        // Schedule onRoundComplete callback once all countdown tasks are expected to finish
         scheduler.schedule(() -> {
-            System.out.println("GameRound.startRound: All player timers complete. Triggering onRoundComplete for gameId: " + gameId + ", roundNumber: " + roundNumber);
             onRoundComplete.run();
         }, seconds, TimeUnit.SECONDS);
     }
 
 
     public synchronized void cancelCountdownForPlayer(String username) {
-        System.out.println("GameRound.cancelCountdownForPlayer: Attempting to cancel for " + username + " in round " + this.roundNumber);
         ScheduledFuture<?> task = countdownTasks.get(username);
         if (task != null) {
             boolean cancelled = task.cancel(false);
-            System.out.println("GameRound.cancelCountdownForPlayer: Task for " + username + " cancellation attempt result: " + cancelled);
-        } else {
+        } else
             System.out.println("GameRound.cancelCountdownForPlayer: No task found for " + username);
-        }
+
     }
 
     public synchronized void stopAllCountdowns() {
-        System.out.println("GameRound.stopAllCountdowns: Stopping all countdowns for round " + this.roundNumber);
         for (Map.Entry<String, ScheduledFuture<?>> entry : countdownTasks.entrySet()) {
             System.out.println("GameRound.stopAllCountdowns: Cancelling task for player " + entry.getKey());
             if (entry.getValue() != null) {
