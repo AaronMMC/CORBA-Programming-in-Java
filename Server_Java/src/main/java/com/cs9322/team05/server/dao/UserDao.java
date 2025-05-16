@@ -8,12 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDao {
+    private static UserDao instance;
     private final Connection connection;
 
-    public UserDao(Connection connection) {
+    private UserDao(Connection connection) {
         this.connection = connection;
     }
 
+    public static synchronized UserDao getInstance(Connection connection) {
+        if (instance == null) {
+            instance = new UserDao(connection);
+        }
+        return instance;
+    }
+
+    public static UserDao getInstance() {
+        if (instance == null)
+            throw new IllegalStateException("UserDao has not been initialized. Call getInstance(Connection) first.");
+
+        return instance;
+    }
     public void addPlayer(Player player) {
         String query = " INSERT INTO player (username, hashed_password, totalWins) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE hashed_password = ?, totalWins = ? ";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -42,7 +56,6 @@ public class UserDao {
     }
 
     public List<Player> getAllPlayers() {
-        System.out.println("UserDao.getAllPlayers: Attempting to fetch all players.");
         List<Player> players = new ArrayList<>();
         String query = "SELECT username, hashed_password, totalWins FROM player";
         try (PreparedStatement stmt = connection.prepareStatement(query);
@@ -56,14 +69,11 @@ public class UserDao {
                 player.wins = rs.getInt("totalWins");
                 players.add(player);
                 count++;
-                System.out.println("UserDao.getAllPlayers: Fetched and added player - Username: " + player.username + ", Wins: " + player.wins);
             }
-            System.out.println("UserDao.getAllPlayers: Total players fetched from database: " + count);
         } catch (SQLException e) {
             System.err.println("UserDao.getAllPlayers: SQLException occurred: " + e.getMessage());
             e.printStackTrace(); // Crucial for seeing DB errors
         }
-        System.out.println("UserDao.getAllPlayers: Returning list with " + players.size() + " players.");
         return players;
     }
 
@@ -122,5 +132,17 @@ public class UserDao {
         }
         return null;
     }
+
+
+    public void addGameWinsOfPlayer(String username) {
+        String sql = "UPDATE Player SET totalWins = totalWins + 1 WHERE username = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }

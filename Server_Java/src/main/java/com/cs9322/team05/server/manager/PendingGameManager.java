@@ -29,7 +29,6 @@ public class PendingGameManager {
     }
 
     public synchronized void setPendingGame(Game game) {
-        System.out.println("PendingGameManager.setPendingGame: Setting pending game to gameId: " + (game != null ? game.getGameId() : "null"));
         this.pendingGame = game;
     }
 
@@ -38,27 +37,23 @@ public class PendingGameManager {
             System.out.println("PendingGameManager.addPlayer: Attempted to add a null player. Ignoring.");
             return;
         }
-        if (pendingGame != null) {
-            System.out.println("PendingGameManager.addPlayer: Adding player " + player.username + " to game " + pendingGame.getGameId());
+        if (pendingGame != null)
             pendingGame.addPlayer(player);
-        } else {
+        else
             System.out.println("PendingGameManager.addPlayer: ERROR - Attempted to add player " + player.username + " but pendingGame is null.");
-        }
     }
 
     public synchronized String getPendingGameId() {
-        if (pendingGame != null) {
+        if (pendingGame != null)
             return pendingGame.getGameId();
-        }
-        System.out.println("PendingGameManager.getPendingGameId: Warning - pendingGame is null. Returning null for gameId.");
+
         return null;
     }
 
     public synchronized int getPendingGameRoundDuration() {
-        if (pendingGame != null) {
+        if (pendingGame != null)
             return pendingGame.getRoundDuration();
-        }
-        System.out.println("PendingGameManager.getPendingGameRoundDuration: Warning - pendingGame is null. Returning 0 for round duration.");
+
         return 0;
     }
 
@@ -85,34 +80,24 @@ public class PendingGameManager {
                         return;
                     }
 
-                    if (remainingWaitingTimeInSeconds > 0) {
+                    if (remainingWaitingTimeInSeconds > 0)
                         remainingWaitingTimeInSeconds -= 1;
-                    } else {
-                        if (pendingGameTask != null) {
+                    else {
+                        if (pendingGameTask != null)
                             pendingGameTask.cancel(false);
-                        }
 
                         Game gameToStart = pendingGame;
                         pendingGame = null;
                         remainingWaitingTimeInSeconds = 0;
 
-                        if (gameToStart != null) {
-                            System.out.println("PendingGameManager CountdownTask: Matchmaking wait time reached zero for gameId: " + gameToStart.getGameId());
-                            System.out.println("PendingGameManager CountdownTask: Attempting to call gameService.addActiveGame for gameId: " + gameToStart.getGameId() + " with players: " + gameToStart.getPlayers().size());
-                            if (gameService != null) {
+                        if (gameToStart != null)
+                            if (gameService != null)
                                 gameService.addActiveGame(gameToStart);
-                                System.out.println("PendingGameManager CountdownTask: gameService.addActiveGame presumably called for gameId: " + gameToStart.getGameId());
-                            } else {
+                            else
                                 System.out.println("PendingGameManager CountdownTask: FATAL - gameService is null. Cannot start game: " + gameToStart.getGameId());
-                            }
-                            System.out.println("PendingGameManager CountdownTask: pendingGame reference has been cleared after processing gameId: " + gameToStart.getGameId());
-                        } else {
-                            System.out.println("PendingGameManager CountdownTask: Matchmaking wait time reached zero, but pendingGame was already null. No action taken to start game.");
-                        }
                     }
                 }
             }, 0, 1, TimeUnit.SECONDS);
-            System.out.println("PendingGameManager.startCountdownToStartGame: Matchmaking countdown task scheduled for gameId: " + (pendingGame != null ? pendingGame.getGameId() : "N/A"));
         }
     }
 }
