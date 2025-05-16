@@ -24,12 +24,9 @@ public class AuthenticationView {
 
     public AuthenticationView(AuthenticationController controller) {
         this.controller = controller;
-        this.controller.setOnLoginFailure(this::showLoginErrorAlert);
+
     }
 
-    private void showLoginErrorAlert(String message) {
-        showAlert("Login Failed", message, AlertType.ERROR);
-    }
 
     public Parent createLoginPane() {
         BorderPane root = new BorderPane();

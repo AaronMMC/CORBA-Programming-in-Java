@@ -95,7 +95,7 @@ public class GameView implements GameViewInterface {
             if (onBackToMenu != null) onBackToMenu.run();
         });
 
-        clearAll();
+        clearAll(); // This will now set the initial visibility correctly
         logger.fine("GameView initialized.");
     }
 
@@ -119,6 +119,13 @@ public class GameView implements GameViewInterface {
             animateLabelUpdate(systemMessageLabel, "Game will start soon...");
             animateLabelUpdate(matchmakingCountdownLabel, "Starting in: " + seconds + "s");
             animateLabelUpdate(roundInfoLabel, "");
+
+            // Ensure game-end buttons are hidden during this phase
+            playAgainBtn.setVisible(false);
+            playAgainBtn.setManaged(false);
+            backToMenuBtn.setVisible(false);
+            backToMenuBtn.setManaged(false);
+            leaderboardBtn.setDisable(false); // Leaderboard can be active
 
             if (matchmakingTimerTimeline != null) {
                 matchmakingTimerTimeline.stop();
@@ -188,17 +195,19 @@ public class GameView implements GameViewInterface {
                 masked.append("_");
             }
             animateLabelUpdate(maskedWordLabel, masked.toString().replaceAll(".(?!$)", "$0 "));
-            animateLabelUpdate(attemptsLeftLabel, "Attempts left: 5");
+            animateLabelUpdate(attemptsLeftLabel, "Attempts left: 5"); // Assuming 5 attempts, adjust if dynamic
             guessedLettersList.getItems().clear();
             guessInput.clear();
             guessInput.setDisable(false);
             guessInput.requestFocus();
 
+            // Ensure game-end buttons are hidden during the round
             playAgainBtn.setVisible(false);
             playAgainBtn.setManaged(false);
-            backToMenuBtn.setVisible(true);
-            backToMenuBtn.setManaged(true);
-            leaderboardBtn.setDisable(false);
+            backToMenuBtn.setVisible(false);
+            backToMenuBtn.setManaged(false);
+
+            leaderboardBtn.setDisable(false); // Leaderboard can be available
             leaderboardBtn.setVisible(true);
             leaderboardBtn.setManaged(true);
 
@@ -257,6 +266,11 @@ public class GameView implements GameViewInterface {
             animateLabelUpdate(roundInfoLabel, "Round " + r.roundNumber + " Over");
             animateLabelUpdate(maskedWordLabel, r.wordToGuess != null ? r.wordToGuess.replaceAll(".(?!$)", "$0 ") : "N/A");
 
+            // Keep game-end buttons hidden after a round result, they only show on final game result
+            playAgainBtn.setVisible(false);
+            playAgainBtn.setManaged(false);
+            backToMenuBtn.setVisible(false);
+            backToMenuBtn.setManaged(false);
 
             StringBuilder sb = new StringBuilder();
             String titleText = "Round " + r.roundNumber + " Over";
@@ -299,13 +313,21 @@ public class GameView implements GameViewInterface {
             animateLabelUpdate(systemMessageLabel, "Game Over!");
             animateLabelUpdate(matchmakingCountdownLabel, "");
             animateLabelUpdate(roundInfoLabel, "");
-            animateLabelUpdate(maskedWordLabel, "");
-            animateLabelUpdate(attemptsLeftLabel, "");
-            guessedLettersList.getItems().clear();
+            animateLabelUpdate(maskedWordLabel, ""); // Clear masked word
+            animateLabelUpdate(attemptsLeftLabel, ""); // Clear attempts
+            guessedLettersList.getItems().clear(); // Clear guessed letters
 
             if (g == null) {
                 logger.severe("GameResult object is null in showFinalResult.");
                 showError("Could not display final results (data missing).");
+                // Still show buttons to allow navigation even on error
+                playAgainBtn.setVisible(true);
+                playAgainBtn.setManaged(true);
+                backToMenuBtn.setVisible(true);
+                backToMenuBtn.setManaged(true);
+                leaderboardBtn.setDisable(false);
+                leaderboardBtn.setVisible(true);
+                leaderboardBtn.setManaged(true);
                 return;
             }
 
@@ -339,11 +361,12 @@ public class GameView implements GameViewInterface {
             alert.getButtonTypes().setAll(ButtonType.OK);
             alert.showAndWait();
 
+            // Make "Play Again" and "Back to Menu" buttons visible now
             playAgainBtn.setVisible(true);
             playAgainBtn.setManaged(true);
             backToMenuBtn.setVisible(true);
             backToMenuBtn.setManaged(true);
-            leaderboardBtn.setDisable(false);
+            leaderboardBtn.setDisable(false); // Ensure leaderboard is enabled
             leaderboardBtn.setVisible(true);
             leaderboardBtn.setManaged(true);
         });
@@ -392,14 +415,14 @@ public class GameView implements GameViewInterface {
             guessInput.clear();
             guessInput.setDisable(true);
 
-            leaderboardBtn.setDisable(true);
+            leaderboardBtn.setDisable(true); // Initially disabled until game context might allow it
             leaderboardBtn.setVisible(true);
-            leaderboardBtn.setManaged(true);
 
+            // Ensure Play Again and Back to Menu are hidden initially and after clearing
             playAgainBtn.setVisible(false);
             playAgainBtn.setManaged(false);
-            backToMenuBtn.setVisible(true);
-            backToMenuBtn.setManaged(true);
+            backToMenuBtn.setVisible(false); // Changed from true
+            backToMenuBtn.setManaged(false); // Changed from true
 
             if (roundTimerTimeline != null) {
                 roundTimerTimeline.stop();
@@ -438,7 +461,7 @@ public class GameView implements GameViewInterface {
         this.onBackToMenu = onBackToMenu;
     }
 
-    public Parent getRoot() {
+    public Parent getRoot() { // This method seems unused given getRootPane() exists for the interface
         return root;
     }
 }
