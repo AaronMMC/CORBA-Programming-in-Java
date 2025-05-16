@@ -118,15 +118,22 @@ public class Game {
 
                 if (potentialWinner != null) {
                     this.winner = potentialWinner;
-                    System.out.printf("Game.startGame: Game %s IS OVER. Winner: %s. Notifying players.%n", this.gameId, winner.username);
-                    notifyPlayersGameOver(winner, leaderboard);
-                } else
+                    System.out.printf("Game.startGame: Game %s IS OVER. Winner: %s. Notifying players in 5 seconds.%n", this.gameId, winner.username);
+
+                    ScheduledExecutorService notifier = Executors.newSingleThreadScheduledExecutor();
+                    notifier.schedule(() -> {
+                        notifyPlayersGameOver(winner, leaderboard);
+                        notifier.shutdown();
+                    }, 5, TimeUnit.SECONDS);
+                } else {
                     scheduleNextRound();
+                }
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     private GamePlayer checkIfGameOver() {
         for (GamePlayer player : players) {

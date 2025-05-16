@@ -36,12 +36,14 @@ public class SessionManager {
             return;
         }
         String username = userSessions.get(token);
+        System.out.println("Current userSessions: " + userSessions);
+        System.out.println("Current clientCallbacks: " + clientCallbacks);
+
         if (username != null) {
             System.out.println("SessionManager.addCallback: Storing callback for username: " + username + " (derived from token: " + token + ")");
             clientCallbacks.put(username, clientCallback);
-        } else {
+        } else
             System.out.println("SessionManager.addCallback: ERROR - No username found for token: " + token + ". Callback NOT stored.");
-        }
     }
 
     public String createSession(String username, String userType) {
@@ -79,9 +81,7 @@ public class SessionManager {
     }
 
     public boolean isUserLoggedIn(String username) {
-        boolean isLoggedIn = clientCallbacks.containsKey(username);
-        System.out.println("SessionManager.isUserLoggedIn: Checking if user '" + username + "' is logged in (has session and callback): " + isLoggedIn);
-        return isLoggedIn;
+        return userSessions.containsValue(username);
     }
 
     public String getUsername(String token) {

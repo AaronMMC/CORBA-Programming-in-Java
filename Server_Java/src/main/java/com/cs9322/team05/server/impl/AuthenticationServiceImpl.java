@@ -47,6 +47,7 @@ public class AuthenticationServiceImpl extends AuthenticationServicePOA {
         if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Access denied: Player login is required to register a Callback.");
 
+        System.out.println("There is a new callback");
         sessionManager.addCallback(callback, token);
     }
 
