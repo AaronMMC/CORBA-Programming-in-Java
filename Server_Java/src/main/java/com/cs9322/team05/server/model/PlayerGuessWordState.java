@@ -15,6 +15,7 @@ public class PlayerGuessWordState {
 
         currentMaskedWord = stringBuilder.toString();
         attemptedLetters = new HashMap<>();
+        remainingGuess = 5;
     }
 
     public String getCurrentMaskedWord() {

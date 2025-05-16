@@ -196,12 +196,14 @@ public class GameRound {
             System.out.println("GameRound.getUpdatedMaskedWord: Error - wordToGuess or player state is null. Returning empty/current masked word.");
             return new StringBuilder(playerGuessWordState != null && playerGuessWordState.getCurrentMaskedWord() != null ? playerGuessWordState.getCurrentMaskedWord() : "");
         }
+
         StringBuilder updatedMasked = new StringBuilder(playerGuessWordState.getCurrentMaskedWord());
-        for (int i = 0; i < wordToGuess.length(); i++) {
-            if (Character.toLowerCase(wordToGuess.charAt(i)) == letter) {
-                updatedMasked.setCharAt(i*2, wordToGuess.charAt(i)); // Assuming masked word has spaces: "w _ r d"
-            }
-        }
+
+        for (int i = 0; i < wordToGuess.length(); i++)
+            if (Character.toLowerCase(wordToGuess.charAt(i)) == letter)
+                updatedMasked.setCharAt(i, wordToGuess.charAt(i));  // Directly set it at the correct index
+
         return updatedMasked;
     }
+
 }
