@@ -31,7 +31,6 @@ public class SessionManager {
     }
 
     public void addCallback(ClientCallback clientCallback, String token) {
-        System.out.println("SessionManager.addCallback: Attempting to add callback for token: " + token);
         if (token == null || clientCallback == null) {
             System.out.println("SessionManager.addCallback: ERROR - Token or ClientCallback is null. Token: " + token);
             return;
@@ -46,56 +45,37 @@ public class SessionManager {
     }
 
     public String createSession(String username, String userType) {
-        System.out.println("SessionManager.createSession: Creating session for username: " + username + ", userType: " + userType);
         if (username == null || username.isEmpty() || userType == null || userType.isEmpty()) {
             System.out.println("SessionManager.createSession: ERROR - Username or userType is null/empty. Cannot create session.");
             return null;
         }
         String token = userType + ":" + UUID.randomUUID().toString();
         userSessions.put(token, username);
-        System.out.println("SessionManager.createSession: Session created for username: " + username + " with token: " + token);
         return token;
     }
 
     public void invalidateSession(String token) {
-        System.out.println("SessionManager.invalidateSession: Attempting to invalidate session for token: " + token);
         if (token == null) {
             System.out.println("SessionManager.invalidateSession: ERROR - Token is null.");
             return;
         }
         String username = userSessions.remove(token);
         if (username != null) {
-            System.out.println("SessionManager.invalidateSession: Removed session for username: " + username + " (token: " + token + ")");
             ClientCallback removedCallback = clientCallbacks.remove(username);
-            if (removedCallback != null) {
+            if (removedCallback != null)
                 System.out.println("SessionManager.invalidateSession: Removed callback for username: " + username);
-            } else {
+            else
                 System.out.println("SessionManager.invalidateSession: No callback found to remove for username: " + username);
-            }
-        } else {
+        } else
             System.out.println("SessionManager.invalidateSession: No session found for token: " + token);
-        }
     }
 
     public boolean isSessionValid(String sessionId) {
-        boolean isValid = userSessions.containsKey(sessionId);
-        System.out.println("SessionManager.isSessionValid: Checking session ID: " + sessionId + ". Valid: " + isValid);
-        return isValid;
+        return userSessions.containsKey(sessionId);
     }
 
     public ClientCallback getCallback(String username) {
-        System.out.println("SessionManager.getCallback: Requesting callback for username: " + username);
-        if (username == null) {
-            System.out.println("SessionManager.getCallback: ERROR - Requested username is null.");
-            return null;
-        }
-        ClientCallback callback = clientCallbacks.get(username);
-        if (callback != null) {
-            System.out.println("SessionManager.getCallback: Found callback for username: " + username);
-        } else {
-            System.out.println("SessionManager.getCallback: NO callback found for username: " + username);
-        }
-        return callback;
+        return clientCallbacks.get(username);
     }
 
     public boolean isUserLoggedIn(String username) {

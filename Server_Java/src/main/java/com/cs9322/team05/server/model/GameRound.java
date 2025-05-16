@@ -96,7 +96,7 @@ public class GameRound {
                 RoundResult roundResult = new RoundResult(gameId, this.roundNumber, roundWinnerForCallback, this.wordToGuess, statusMessage, leaderboardArray);
 
                 ClientCallback cbToEnd = sessionManager.getCallback(playerUsernameForTask);
-                if (cbToEnd != null) {
+                if (cbToEnd != null)
                     try {
                         cbToEnd.endRound(roundResult);
                     } catch (org.omg.CORBA.SystemException se) {
@@ -104,37 +104,29 @@ public class GameRound {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                } else {
+                else
                     System.out.println("GameRound (EndRoundTask): Callback was null for player " + playerUsernameForTask + ". Cannot send endRound.");
-                }
 
             }, seconds, TimeUnit.SECONDS);
             countdownTasks.put(username, task);
 
         }
 
-        scheduler.schedule(() -> {
-            onRoundComplete.run();
-        }, seconds, TimeUnit.SECONDS);
+        scheduler.schedule(() -> onRoundComplete.run(), seconds, TimeUnit.SECONDS);
     }
 
 
     public synchronized void cancelCountdownForPlayer(String username) {
         ScheduledFuture<?> task = countdownTasks.get(username);
-        if (task != null) {
-            boolean cancelled = task.cancel(false);
-        } else
+        if (task == null)
             System.out.println("GameRound.cancelCountdownForPlayer: No task found for " + username);
-
     }
 
     public synchronized void stopAllCountdowns() {
-        for (Map.Entry<String, ScheduledFuture<?>> entry : countdownTasks.entrySet()) {
-            System.out.println("GameRound.stopAllCountdowns: Cancelling task for player " + entry.getKey());
-            if (entry.getValue() != null) {
+        for (Map.Entry<String, ScheduledFuture<?>> entry : countdownTasks.entrySet())
+            if (entry.getValue() != null)
                 entry.getValue().cancel(false);
-            }
-        }
+
         countdownTasks.clear();
     }
 
@@ -146,14 +138,12 @@ public class GameRound {
         boolean isTheLetterInTheWord = (wordToGuess != null) && wordToGuess.indexOf(Character.toLowerCase(letter)) >= 0;
         playerGuessWordState.addAttemptedLetter(Character.toLowerCase(letter), isTheLetterInTheWord);
 
-        if (!isTheLetterInTheWord) {
+        if (!isTheLetterInTheWord)
             playerGuessWordState.setRemainingGuess(playerGuessWordState.getRemainingGuess() - 1);
-        }
 
         StringBuilder updatedMasked = getUpdatedMaskedWord(playerGuessWordState, Character.toLowerCase(letter));
         playerGuessWordState.setCurrentMaskedWord(updatedMasked.toString());
         boolean isWordGuessed = !updatedMasked.toString().contains("_");
-
 
         if (isWordGuessed) {
             cancelCountdownForPlayer(username);
@@ -189,7 +179,7 @@ public class GameRound {
 
         for (int i = 0; i < wordToGuess.length(); i++)
             if (Character.toLowerCase(wordToGuess.charAt(i)) == letter)
-                updatedMasked.setCharAt(i, wordToGuess.charAt(i));  // Directly set it at the correct index
+                updatedMasked.setCharAt(i, wordToGuess.charAt(i));
 
         return updatedMasked;
     }

@@ -17,8 +17,8 @@ public class Game {
     private GamePlayer winner;
     private int roundDuration;
     private int roundCount;
-    private List<GamePlayer> players;
-    private List<GameRound> rounds;
+    private final List<GamePlayer> players;
+    private final List<GameRound> rounds;
     private final SessionManager sessionManager;
 
     public Game(String gameId, int roundDuration, String initialPlayerUsername) {
