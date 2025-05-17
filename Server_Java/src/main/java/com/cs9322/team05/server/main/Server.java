@@ -93,10 +93,11 @@ public class Server {
 
             logger.info("Server initialied in " + (System.currentTimeMillis() - startTime + "ms"));
             // 8) Print startup confirmation
-            System.out.println("\n===== SERVER STATUS =====");
-            System.out.println("Status: RUNNING");
-            System.out.println("Port: " + (args.length > 0 ? args[0] : "default"));
-            System.out.println("=====================\n");
+            System.out.println("=== Server is up and running ===");
+            System.out.println("Bound services in NameService:");
+            System.out.println("  • AdminService");
+            System.out.println("  • AuthenticationService");
+            System.out.println("  • GameService");
 
             // 9) Wait for client invocations
             orb.run();
