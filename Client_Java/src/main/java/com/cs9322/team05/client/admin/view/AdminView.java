@@ -5,6 +5,7 @@ import ModifiedHangman.Player;
 import com.cs9322.team05.client.admin.controller.AdminController;
 import com.cs9322.team05.client.player.controller.AuthenticationController;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -206,8 +207,21 @@ public class AdminView {
         passwordDisplayCol.setPrefWidth(200);
 
         TableColumn<Player, Integer> winsCol = new TableColumn<>("Wins");
-        winsCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("wins")); 
+        winsCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().wins));
         winsCol.setPrefWidth(80);
+        winsCol.setCellFactory(column -> new TableCell<Player, Integer>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.toString());
+                    setStyle("-fx-alignment: CENTER;");
+                }
+            }
+        });
+
 
         playerTable.getColumns().setAll(usernameCol, passwordDisplayCol, winsCol);
         playerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

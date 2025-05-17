@@ -20,13 +20,12 @@ public class SessionManager {
     }
 
     public static SessionManager getInstance() {
-        if (instance == null) {
+        if (instance == null)
             synchronized (SessionManager.class) {
-                if (instance == null) {
+                if (instance == null)
                     instance = new SessionManager();
-                }
             }
-        }
+
         return instance;
     }
 
@@ -61,14 +60,11 @@ public class SessionManager {
             System.out.println("SessionManager.invalidateSession: ERROR - Token is null.");
             return;
         }
+
         String username = userSessions.remove(token);
-        if (username != null) {
-            ClientCallback removedCallback = clientCallbacks.remove(username);
-            if (removedCallback != null)
-                System.out.println("SessionManager.invalidateSession: Removed callback for username: " + username);
-            else
-                System.out.println("SessionManager.invalidateSession: No callback found to remove for username: " + username);
-        } else
+        if (username != null)
+            clientCallbacks.remove(username);
+        else
             System.out.println("SessionManager.invalidateSession: No session found for token: " + token);
     }
 

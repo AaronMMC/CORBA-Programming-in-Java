@@ -100,9 +100,14 @@ public class HomeView implements HomeViewInterface {
         } else {
             StringBuilder sb = new StringBuilder();
             int rank = 1;
-            for (GamePlayer p : top5) {
-                sb.append(rank++).append(". ").append(p.username).append(" – Wins: ").append(p.wins).append("\n");
+            sb.append(String.format("%-10s%-20s%-12s", "Rank", "Player", "Game Wins"));
+            sb.append("---------------------------------------\n");
+
+            for (; rank <= top5.size(); rank++) {
+                GamePlayer p = top5.get(rank - 1);
+                sb.append(String.format("%-10d%-20s%18d%n", rank, p.username, p.wins));
             }
+
             alert.setContentText(sb.toString());
         }
         alert.showAndWait();

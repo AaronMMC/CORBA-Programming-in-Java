@@ -105,7 +105,7 @@ public class GameRound {
 
     private void updatePlayerGuessState(PlayerGuessWordState state, char letter, boolean isCorrect) {
         state.addAttemptedLetter(letter, isCorrect);
-        if (!isCorrect)
+        if (!isCorrect && !state.getAttemptedLetters().containsKey(letter))
             state.setRemainingGuess(state.getRemainingGuess() - 1);
     }
 
