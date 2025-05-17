@@ -28,8 +28,7 @@ This starts the Name Server on port 1050. Make sure the port is not blocked by f
  Edit the configurations and add VM Options. 
 add this:
 ```
-   -Dorg.omg.CORBA.ORBInitialPort=<Port> -Dorg.omg.CORBA.ORBInitialHost=<IP Address>
-
+   -ORBInitialHost localhost -ORBInitialPort 2611
 ```
 ### Step 3: Run the CORBA Client
     Do the same in step 2
