@@ -6,6 +6,8 @@ import com.cs9322.team05.client.player.model.GameModel;
 import javafx.application.Platform;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,6 +18,7 @@ public class GameController {
     private String gameId;
     private int expectedRoundDurationSeconds;
     private int currentRoundNumber = 0;
+    private Consumer<String> onGameStartFailedForNavigation;
 
     public GameController(GameModel gameModel, GameViewInterface view) {
         this.gameModel = gameModel;
@@ -45,7 +48,7 @@ public class GameController {
         logger.info("GameController context set - GameID: " + this.gameId + ", ExpectedRoundDuration: " + this.expectedRoundDurationSeconds + "s");
         if (view != null) {
             Platform.runLater(() -> {
-                if (this.gameId != null && !this.gameId.isEmpty()){
+                if (this.gameId != null && !this.gameId.isEmpty()) {
                     view.clearAll();
                     view.showStatusMessage("Game context set. Waiting for server...");
                 }
@@ -53,19 +56,40 @@ public class GameController {
         }
     }
 
+    public void setOnGameStartFailedForNavigation(Consumer<String> callback) {
+        this.onGameStartFailedForNavigation = callback;
+    }
+
     public void handleGameStartFailed(String message) {
-        logger.info("Controller: handleGameStartFailed called with message: " + message);
-        if (view != null) {
-            Platform.runLater(() -> {
-                view.clearAll();
-                view.showError(message);
-                view.showStatusMessage(message);
-                view.disableGuessing();
-            });
+        logger.info("Controller: handleGameStartFailed called with server message: " + message);
+
+        final String userFriendlyMessage;
+        boolean notEnoughPlayers = message != null && message.toLowerCase().contains("not enough players");
+
+        if (notEnoughPlayers) {
+            userFriendlyMessage = "Not enough players available to start the game.";
+        } else if (message != null && !message.isEmpty()) {
+            userFriendlyMessage = "Failed to start game: " + message;
         } else {
-            logger.warning("handleGameStartFailed called but view is null.");
+            userFriendlyMessage = "Could not start game due to an unexpected issue.";
+        }
+
+        if (view != null && notEnoughPlayers) {
+            logger.info("Controller: 'Not enough players' failure. Updating GameView directly.");
+
+            Platform.runLater(() -> view.showGameStartFailedError(userFriendlyMessage));
+        } else if (onGameStartFailedForNavigation != null) {
+            logger.info("Controller: Game start failed (reason: " + message + "). Using onGameStartFailedForNavigation callback.");
+            Platform.runLater(() -> onGameStartFailedForNavigation.accept(userFriendlyMessage));
+        } else {
+            logger.warning("GameController: handleGameStartFailed - Cannot properly handle error: " + userFriendlyMessage + (view == null ? " (view is null)" : "") + (onGameStartFailedForNavigation == null ? " (onGameStartFailedForNavigation is null)" : ""));
+
+            if (view != null && !notEnoughPlayers) {
+                Platform.runLater(() -> view.showError(userFriendlyMessage + " (Navigation to home failed)"));
+            }
         }
     }
+
 
     public void onStartRound(int wordLength, int roundNumber) {
         this.currentRoundNumber = roundNumber;
@@ -137,7 +161,7 @@ public class GameController {
             if (lb != null && lb.players != null) {
                 Platform.runLater(() -> view.showLeaderboard(Arrays.asList(lb.players)));
             } else {
-                Platform.runLater(() -> view.showLeaderboard(Arrays.asList())); 
+                Platform.runLater(() -> view.showLeaderboard(Collections.emptyList()));
                 logger.warning("Fetched leaderboard or its players array is null.");
             }
         } catch (PlayerNotLoggedInException e) {
@@ -155,13 +179,11 @@ public class GameController {
             logger.warning("onProceedToNextRound called but view is null.");
             return;
         }
-        Platform.runLater(() -> {
-            view.showStatusMessage("Round " + currentRoundNumber + " ended. Preparing for the next round...");
-        });
+        Platform.runLater(() -> view.showStatusMessage("Round " + currentRoundNumber + " ended. Preparing for the next round..."));
     }
 
     public void onEndRound(RoundResult result) {
-        logger.info("Controller: Server signaled onEndRound for round " + result.roundNumber + ". Correct word: " + result.wordToGuess);
+        logger.info("Controller: Server signaled onEndRound for round " + (result != null ? result.roundNumber : "N/A") + ". Correct word: " + (result != null ? result.wordToGuess : "N/A"));
         if (view == null) {
             logger.warning("onEndRound called but view is null.");
             return;
@@ -180,13 +202,15 @@ public class GameController {
     }
 
     private void requestPlayAgain() {
-        logger.info("Controller: Play Again requested by user. Triggering view's onReturnToMenu.");
+        logger.info("Controller: Play Again requested by user.");
         if (view == null) return;
+
+
         view.onReturnToMenu();
     }
 
     private void requestBackToMenu() {
-        logger.info("Controller: Back to Menu requested by user. Triggering view's onReturnToMenu.");
+        logger.info("Controller: Back to Menu requested by user.");
         if (view == null) return;
         view.onReturnToMenu();
     }
@@ -205,9 +229,6 @@ public class GameController {
         return gameId;
     }
 
-    public GameModel getGameModel() {
-        return gameModel;
-    }
 
     public void cleanupControllerState() {
         logger.info("GameController: Cleaning up controller state for gameId: " + this.gameId);
@@ -215,7 +236,7 @@ public class GameController {
         this.currentRoundNumber = 0;
         this.expectedRoundDurationSeconds = 0;
         if (view != null) {
-            view.clearAll();
+            Platform.runLater(view::clearAll);
             logger.fine("GameView instructed to clearAll.");
         }
         logger.info("GameController: Cleanup complete.");

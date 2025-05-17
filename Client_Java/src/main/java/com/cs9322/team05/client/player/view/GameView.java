@@ -120,6 +120,13 @@ public class GameView implements GameViewInterface {
             animateLabelUpdate(matchmakingCountdownLabel, "Starting in: " + seconds + "s");
             animateLabelUpdate(roundInfoLabel, "");
 
+
+            playAgainBtn.setVisible(false);
+            playAgainBtn.setManaged(false);
+            backToMenuBtn.setVisible(false);
+            backToMenuBtn.setManaged(false);
+            leaderboardBtn.setDisable(false);
+
             if (matchmakingTimerTimeline != null) {
                 matchmakingTimerTimeline.stop();
             }
@@ -194,10 +201,12 @@ public class GameView implements GameViewInterface {
             guessInput.setDisable(false);
             guessInput.requestFocus();
 
+
             playAgainBtn.setVisible(false);
             playAgainBtn.setManaged(false);
-            backToMenuBtn.setVisible(true);
-            backToMenuBtn.setManaged(true);
+            backToMenuBtn.setVisible(false);
+            backToMenuBtn.setManaged(false);
+
             leaderboardBtn.setDisable(false);
             leaderboardBtn.setVisible(true);
             leaderboardBtn.setManaged(true);
@@ -258,6 +267,11 @@ public class GameView implements GameViewInterface {
             animateLabelUpdate(maskedWordLabel, r.wordToGuess != null ? r.wordToGuess.replaceAll(".(?!$)", "$0 ") : "N/A");
 
 
+            playAgainBtn.setVisible(false);
+            playAgainBtn.setManaged(false);
+            backToMenuBtn.setVisible(false);
+            backToMenuBtn.setManaged(false);
+
             StringBuilder sb = new StringBuilder();
             String titleText = "Round " + r.roundNumber + " Over";
             String headerText = r.statusMessage != null && !r.statusMessage.isEmpty() ? r.statusMessage : "Round Concluded";
@@ -306,6 +320,14 @@ public class GameView implements GameViewInterface {
             if (g == null) {
                 logger.severe("GameResult object is null in showFinalResult.");
                 showError("Could not display final results (data missing).");
+
+                playAgainBtn.setVisible(true);
+                playAgainBtn.setManaged(true);
+                backToMenuBtn.setVisible(true);
+                backToMenuBtn.setManaged(true);
+                leaderboardBtn.setDisable(false);
+                leaderboardBtn.setVisible(true);
+                leaderboardBtn.setManaged(true);
                 return;
             }
 
@@ -338,6 +360,7 @@ public class GameView implements GameViewInterface {
             alert.setContentText(sb.toString());
             alert.getButtonTypes().setAll(ButtonType.OK);
             alert.showAndWait();
+
 
             playAgainBtn.setVisible(true);
             playAgainBtn.setManaged(true);
@@ -398,8 +421,8 @@ public class GameView implements GameViewInterface {
 
             playAgainBtn.setVisible(false);
             playAgainBtn.setManaged(false);
-            backToMenuBtn.setVisible(true);
-            backToMenuBtn.setManaged(true);
+            backToMenuBtn.setVisible(false);
+            backToMenuBtn.setManaged(false);
 
             if (roundTimerTimeline != null) {
                 roundTimerTimeline.stop();
@@ -409,6 +432,38 @@ public class GameView implements GameViewInterface {
             }
         });
     }
+
+
+    public void showGameStartFailedError(String message) {
+        Platform.runLater(() -> {
+            logger.info("GameView: Showing game start failed error: " + message);
+            animateLabelUpdate(systemMessageLabel, "Error: " + message);
+            animateLabelUpdate(matchmakingCountdownLabel, "");
+            animateLabelUpdate(roundInfoLabel, "");
+            animateLabelUpdate(maskedWordLabel, "--- GAME CANNOT START ---");
+            animateLabelUpdate(attemptsLeftLabel, "");
+            guessedLettersList.getItems().clear();
+            guessInput.clear();
+            guessInput.setDisable(true);
+
+            playAgainBtn.setVisible(false);
+            playAgainBtn.setManaged(false);
+            backToMenuBtn.setVisible(true);
+            backToMenuBtn.setManaged(true);
+
+            leaderboardBtn.setDisable(true);
+            leaderboardBtn.setVisible(true);
+            leaderboardBtn.setManaged(true);
+
+            if (roundTimerTimeline != null) {
+                roundTimerTimeline.stop();
+            }
+            if (matchmakingTimerTimeline != null) {
+                matchmakingTimerTimeline.stop();
+            }
+        });
+    }
+
 
     @Override
     public void onReturnToMenu() {
