@@ -1,10 +1,10 @@
-
 package com.cs9322.team05.client.admin.view;
 
 import ModifiedHangman.Player;
 import com.cs9322.team05.client.admin.controller.AdminController;
 import com.cs9322.team05.client.player.controller.AuthenticationController;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,7 +30,7 @@ public class AdminView {
     private final AuthenticationController authController;
     private final String token;
 
-    private Runnable onLogout; 
+    private Runnable onLogout;
 
     private TableView<Player> playerTable;
     private TextField usernameFieldCR;
@@ -42,6 +42,11 @@ public class AdminView {
     private TextField waitingTimeInputGS;
     private Label currentRoundDurationLabelGS;
     private TextField roundDurationInputGS;
+
+    private static final double BASE_WIDTH = 1000;
+    private static final double BASE_HEIGHT = 700;
+    private static final double MIN_SCALE = 0.8;
+    private static final double MAX_SCALE = 1.5;
 
     public AdminView(String token, AdminController adminController, AuthenticationController authController) {
         this.token = token;
@@ -78,31 +83,37 @@ public class AdminView {
 
     private BorderPane createCompleteUI() {
         BorderPane borderPane = new BorderPane();
-        borderPane.setPrefSize(1000, 700);
+        borderPane.prefWidthProperty().bind(
+                Bindings.max(BASE_WIDTH * MIN_SCALE, Bindings.min(BASE_WIDTH * MAX_SCALE, borderPane.getScene().widthProperty()))
+        );
+        borderPane.prefHeightProperty().bind(
+                Bindings.max(BASE_HEIGHT * MIN_SCALE, Bindings.min(BASE_HEIGHT * MAX_SCALE, borderPane.getScene().heightProperty()))
+        );
         borderPane.setStyle("-fx-background-color: #f0f2f5;");
 
         HBox topBar = new HBox(20);
         topBar.setPadding(new Insets(15, 20, 15, 20));
         topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setStyle("-fx-background-color: #3f51b5;"); 
+        topBar.setStyle("-fx-background-color: #3f51b5;");
 
         Label titleLabel = new Label("Administrator Dashboard");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24)); 
-        titleLabel.setStyle("-fx-text-fill: white;");
+        titleLabel.styleProperty().bind(Bindings.concat("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: ",
+                Bindings.when(borderPane.widthProperty().greaterThan(BASE_WIDTH * 1.2)).then("26px").otherwise("24px")
+        ));
 
-        Region spacer = new Region(); 
+        Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Button logoutButton = new Button("Logout");
         logoutButton.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-        logoutButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-background-radius: 4px; -fx-padding: 8px 15px;"); 
+        logoutButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-background-radius: 4px; -fx-padding: 8px 15px;");
         logoutButton.setOnAction(e -> handleLogout());
 
         topBar.getChildren().addAll(titleLabel, spacer, logoutButton);
         borderPane.setTop(topBar);
 
         GridPane mainContentGrid = new GridPane();
-        mainContentGrid.setAlignment(Pos.TOP_CENTER); 
+        mainContentGrid.setAlignment(Pos.TOP_CENTER);
         mainContentGrid.setPadding(new Insets(20));
         mainContentGrid.setVgap(20);
         mainContentGrid.setHgap(20);
@@ -119,9 +130,11 @@ public class AdminView {
 
 
         ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(60); 
+        col1.setPercentWidth(60);
+        col1.setMinWidth(400);
         ColumnConstraints col2 = new ColumnConstraints();
         col2.setPercentWidth(40);
+        col2.setMinWidth(300);
         mainContentGrid.getColumnConstraints().addAll(col1, col2);
 
         mainContentGrid.getChildren().addAll(playerManagementSection, gameSettingsSection);
@@ -143,7 +156,13 @@ public class AdminView {
 
         section.getChildren().add(createTitledSeparator("Registered Players"));
         section.getChildren().add(createSearchPlayerPane());
-        section.getChildren().add(createPlayerTablePane());
+
+        ScrollPane tableScroll = new ScrollPane(createPlayerTablePane());
+        tableScroll.setFitToWidth(true);
+        tableScroll.setFitToHeight(true);
+        VBox.setVgrow(tableScroll, Priority.ALWAYS);
+        section.getChildren().add(tableScroll);
+
         section.getChildren().add(createTableActionsPane());
 
         return section;
@@ -153,7 +172,7 @@ public class AdminView {
         GridPane addPlayerPane = new GridPane();
         addPlayerPane.setHgap(10);
         addPlayerPane.setVgap(10);
-        addPlayerPane.setPadding(new Insets(0,0,10,0)); 
+        addPlayerPane.setPadding(new Insets(0,0,10,0));
 
         usernameFieldCR = new TextField();
         usernameFieldCR.setPromptText("Enter username");
@@ -170,7 +189,7 @@ public class AdminView {
         addPlayerPane.add(new Label("Password:"), 0, 1); addPlayerPane.add(passwordFieldCR, 1, 1);
         HBox btnContainer = new HBox(addPlayerBtn);
         btnContainer.setAlignment(Pos.CENTER_RIGHT);
-        addPlayerPane.add(btnContainer, 1, 2); 
+        addPlayerPane.add(btnContainer, 1, 2);
 
         return addPlayerPane;
     }
@@ -193,31 +212,35 @@ public class AdminView {
     private TableView<Player> createPlayerTablePane() {
         playerTable = new TableView<>();
         playerTable.setPlaceholder(new Label("No players data found or error loading."));
-        playerTable.setMinHeight(200); 
-        playerTable.setPrefHeight(300); 
-        VBox.setVgrow(playerTable, Priority.ALWAYS); 
+        playerTable.prefHeightProperty().bind(
+                rootLayout.heightProperty().multiply(0.5) // Takes 50% of available height
+        );
 
         TableColumn<Player, String> usernameCol = new TableColumn<>("Username");
-        usernameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().username));
+        usernameCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().username));
         usernameCol.setPrefWidth(150);
 
-        TableColumn<Player, String> passwordDisplayCol = new TableColumn<>("Password (Stored)"); 
-        passwordDisplayCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().password));
+        TableColumn<Player, String> passwordDisplayCol = new TableColumn<>("Password (Stored)");
+        passwordDisplayCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().password));
         passwordDisplayCol.setPrefWidth(200);
 
         TableColumn<Player, Integer> winsCol = new TableColumn<>("Wins");
-        winsCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("wins")); 
+        winsCol.setCellValueFactory(
+                new javafx.scene.control.cell.PropertyValueFactory<>("wins"));
         winsCol.setPrefWidth(80);
 
         playerTable.getColumns().setAll(usernameCol, passwordDisplayCol, winsCol);
         playerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
         return playerTable;
     }
 
     private HBox createTableActionsPane() {
         HBox tableActionsBox = new HBox(10);
         tableActionsBox.setAlignment(Pos.CENTER_LEFT);
-        tableActionsBox.setPadding(new Insets(10,0,0,0)); 
+        tableActionsBox.setPadding(new Insets(10,0,0,0));
 
         updatePasswordFieldUP = new TextField();
         updatePasswordFieldUP.setPromptText("New Password for Selected");
@@ -277,9 +300,9 @@ public class AdminView {
 
     private Label createSectionTitle(String text) {
         Label title = new Label(text);
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 18)); 
-        title.setStyle("-fx-text-fill: #3f51b5;"); 
-        title.setPadding(new Insets(0, 0, 5, 0)); 
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        title.setStyle("-fx-text-fill: #3f51b5;");
+        title.setPadding(new Insets(0, 0, 5, 0));
         return title;
     }
 
@@ -287,10 +310,10 @@ public class AdminView {
         Separator separator = new Separator(javafx.geometry.Orientation.HORIZONTAL);
         Label label = new Label(titleText);
         label.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #555;");
-        label.setPadding(new Insets(8,0,2,0)); 
+        label.setPadding(new Insets(8,0,2,0));
 
         VBox titledSeparator = new VBox(label, separator);
-        titledSeparator.setPadding(new Insets(10,0,5,0)); 
+        titledSeparator.setPadding(new Insets(10,0,5,0));
         return titledSeparator;
     }
 
@@ -306,8 +329,8 @@ public class AdminView {
         showAlert(Alert.AlertType.INFORMATION, "Logout Status", logoutMessage);
         if (logoutMessage.toLowerCase().contains("successful") && onLogout != null) {
             logger.info("AdminView: Logout successful, invoking AdminView's onLogout callback (if set by MainApp).");
-            
-            onLogout.run(); 
+
+            onLogout.run();
         }
     }
 
@@ -339,7 +362,7 @@ public class AdminView {
             adminController.update_player(selectedPlayer.username, newPassword, token);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Password for player '" + selectedPlayer.username + "' update request sent.");
             updatePasswordFieldUP.clear();
-            
+
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Error updating password for player: " + selectedPlayer.username, ex);
             showAlert(Alert.AlertType.ERROR, "Update Player Error", "Failed to update password: " + ex.getMessage());
@@ -376,7 +399,7 @@ public class AdminView {
             Player foundPlayer = adminController.search_player(keyword, token);
             Platform.runLater(() -> {
                 if (playerTable == null) { logger.warning("handleSearchPlayer (UI): playerTable is null."); return; }
-                if (foundPlayer != null && foundPlayer.username != null && !foundPlayer.username.isEmpty()) { 
+                if (foundPlayer != null && foundPlayer.username != null && !foundPlayer.username.isEmpty()) {
                     playerTable.setItems(FXCollections.observableArrayList(foundPlayer));
                     logger.info("handleSearchPlayer (UI): Displaying found player: " + foundPlayer.username);
                 } else {
@@ -404,7 +427,7 @@ public class AdminView {
                 if (playerList != null) {
                     ObservableList<Player> itemsToSet = FXCollections.observableArrayList(playerList);
                     playerTable.setItems(itemsToSet);
-                    playerTable.refresh(); 
+                    playerTable.refresh();
                     logger.info("AdminView: refreshPlayerTable (UI) - Table items set/refreshed (" + itemsToSet.size() + " players).");
                     if (itemsToSet.isEmpty()){
                         playerTable.setPlaceholder(new Label("No players found or registered yet."));
@@ -432,12 +455,12 @@ public class AdminView {
         if (adminController == null) { showAlert(Alert.AlertType.ERROR, "Error", "Admin Controller not available."); return; }
         try {
             int newTime = Integer.parseInt(waitingTimeInputGS.getText().trim());
-            if (newTime < 1 || newTime > 1200) { 
+            if (newTime < 1 || newTime > 1200) {
                 showAlert(Alert.AlertType.WARNING, "Input Validation", "Waiting time must be between 1 and 1200 seconds."); return;
             }
             adminController.set_waiting_time(newTime, token);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Matchmaking waiting time update request sent.");
-            fetchAndDisplayGameSettings(); 
+            fetchAndDisplayGameSettings();
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Input Error", "Invalid number format for waiting time. Please enter digits only.");
         } catch (Exception ex) {
@@ -450,12 +473,12 @@ public class AdminView {
         if (adminController == null) { showAlert(Alert.AlertType.ERROR, "Error", "Admin Controller not available."); return; }
         try {
             int newTime = Integer.parseInt(roundDurationInputGS.getText().trim());
-            if (newTime < 10 || newTime > 600) { 
+            if (newTime < 10 || newTime > 600) {
                 showAlert(Alert.AlertType.WARNING, "Input Validation", "Round duration must be between 10 and 600 seconds."); return;
             }
             adminController.set_round_duration(newTime, token);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Round duration update request sent.");
-            fetchAndDisplayGameSettings(); 
+            fetchAndDisplayGameSettings();
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Input Error", "Invalid number format for round duration. Please enter digits only.");
         } catch (Exception ex) {
@@ -468,13 +491,13 @@ public class AdminView {
         if (adminController == null) { logger.warning("AdminView: fetchAndDisplayGameSettings - adminController is null."); return; }
         logger.info("AdminView: Fetching current game settings.");
         try {
-            
+
             int waitingTime = adminController.get_waiting_time(token);
             int roundDuration = adminController.get_round_duration(token);
             Platform.runLater(() -> {
                 currentWaitingTimeLabelGS.setText("Current Matchmaking Waiting Time: " + waitingTime + "s");
-                waitingTimeInputGS.setPromptText(String.valueOf(waitingTime) + "s (current)"); 
-                waitingTimeInputGS.clear(); 
+                waitingTimeInputGS.setPromptText(String.valueOf(waitingTime) + "s (current)");
+                waitingTimeInputGS.clear();
 
                 currentRoundDurationLabelGS.setText("Current Round Duration (Guessing): " + roundDuration + "s");
                 roundDurationInputGS.setPromptText(String.valueOf(roundDuration) + "s (current)");
@@ -492,11 +515,11 @@ public class AdminView {
     }
 
     private void showAlert(Alert.AlertType alertType, String title, String content) {
-        
+
         if (Platform.isFxApplicationThread()) {
             Alert alert = new Alert(alertType);
             alert.setTitle(title);
-            alert.setHeaderText(null); 
+            alert.setHeaderText(null);
             alert.setContentText(content);
             alert.showAndWait();
         } else {
@@ -510,6 +533,14 @@ public class AdminView {
         }
     }
 
+    private Font getResponsiveFont(double baseSize) {
+        return Font.font("Arial", FontWeight.NORMAL,
+                Math.max(baseSize * MIN_SCALE,
+                        Math.min(baseSize * MAX_SCALE,
+                                baseSize * (rootLayout.getWidth() / BASE_WIDTH)))
+        );
+    }
+
     private Optional<ButtonType> showConfirmationDialog(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle(title);
@@ -519,4 +550,5 @@ public class AdminView {
         alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         return alert.showAndWait();
     }
+
 }
