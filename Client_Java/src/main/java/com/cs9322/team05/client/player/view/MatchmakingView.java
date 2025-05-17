@@ -4,6 +4,7 @@ package com.cs9322.team05.client.player.view;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -11,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.InputMethodTextRun;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
@@ -28,23 +30,52 @@ public class MatchmakingView {
 
     
     private Timeline countdownTimeline;
+    private static final double BASE_WIDTH = 400.0;
+    private static final double MIN_SCALE = 0.8;
+    private static final double MAX_SCALE = 1.5;
 
     public MatchmakingView() {
         setupUI();
-        
     }
 
     private void setupUI() {
-        titleLabel.setFont(new Font("Arial", 28));
-        statusLabel.setFont(new Font("Arial", 18));
-        timerLabel.setFont(new Font("Arial", 16));
-
         root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(50));
-        
+        root.setPadding(new Insets(20));
+        VBox.setVgrow(root, Priority.ALWAYS); // Force vertical expansion
+        titleLabel.setWrapText(true);
+        statusLabel.setWrapText(true);
+        timerLabel.setWrapText(true);
+
+
+        progressIndicator.setMaxSize(150, 150); // Absolute maximum
+        progressIndicator.setPrefSize(100, 100); // Base size
+        progressIndicator.styleProperty().bind(
+                Bindings.format("-fx-progress-color: #2196F3; -fx-stroke-width: %f;",
+                        root.widthProperty().divide(BASE_WIDTH).multiply(2))
+        );
+
         root.getChildren().addAll(titleLabel, progressIndicator, statusLabel, timerLabel);
         timerLabel.setVisible(false);
         timerLabel.setManaged(false);
+        root.widthProperty().addListener((obs, oldVal, newVal) -> {
+            applyScaling(calculateScaleFactor(newVal.doubleValue()));
+        });
+
+        applyScaling(1.0);
+    }
+
+    private double calculateScaleFactor(double currentWidth) {
+        return Math.max(MIN_SCALE, Math.min(MAX_SCALE, currentWidth / BASE_WIDTH));
+    }
+
+    private void applyScaling(double scaleFactor) {
+        titleLabel.setFont(new Font("Arial", 28 * scaleFactor));
+        statusLabel.setFont(new Font("Arial", 18 * scaleFactor));
+        timerLabel.setFont(new Font("Arial", 16 * scaleFactor));
+
+        progressIndicator.setPrefSize(100 * scaleFactor, 100 * scaleFactor);
+        root.setPadding(new Insets(20 * scaleFactor));
+
     }
 
     public Parent getRootPane() {
