@@ -2,6 +2,7 @@
 package com.cs9322.team05.client.admin.view;
 
 import ModifiedHangman.Player;
+import ModifiedHangman.PlayerAlreadyExistException;
 import com.cs9322.team05.client.admin.controller.AdminController;
 import com.cs9322.team05.client.player.controller.AuthenticationController;
 import javafx.application.Platform;
@@ -330,19 +331,31 @@ public class AdminView {
 
 
     private void handleAddPlayer() {
-        if (adminController == null) { showAlert(Alert.AlertType.ERROR, "Error", "Admin Controller not available."); return; }
+        if (adminController == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Admin Controller not available.");
+            return;
+        }
+
         String username = usernameFieldCR.getText().trim();
         String password = passwordFieldCR.getText();
-        if (username.isEmpty() || password.isEmpty()) { showAlert(Alert.AlertType.WARNING, "Validation Error", "Username and Password cannot be empty."); return; }
+
+        if (username.isEmpty() || password.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Username and Password cannot be empty.");
+            return;
+        }
+
         try {
             adminController.create_player(username, password, token);
-            showAlert(Alert.AlertType.INFORMATION, "Success", "Player '" + username + "' creation request sent successfully.");
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Player '" + username + "' was created successfully.");
             usernameFieldCR.clear();
             passwordFieldCR.clear();
             refreshPlayerTable();
+        } catch (PlayerAlreadyExistException ex) {
+            logger.warning("Player creation failed: Username already exists - " + username);
+            showAlert(Alert.AlertType.WARNING, "Player Exists", "A player with the username '" + username + "' already exists.");
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Error adding player: " + username, ex);
-            showAlert(Alert.AlertType.ERROR, "Add Player Error", "Failed to create player '" + username + "': " + ex.getMessage());
+            logger.log(Level.SEVERE, "Unexpected error adding player: " + username, ex);
+            showAlert(Alert.AlertType.ERROR, "Add Player Error", "An unexpected error occurred while creating player: " + ex.getMessage());
         }
     }
 

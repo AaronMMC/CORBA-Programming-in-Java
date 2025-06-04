@@ -3,6 +3,7 @@ package com.cs9322.team05.client.admin.model;
 import ModifiedHangman.AdminNotLoggedInException;
 import ModifiedHangman.AdminService;
 import ModifiedHangman.Player;
+import ModifiedHangman.PlayerAlreadyExistException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,9 +17,21 @@ public class AdminModel {
         AdminModel.adminServiceImpl = adminService;
     }
 
-    public void create_player(String username, String password, String token) throws AdminNotLoggedInException {
+    public void create_player(String username, String password, String token)
+            throws AdminNotLoggedInException, PlayerAlreadyExistException {
+
+        List<Player> existingPlayers = getAllPlayers(token); // assumes this is already implemented
+
+        boolean usernameExists = existingPlayers.stream()
+                .anyMatch(p -> p.username != null && p.username.equalsIgnoreCase(username));
+
+        if (usernameExists) {
+            throw new PlayerAlreadyExistException("Username '" + username + "' already exists.");
+        }
+
         adminServiceImpl.create_player(username, password, token);
     }
+
 
     public void update_player(String username, String password, String token) throws AdminNotLoggedInException {
         adminServiceImpl.update_player(username, password, token);
