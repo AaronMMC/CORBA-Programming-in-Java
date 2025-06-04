@@ -241,14 +241,17 @@ public class AdminView {
         updatePlayerBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 12px;");
         updatePlayerBtn.setOnAction(e -> handleUpdatePlayerPassword());
 
+        Button updatePlayerUsernameBtn = new Button("Update Password");
+        updatePlayerUsernameBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 12px;");
+        updatePlayerUsernameBtn.setOnAction(e -> handleUpdatePlayerUsername());
+
         Button deletePlayerBtn = new Button("Delete Selected Player");
         deletePlayerBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 12px;");
         deletePlayerBtn.setOnAction(e -> handleDeletePlayer());
 
-        tableActionsBox.getChildren().addAll(updatePasswordFieldUP, updatePlayerBtn, deletePlayerBtn);
+        tableActionsBox.getChildren().addAll(updatePasswordFieldUP, updatePlayerBtn, updatePlayerUsernameBtn, deletePlayerBtn);
         return tableActionsBox;
     }
-
 
     private VBox createGameSettingsSection() {
         VBox section = new VBox(15);
@@ -357,6 +360,22 @@ public class AdminView {
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Error updating password for player: " + selectedPlayer.username, ex);
             showAlert(Alert.AlertType.ERROR, "Update Player Error", "Failed to update password: " + ex.getMessage());
+        }
+    }
+
+    private void handleUpdatePlayerUsername() {
+        if (adminController == null) { showAlert(Alert.AlertType.ERROR, "Error", "Admin Controller not available."); return;}
+        Player selectedPlayer = playerTable.getSelectionModel().getSelectedItem();
+        if (selectedPlayer == null) { showAlert(Alert.AlertType.WARNING, "Selection Needed", "Please select a player from the table to update."); return; }
+        String newUsername = usernameFieldCR.getText().trim();
+        if (newUsername.isEmpty()) {showAlert(Alert.AlertType.WARNING, "Validation Error", "New username field cannot be empty."); return;}
+        try {
+            adminController.update_player(newUsername, selectedPlayer.password, token);
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Username for player '" + selectedPlayer.username + "' update request sent.");
+            updatePasswordFieldUP.clear();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error updating username for player: " + selectedPlayer.username, e);
+            showAlert(Alert.AlertType.ERROR, "Update Player Error", "Failed to update username: " + e.getMessage());
         }
     }
 
