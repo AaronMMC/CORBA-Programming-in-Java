@@ -20,12 +20,13 @@ public class SessionManager {
     }
 
     public static SessionManager getInstance() {
-        if (instance == null)
+        if (instance == null) {
             synchronized (SessionManager.class) {
-                if (instance == null)
+                if (instance == null) {
                     instance = new SessionManager();
+                }
             }
-
+        }
         return instance;
     }
 
@@ -35,14 +36,12 @@ public class SessionManager {
             return;
         }
         String username = userSessions.get(token);
-        System.out.println("Current userSessions: " + userSessions);
-        System.out.println("Current clientCallbacks: " + clientCallbacks);
-
         if (username != null) {
             System.out.println("SessionManager.addCallback: Storing callback for username: " + username + " (derived from token: " + token + ")");
             clientCallbacks.put(username, clientCallback);
-        } else
+        } else {
             System.out.println("SessionManager.addCallback: ERROR - No username found for token: " + token + ". Callback NOT stored.");
+        }
     }
 
     public String createSession(String username, String userType) {
@@ -62,10 +61,41 @@ public class SessionManager {
         }
 
         String username = userSessions.remove(token);
-        if (username != null)
+        if (username != null) {
             clientCallbacks.remove(username);
-        else
+        } else {
             System.out.println("SessionManager.invalidateSession: No session found for token: " + token);
+        }
+    }
+
+    public void invalidateSessionByUsername(String username) {
+        if (username == null || username.isEmpty()) {
+            System.out.println("SessionManager.invalidateSessionByUsername: ERROR - Username is null or empty.");
+            return;
+        }
+
+        String tokenToInvalidate = null;
+        for (Map.Entry<String, String> entry : userSessions.entrySet()) {
+            if (username.equals(entry.getValue())) {
+                tokenToInvalidate = entry.getKey();
+                break;
+            }
+        }
+
+        if (tokenToInvalidate != null) {
+            userSessions.remove(tokenToInvalidate);
+            ClientCallback callback = clientCallbacks.remove(username);
+            if (callback != null) {
+                try {
+                    callback.notifySessionInvalidated("Your session has been invalidated by a new login on another device.");
+                    System.out.println("SessionManager.invalidateSessionByUsername: Notified client " + username + " of session invalidation.");
+                } catch (Exception e) {
+                    System.err.println("SessionManager.invalidateSessionByUsername: Error notifying client " + username + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("SessionManager.invalidateSessionByUsername: Session invalidated for user: " + username + " (token: " + tokenToInvalidate + ")");
+        }
     }
 
     public boolean isSessionValid(String sessionId) {
@@ -81,7 +111,9 @@ public class SessionManager {
     }
 
     public String getUsername(String token) {
-        if (token == null) return null;
+        if (token == null) {
+            return null;
+        }
         return userSessions.get(token);
     }
 }

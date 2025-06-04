@@ -3,6 +3,7 @@ package com.cs9322.team05.client.player.callback;
 import ModifiedHangman.*;
 import com.cs9322.team05.client.player.controller.GameController;
 import javafx.application.Platform;
+import javafx.scene.control.Alert; // Import Alert
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.PortableServer.POA;
@@ -21,6 +22,7 @@ public class ClientCallbackImpl extends ClientCallbackPOA {
     private final String token;
     private GameController controller;
     private final POA rootPoaInstance;
+    private Runnable onSessionInvalidatedCallback; // ADDED: Field to hold the callback
 
     public ClientCallbackImpl(ORB orb, GameService gameService, String token, GameController controller) {
         this.orb = orb;
@@ -34,6 +36,11 @@ public class ClientCallbackImpl extends ClientCallbackPOA {
             logger.log(Level.SEVERE, "Failed to initialize or activate RootPOA in ClientCallbackImpl constructor", e);
             throw new RuntimeException("POA initialization/activation failed", e);
         }
+    }
+
+    // ADDED: Setter for the session invalidation callback
+    public void setOnSessionInvalidatedCallback(Runnable onSessionInvalidatedCallback) {
+        this.onSessionInvalidatedCallback = onSessionInvalidatedCallback;
     }
 
     public void register() throws PlayerNotLoggedInException, ServantNotActive, WrongPolicy, InvalidName, AdapterInactive {
@@ -126,6 +133,26 @@ public class ClientCallbackImpl extends ClientCallbackPOA {
                 controller.handleGameStartFailed(failureMessage);
             } else {
                 logger.severe("CRITICAL: GameController is NULL in startGameFailed callback!");
+            }
+        });
+    }
+
+    @Override
+    public void notifySessionInvalidated(String reason) {
+        logger.info("SERVER CALLBACK: notifySessionInvalidated RECEIVED - Reason: " + reason);
+        Platform.runLater(() -> {
+            logger.fine("Platform.runLater: Displaying session invalidated pop-up.");
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Session Expired");
+            alert.setHeaderText("Your session has been invalidated!");
+            alert.setContentText("Another device has logged in with your account, or your session has otherwise expired. You will be logged out.");
+            alert.showAndWait();
+
+            if (onSessionInvalidatedCallback != null) {
+                logger.info("Triggering onSessionInvalidatedCallback.");
+                onSessionInvalidatedCallback.run();
+            } else {
+                logger.warning("onSessionInvalidatedCallback is null in ClientCallbackImpl.notifySessionInvalidated. Cannot navigate logout.");
             }
         });
     }

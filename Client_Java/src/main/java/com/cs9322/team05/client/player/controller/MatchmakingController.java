@@ -157,14 +157,6 @@ public class MatchmakingController {
                 logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
                 failureReason = REASON_UNEXPECTED_ERROR;
                 Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
-            } catch (InvalidName e) { 
-                logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
-                failureReason = REASON_UNEXPECTED_ERROR;
-                Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
-            } catch (AdapterInactive e) { 
-                logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
-                failureReason = REASON_UNEXPECTED_ERROR;
-                Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
             } catch (ServantNotActive e) { 
                 logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
                 failureReason = REASON_UNEXPECTED_ERROR;
@@ -173,6 +165,10 @@ public class MatchmakingController {
                 logger.log(Level.SEVERE, "Unexpected exception during matchmaking process.", e);
                 failureReason = REASON_UNEXPECTED_ERROR;
                 Platform.runLater(() -> view.showMatchmakingFailed("An error occurred: " + e.getMessage()));
+            } catch (InvalidName e) {
+                throw new RuntimeException(e);
+            } catch (AdapterInactive e) {
+                throw new RuntimeException(e);
             } finally {
                 logger.fine("Matchmaking thread finished execution. Cancellation: " + cancellationRequested.get() + ", FailureReason: " + failureReason);
                 cleanupTimeoutTimer();

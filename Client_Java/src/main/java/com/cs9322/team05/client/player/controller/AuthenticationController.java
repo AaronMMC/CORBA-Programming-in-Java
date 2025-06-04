@@ -98,6 +98,10 @@ public class AuthenticationController {
         this.onLoginSuccess = callback;
     }
 
+    public void setOnLoginFailure(Consumer<String> callback) {
+        this.onLoginFailure = callback;
+    }
+
     public void setOnLogoutSuccess(Runnable callback) {
         this.onLogoutSuccess = callback;
     }
