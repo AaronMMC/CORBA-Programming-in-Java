@@ -50,8 +50,10 @@ public class GameServiceImpl extends GameServicePOA {
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         synchronized (pendingGameManager) {
-            if (isPlayerInGame(username))
+            if (isPlayerInGame(username)) {
                 System.out.println("Player is already in game. ");
+                ClientCallback callback = SessionManager.getInstance().getCallback(username);
+            }
             else if (!pendingGameManager.isPendingGameExists()) {
                 String gameId = UUID.randomUUID().toString();
                 int actualGameRoundDuration = gameDao.getCurrentRoundLength();
@@ -65,9 +67,12 @@ public class GameServiceImpl extends GameServicePOA {
 
 
             String gameId = pendingGameManager.getPendingGameId();
-            if (isPlayerInGame(username))
-                gameId = getGameByUsername(username).getGameId();
             int roundLength = pendingGameManager.getPendingGameRoundDuration();
+            if (isPlayerInGame(username)) {
+                Game game = getGameByUsername(username);
+                gameId = game.getGameId();
+                roundLength = game.getRoundDuration();
+            }
             int remainingWaitingTime = pendingGameManager.getRemainingWaitingTimeInSeconds();
             return new GameInfo(gameId, roundLength, remainingWaitingTime);
         }
