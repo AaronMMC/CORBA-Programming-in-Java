@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class AdminView {
     private static final Logger logger = Logger.getLogger(AdminView.class.getName());
@@ -242,7 +243,7 @@ public class AdminView {
         updatePlayerBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 12px;");
         updatePlayerBtn.setOnAction(e -> handleUpdatePlayerPassword());
 
-        Button updatePlayerUsernameBtn = new Button("Update Password");
+        Button updatePlayerUsernameBtn = new Button("Update Username");
         updatePlayerUsernameBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px 12px;");
         updatePlayerUsernameBtn.setOnAction(e -> handleUpdatePlayerUsername());
 
@@ -419,12 +420,20 @@ public class AdminView {
             refreshPlayerTable(); return;
         }
         try {
-            Player foundPlayer = adminController.search_player(keyword, token);
+            List<Player> foundPlayers = adminController.getAllPlayers(token)
+                    .stream()
+                    .filter(player -> player.username.contains(keyword))
+                    .collect(Collectors.toList());
+
             Platform.runLater(() -> {
-                if (playerTable == null) { logger.warning("handleSearchPlayer (UI): playerTable is null."); return; }
-                if (foundPlayer != null && foundPlayer.username != null && !foundPlayer.username.isEmpty()) { 
-                    playerTable.setItems(FXCollections.observableArrayList(foundPlayer));
-                    logger.info("handleSearchPlayer (UI): Displaying found player: " + foundPlayer.username);
+                if (playerTable == null) {
+                    logger.warning("handleSearchPlayer (UI): playerTable is null.");
+                    return;
+                }
+                if (!foundPlayers.isEmpty()) {
+                    playerTable.setItems(FXCollections.observableArrayList(foundPlayers));
+                    foundPlayers.forEach(player ->
+                            logger.info("handleSearchPlayer (UI): Displaying found player: " + player.username));
                 } else {
                     playerTable.setItems(FXCollections.emptyObservableList());
                     showAlert(Alert.AlertType.INFORMATION, "Search Result", "No player found matching username '" + keyword + "'.");
