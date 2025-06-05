@@ -170,4 +170,10 @@ public class Game {
     }
 
 
+    public boolean hasPlayer(String username) {
+        for (GamePlayer player : players)
+            if (username.equals(player.username))
+                return true;
+        return false;
+    }
 }

@@ -64,13 +64,23 @@ public class GameServiceImpl extends GameServicePOA {
                 pendingGameManager.addPlayer(new GamePlayer(username, 0));
 
 
-
             String gameId = pendingGameManager.getPendingGameId();
+            if (isPlayerInGame(username))
+                gameId = getGameByUsername(username).getGameId();
             int roundLength = pendingGameManager.getPendingGameRoundDuration();
             int remainingWaitingTime = pendingGameManager.getRemainingWaitingTimeInSeconds();
             return new GameInfo(gameId, roundLength, remainingWaitingTime);
         }
     }
+
+    public Game getGameByUsername(String username) {
+        for (Game game : activeGames.values())
+            if (game.hasPlayer(username))
+                return game;
+
+        return null; // or throw exception if preferred
+    }
+
 
     private boolean isPlayerInGame(String username) {
         for (Game game : activeGames.values())
