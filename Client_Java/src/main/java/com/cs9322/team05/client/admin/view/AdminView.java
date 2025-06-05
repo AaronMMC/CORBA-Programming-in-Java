@@ -236,7 +236,7 @@ public class AdminView {
         tableActionsBox.setPadding(new Insets(10,0,0,0)); 
 
         updatePasswordFieldUP = new TextField();
-        updatePasswordFieldUP.setPromptText("New Password for Selected");
+        updatePasswordFieldUP.setPromptText("New Password/ Username for Selected");
         updatePasswordFieldUP.setPrefWidth(180);
 
         Button updatePlayerBtn = new Button("Update Password");
