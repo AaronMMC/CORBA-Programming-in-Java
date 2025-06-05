@@ -18,43 +18,40 @@ public class AuthenticationServiceImpl extends AuthenticationServicePOA {
     @Override
     public String login(String username, String password) throws LogInException {
         Player player = userDao.getPlayerByUsername(username);
-        if (player != null) {
+        if (player != null)
             return attemptLogin(username, password, player.password, "player");
-        }
 
         Admin admin = userDao.getAdminByUsername(username);
-        if (admin != null) {
+        if (admin != null)
             return attemptLogin(username, password, admin.getPassword(), "admin");
-        }
+
 
         throw new LogInException("User not found.");
     }
 
     private String attemptLogin(String username, String rawPassword, String hashedPassword, String userType) throws LogInException {
-        if (!BCrypt.checkpw(rawPassword, hashedPassword)) {
+        if (!BCrypt.checkpw(rawPassword, hashedPassword))
             throw new LogInException("Incorrect password.");
-        }
 
-        if (sessionManager.isUserLoggedIn(username)) {
+        if (sessionManager.isUserLoggedIn(username))
             sessionManager.invalidateSessionByUsername(username);
-        }
 
         return sessionManager.createSession(username, userType);
     }
 
     @Override
     public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {
-        if (!isTokenValid(token)) {
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Access denied: Player login is required to register a Callback.");
-        }
+
         sessionManager.addCallback(callback, token);
     }
 
     @Override
     public void logout(String token) throws PlayerNotLoggedInException {
-        if (!isTokenValid(token)) {
+        if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Access denied: User login is required to log out.");
-        }
+
         sessionManager.invalidateSession(token);
     }
 

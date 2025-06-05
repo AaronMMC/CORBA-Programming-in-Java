@@ -1,6 +1,7 @@
 package com.cs9322.team05.server.model;
 
 import ModifiedHangman.*;
+import com.cs9322.team05.server.impl.GameServiceImpl;
 import com.cs9322.team05.server.manager.SessionManager;
 
 import java.util.*;
@@ -14,6 +15,8 @@ public class GameRound {
     private final Map<String, ScheduledFuture<?>> countdownTasks;
     private final Map<String, PlayerGuessWordState> playerGuessStates;
     private final SessionManager sessionManager;
+    private Runnable onRoundComplete;
+    private ScheduledFuture<?> roundCompleteTask;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
     public GameRound(List<GamePlayer> playersList, String wordToGuess, int roundNumber) {
@@ -21,9 +24,9 @@ public class GameRound {
         this.countdownTasks = new HashMap<>();
         this.playerGuessStates = new HashMap<>();
         this.sessionManager = SessionManager.getInstance();
-
         this.roundNumber = roundNumber;
         this.wordToGuess = wordToGuess;
+
         int wordToGuessLength = (wordToGuess != null) ? wordToGuess.length() : 0;
 
         if (playersList == null || playersList.isEmpty()) {
@@ -31,16 +34,16 @@ public class GameRound {
             return;
         }
 
-        for (GamePlayer player : playersList)
+        for (GamePlayer player : playersList) {
             if (player != null && player.username != null) {
                 System.out.println("  - " + player.username);
                 playerGuessStates.put(player.username, new PlayerGuessWordState(wordToGuessLength));
-                this.players.put(player.username, player);
-            } else
+                players.put(player.username, player);
+            } else {
                 System.out.println("  - Warning: Null player or player with null username in list for round " + this.roundNumber);
+            }
+        }
     }
-
-
 
     public void startRound(int roundDuration, String gameId, Runnable onRoundComplete) {
         if (playerGuessStates.isEmpty()) {
@@ -57,28 +60,9 @@ public class GameRound {
             countdownTasks.put(username, task);
         }
 
-        scheduler.schedule(onRoundComplete, roundDuration, TimeUnit.SECONDS);
+        this.onRoundComplete = onRoundComplete;
+        this.roundCompleteTask = scheduler.schedule(onRoundComplete, roundDuration, TimeUnit.SECONDS);
     }
-
-
-
-    public synchronized void cancelCountdownForPlayer(String username) {
-        ScheduledFuture<?> task = countdownTasks.get(username);
-        if (task == null)
-            System.out.println("GameRound.cancelCountdownForPlayer: No task found for " + username);
-    }
-
-
-
-    public synchronized void stopAllCountdowns() {
-        for (Map.Entry<String, ScheduledFuture<?>> entry : countdownTasks.entrySet())
-            if (entry.getValue() != null)
-                entry.getValue().cancel(false);
-
-        countdownTasks.clear();
-    }
-
-
 
     public synchronized GuessResponse guessLetter(String username, char letter) {
         PlayerGuessWordState state = playerGuessStates.get(username);
@@ -87,12 +71,12 @@ public class GameRound {
 
         char lowerLetter = Character.toLowerCase(letter);
         boolean isLetterInWord = wordToGuess != null && wordToGuess.indexOf(lowerLetter) >= 0;
+
         updatePlayerGuessState(state, lowerLetter, isLetterInWord);
         String maskedWord = updateMaskedWord(state, lowerLetter);
         boolean isWordGuessed = !maskedWord.contains("_");
 
-        if (isWordGuessed)
-            checkAndSetWinner(username);
+        if (isWordGuessed) checkAndSetWinner(username);
 
         AttemptedLetter[] attemptedLetters = state.getAttemptedLetters().entrySet().stream()
                 .map(entry -> new AttemptedLetter(entry.getKey(), entry.getValue()))
@@ -101,6 +85,50 @@ public class GameRound {
         return new GuessResponse(isWordGuessed, maskedWord, attemptedLetters, state.getRemainingGuess());
     }
 
+    public synchronized void cancelCountdownForPlayer(String username) {
+        ScheduledFuture<?> task = countdownTasks.get(username);
+        if (task == null)
+            System.out.println("GameRound.cancelCountdownForPlayer: No task found for " + username);
+    }
+
+    public synchronized void stopAllCountdowns() {
+        for (ScheduledFuture<?> task : countdownTasks.values())
+            if (task != null) task.cancel(false);
+
+        countdownTasks.clear();
+
+        if (roundCompleteTask != null) {
+            roundCompleteTask.cancel(false);
+            roundCompleteTask = null;
+        }
+    }
+
+    public void endRoundEarly(String gameId) {
+        stopAllCountdowns(); // Ensure no other timers will fire
+
+        GamePlayer roundWinner = (this.winner != null) ? this.winner : new GamePlayer("no_winner", 0);
+
+        for (String username : players.keySet()) {
+            String message = determineStatusMessage(username, roundWinner);
+
+            GamePlayer[] leaderboard = players.values().stream()
+                    .sorted(Comparator.comparingInt((GamePlayer p) -> p.wins).reversed())
+                    .toArray(GamePlayer[]::new);
+
+            RoundResult result = new RoundResult(gameId, roundNumber, roundWinner, wordToGuess, message, leaderboard);
+
+            try {
+                ClientCallback callback = sessionManager.getCallback(username);
+                if (callback != null)
+                    callback.endRound(result);
+                else
+                    System.out.printf("GameRound (EarlyEnd): NULL callback for %s. Cannot send endRound.%n", username);
+            } catch (Exception e) {
+                System.out.printf("GameRound (EarlyEnd): Exception for %s - %s%n", username, e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
 
 
     private void updatePlayerGuessState(PlayerGuessWordState state, char letter, boolean isCorrect) {
@@ -110,36 +138,41 @@ public class GameRound {
         state.addAttemptedLetter(letter, isCorrect);
     }
 
-
-
     private String updateMaskedWord(PlayerGuessWordState state, char letter) {
         StringBuilder updatedMasked = getUpdatedMaskedWord(state, letter);
         state.setCurrentMaskedWord(updatedMasked.toString());
         return updatedMasked.toString();
     }
 
-
-
-    private void checkAndSetWinner(String username) {
-        cancelCountdownForPlayer(username);
+    private synchronized void checkAndSetWinner(String username) {
         if (this.winner == null) {
             this.winner = players.get(username);
-            if (this.winner != null)
+            if (this.winner != null) {
                 this.winner.wins++;
-        } else
-            System.out.printf("GameRound.guessLetter: Word guessed by %s but winner already %s%n", username, this.winner.username);
+                stopAllCountdowns();
+
+                if (roundCompleteTask != null) {
+                    roundCompleteTask.cancel(false);
+                    roundCompleteTask = null;
+                }
+
+                if (onRoundComplete != null) {
+                    onRoundComplete.run();
+                    onRoundComplete = null;
+                }
+
+                endRoundEarly("random"); // since the gameId is not needed in the showing of results
+            }
+        }
     }
 
-
-
-    private StringBuilder getUpdatedMaskedWord(PlayerGuessWordState playerGuessWordState, char letter) {
-        if (wordToGuess == null || playerGuessWordState == null || playerGuessWordState.getCurrentMaskedWord() == null) {
-            System.out.println("GameRound.getUpdatedMaskedWord: Error - wordToGuess or player state is null. Returning empty/current masked word.");
-            return new StringBuilder(playerGuessWordState != null && playerGuessWordState.getCurrentMaskedWord() != null ? playerGuessWordState.getCurrentMaskedWord() : "");
+    private StringBuilder getUpdatedMaskedWord(PlayerGuessWordState state, char letter) {
+        if (wordToGuess == null || state == null || state.getCurrentMaskedWord() == null) {
+            System.out.println("GameRound.getUpdatedMaskedWord: Error - wordToGuess or player state is null.");
+            return new StringBuilder(state != null && state.getCurrentMaskedWord() != null ? state.getCurrentMaskedWord() : "");
         }
 
-
-        StringBuilder updatedMasked = new StringBuilder(playerGuessWordState.getCurrentMaskedWord());
+        StringBuilder updatedMasked = new StringBuilder(state.getCurrentMaskedWord());
 
         for (int i = 0; i < wordToGuess.length(); i++)
             if (Character.toLowerCase(wordToGuess.charAt(i)) == letter)
@@ -148,14 +181,11 @@ public class GameRound {
         return updatedMasked;
     }
 
-
-
     private ClientCallback getClientCallback(String username, String gameId) {
         try {
             ClientCallback callback = sessionManager.getCallback(username);
             if (callback == null)
                 System.out.printf("GameRound.startRound: NULL callback for player %s (gameId: %s, round %d)%n", username, gameId, roundNumber);
-
             return callback;
         } catch (Exception e) {
             System.out.printf("GameRound.startRound: EXCEPTION getting callback for %s - %s%n", username, e.getMessage());
@@ -163,8 +193,6 @@ public class GameRound {
             return null;
         }
     }
-
-
 
     private void notifyClientStartRound(ClientCallback callback, String username, String gameId) {
         try {
@@ -179,11 +207,9 @@ public class GameRound {
         }
     }
 
-
-
     private ScheduledFuture<?> scheduleEndRoundTask(int roundDuration, String username, String gameId) {
         return scheduler.schedule(() -> {
-            GamePlayer roundWinner = (this.winner != null) ? this.winner : new GamePlayer("no_winner", 0);
+            GamePlayer roundWinner = (winner != null) ? winner : new GamePlayer("no_winner", 0);
             String message = determineStatusMessage(username, roundWinner);
 
             GamePlayer[] leaderboard = players.values().stream()
@@ -205,13 +231,9 @@ public class GameRound {
         }, roundDuration, TimeUnit.SECONDS);
     }
 
-
-
     private String determineStatusMessage(String username, GamePlayer winner) {
         if (winner.username.equals("no_winner"))
             return "No one guessed the word this round.";
-
         return winner.username.equals(username) ? "You won this Round!" : "You lost this round. Winner was " + winner.username;
     }
-
 }

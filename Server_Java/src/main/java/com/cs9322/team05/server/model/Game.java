@@ -3,6 +3,7 @@ package com.cs9322.team05.server.model;
 import ModifiedHangman.*;
 import com.cs9322.team05.server.dao.UserDao;
 import com.cs9322.team05.server.dao.WordDao;
+import com.cs9322.team05.server.impl.GameServiceImpl;
 import com.cs9322.team05.server.manager.SessionManager;
 
 import java.util.ArrayList;
@@ -123,6 +124,8 @@ public class Game {
                     ScheduledExecutorService notifier = Executors.newSingleThreadScheduledExecutor();
                     notifier.schedule(() -> {
                         notifyPlayersGameOver(winner, leaderboard);
+                        GameServiceImpl gameService = GameServiceImpl.getInstance();
+                        gameService.finishActiveGame(gameId);
                         notifier.shutdown();
                     }, 5, TimeUnit.SECONDS);
                 } else {
@@ -163,7 +166,7 @@ public class Game {
         scheduler.schedule(() -> {
             startGame();
             scheduler.shutdown();
-        }, 7, TimeUnit.SECONDS);
+        }, 6, TimeUnit.SECONDS);
     }
 
 

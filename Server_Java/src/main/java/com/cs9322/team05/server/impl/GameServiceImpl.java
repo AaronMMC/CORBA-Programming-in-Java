@@ -25,22 +25,22 @@ public class GameServiceImpl extends GameServicePOA {
         this.userDao = userDao;
         this.activeGames = new HashMap<>();
         this.pendingGameManager = pendingGameManager;
-        if (this.pendingGameManager != null) {
+        if (this.pendingGameManager != null)
             this.pendingGameManager.setGameService(this);
-        }
+
     }
 
     public static synchronized GameServiceImpl getInstance(SessionManager sessionManager, GameDao gameDao, UserDao userDao, PendingGameManager pendingGameManager) {
-        if (instance == null) {
+        if (instance == null)
             instance = new GameServiceImpl(sessionManager, gameDao, userDao, pendingGameManager);
-        }
+
         return instance;
     }
 
     public static GameServiceImpl getInstance() {
-        if (instance == null) {
+        if (instance == null)
             throw new IllegalStateException("GameServiceImpl is not yet initialized.");
-        }
+
         return instance;
     }
 
@@ -50,15 +50,19 @@ public class GameServiceImpl extends GameServicePOA {
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         synchronized (pendingGameManager) {
-            if (!pendingGameManager.isPendingGameExists()) {
+            if (isPlayerInGame(username))
+                System.out.println("Player is already in game. ");
+            else if (!pendingGameManager.isPendingGameExists()) {
                 String gameId = UUID.randomUUID().toString();
                 int actualGameRoundDuration = gameDao.getCurrentRoundLength();
                 pendingGameManager.setPendingGame(new Game(gameId, actualGameRoundDuration, username));
 
                 int matchmakingWaitDuration = gameDao.getCurrentWaitingTimeLength();
                 pendingGameManager.startCountdownToStartGame(matchmakingWaitDuration);
-            } else
+            }
+            else
                 pendingGameManager.addPlayer(new GamePlayer(username, 0));
+
 
 
             String gameId = pendingGameManager.getPendingGameId();
@@ -68,12 +72,25 @@ public class GameServiceImpl extends GameServicePOA {
         }
     }
 
+    private boolean isPlayerInGame(String username) {
+        for (Game game : activeGames.values())
+            for (GamePlayer player : game.getPlayers()) {
+                System.out.println(player.username);
+                if (player.username.equals(username))
+                    return true;
+            }
+
+        return false;
+    }
+
+
     @Override
     public void registerCallback(ClientCallback callback, String token) throws PlayerNotLoggedInException {
         if (!isTokenValid(token))
             throw new PlayerNotLoggedInException("Player is not Logged in.");
 
         sessionManager.addCallback(callback, token);
+        System.out.println("a callback is registered. ");
     }
 
     @Override
@@ -154,4 +171,13 @@ public class GameServiceImpl extends GameServicePOA {
     private boolean isTokenValid(String token) {
         return sessionManager.isSessionValid(token);
     }
+
+    public void finishActiveGame(String gameId) {
+        if (activeGames.containsKey(gameId)) {
+            activeGames.remove(gameId);
+            System.out.println("Game with ID " + gameId + " has been removed.");
+        } else
+            System.out.println("No game found with ID " + gameId + ".");
+    }
+
 }
