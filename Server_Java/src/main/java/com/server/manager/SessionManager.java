@@ -13,7 +13,7 @@ public class SessionManager {
 
     private static volatile SessionManager instance;
 
-    // Maps session tokens to usernames.
+    // Maps connection tokens to usernames.
     private final Map<String, String> userSessions;
     // Maps usernames to client callbacks for server push communication.
     private final Map<String, ClientCallback> clientCallbacks;
@@ -40,7 +40,7 @@ public class SessionManager {
 
 
     /**
-     * Adds a client callback for a given session token if the token is valid.
+     * Adds a client callback for a given connection token if the token is valid.
      */
     public void addCallback(ClientCallback clientCallback, String token) {
         if (token == null || clientCallback == null) {
@@ -59,11 +59,11 @@ public class SessionManager {
 
 
     /**
-     * Creates a new session for the user, generating a token based on userType and UUID.
+     * Creates a new connection for the user, generating a token based on userType and UUID.
      */
     public String createSession(String username, String userType) {
         if (username == null || username.isEmpty() || userType == null || userType.isEmpty()) {
-            System.out.println("SessionManager.createSession: ERROR - Username or userType is null/empty. Cannot create session.");
+            System.out.println("SessionManager.createSession: ERROR - Username or userType is null/empty. Cannot create connection.");
             return null;
         }
 
@@ -75,7 +75,7 @@ public class SessionManager {
 
 
     /**
-     * Invalidates a session given its token. Removes user session and associated callback.
+     * Invalidates a connection given its token. Removes user connection and associated callback.
      */
     public void invalidateSession(String token) {
         if (token == null) {
@@ -83,18 +83,18 @@ public class SessionManager {
             return;
         }
 
-        // Remove session and associated callback if any
+        // Remove connection and associated callback if any
         String username = userSessions.remove(token);
         if (username != null)
             clientCallbacks.remove(username);
         else
-            System.out.println("SessionManager.invalidateSession: No session found for token: " + token);
+            System.out.println("SessionManager.invalidateSession: No connection found for token: " + token);
 
     }
 
 
     /**
-     * Invalidates a session by username, used for forced logout scenarios like new device login.
+     * Invalidates a connection by username, used for forced logout scenarios like new device login.
      */
     public void invalidateSessionByUsername(String username) {
         if (username == null || username.isEmpty()) {
@@ -117,19 +117,19 @@ public class SessionManager {
             ClientCallback callback = clientCallbacks.remove(username);
             if (callback != null)
                 try {
-                    callback.notifySessionInvalidated("Your session has been invalidated by a new login on another device.");
-                    System.out.println("SessionManager.invalidateSessionByUsername: Notified client " + username + " of session invalidation.");
+                    callback.notifySessionInvalidated("Your connection has been invalidated by a new login on another device.");
+                    System.out.println("ConnectionManager.invalidateSessionByUsername: Notified client " + username + " of connection invalidation.");
                 } catch (Exception e) {
-                    System.err.println("SessionManager.invalidateSessionByUsername: Error notifying client " + username + ": " + e.getMessage());
+                    System.err.println("ConnectionManager.invalidateSessionByUsername: Error notifying client " + username + ": " + e.getMessage());
                     e.printStackTrace();
                 }
 
-            System.out.println("SessionManager.invalidateSessionByUsername: Session invalidated for user: " + username + " (token: " + tokenToInvalidate + ")");
+            System.out.println("ConnectionManager.invalidateConnectionByUsername: connection invalidated for user: " + username + " (token: " + tokenToInvalidate + ")");
         }
     }
 
     /**
-     * Checks if a session is currently valid (i.e., token exists).
+     * Checks if a connection is currently valid (i.e., token exists).
      */
     public boolean isSessionValid(String sessionId) {
         return userSessions.containsKey(sessionId);

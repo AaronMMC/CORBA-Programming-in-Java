@@ -16,7 +16,6 @@ public final class RoundResult implements org.omg.CORBA.portable.IDLEntity
   public String wordToGuess = null;
   public String statusMessage = null;
 
-  // it can be "You've done it in 20 seconds" or "You did not guessed it" or "You won this round"
   public ModifiedHangman.GamePlayer currentGameLeaderboard[] = null;
 
   public RoundResult ()
