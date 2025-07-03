@@ -15,49 +15,41 @@ import javafx.stage.Modality;
 import java.util.List;
 
 public class HomeView implements HomeViewInterface {
-    private final VBox root = new VBox(20); 
-    private final Label welcomeLabel = new Label(); 
-    private final Button startBtn = new Button("Start New Game");
-    private final Button leaderboardBtn = new Button("View Leaderboard");
-    private final Button logoutBtn = new Button("Logout");
-
-    
-    
+    private final VBox root = new VBox(20);
+    private final Label welcomeLabel = new Label();
+    private final Button startBtn = new Button(" Launch Game");
+    private final Button leaderboardBtn = new Button(" View Leaderboard");
+    private final Button logoutBtn = new Button(" Log Out");
 
     private Runnable onStartGame;
     private Runnable onViewLeaderboard;
     private Runnable onLogout;
 
-
-    public HomeView(String userToken, HomeController controller) { 
-        
+    public HomeView(String userToken, HomeController controller) {
         welcomeLabel.setFont(new Font("Arial", 24));
-        welcomeLabel.setText("Welcome!"); 
+        welcomeLabel.setText("Welcome!");
+        welcomeLabel.setStyle("-fx-text-fill: #EEEEEE;");
 
-        
         double buttonWidth = 200;
         Font buttonFont = new Font("Arial", 16);
 
         startBtn.setPrefWidth(buttonWidth);
         startBtn.setFont(buttonFont);
-        startBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
-
+        startBtn.setStyle("-fx-background-color: #2E7D32; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
 
         leaderboardBtn.setPrefWidth(buttonWidth);
         leaderboardBtn.setFont(buttonFont);
-        leaderboardBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
-
+        leaderboardBtn.setStyle("-fx-background-color: #1565C0; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
 
         logoutBtn.setPrefWidth(buttonWidth);
         logoutBtn.setFont(buttonFont);
-        logoutBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white;");
+        logoutBtn.setStyle("-fx-background-color: #B71C1C; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
 
-
-        root.setAlignment(Pos.CENTER); 
-        root.setPadding(new Insets(40)); 
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(40));
+        root.setStyle("-fx-background-color: #121212;");
         root.getChildren().addAll(welcomeLabel, startBtn, leaderboardBtn, logoutBtn);
 
-        
         startBtn.setOnAction(e -> {
             if (onStartGame != null) onStartGame.run();
         });
@@ -78,22 +70,19 @@ public class HomeView implements HomeViewInterface {
     }
 
     @Override
-    public Parent getRootPane() { 
+    public Parent getRootPane() {
         return root;
     }
 
     @Override
-    public void openGameScreen() {
-        
-        
-    }
+    public void openGameScreen() {}
 
     @Override
     public void showLeaderboard(List<GamePlayer> top5) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Overall Leaderboard");
         alert.setHeaderText("Top 5 Players (by Wins)");
-        alert.initModality(Modality.APPLICATION_MODAL); 
+        alert.initModality(Modality.APPLICATION_MODAL);
 
         if (top5 == null || top5.isEmpty()) {
             alert.setContentText("The leaderboard is currently empty or could not be retrieved.");
@@ -114,10 +103,7 @@ public class HomeView implements HomeViewInterface {
     }
 
     @Override
-    public void returnToLogin() {
-        
-        
-    }
+    public void returnToLogin() {}
 
     @Override
     public void showError(String msg) {
@@ -127,7 +113,6 @@ public class HomeView implements HomeViewInterface {
         alert.setContentText(msg);
         alert.showAndWait();
     }
-
 
     public void setOnStartGame(Runnable cb) {
         this.onStartGame = cb;
@@ -140,5 +125,4 @@ public class HomeView implements HomeViewInterface {
     public void setOnLogout(Runnable cb) {
         this.onLogout = cb;
     }
-
 }

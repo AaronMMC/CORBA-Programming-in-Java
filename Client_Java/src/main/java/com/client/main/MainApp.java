@@ -348,7 +348,7 @@ public class MainApp extends Application {
                     alertType = Alert.AlertType.ERROR;
                     break;
                 case MatchmakingController.REASON_LOGIN_EXPIRED:
-                    userMessage = "Your session has expired. Please log in again to continue.";
+                    userMessage = "You've been disconnected. Please log in again to continue.";
                     alertType = Alert.AlertType.ERROR;
                     showLogin();
                     return;

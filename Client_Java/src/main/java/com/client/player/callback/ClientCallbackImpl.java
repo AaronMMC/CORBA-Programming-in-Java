@@ -144,8 +144,8 @@ public class ClientCallbackImpl extends ClientCallbackPOA {
             logger.fine("Platform.runLater: Displaying session invalidated pop-up.");
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Session Expired");
-            alert.setHeaderText("Your session has been invalidated!");
-            alert.setContentText("Another device has logged in with your account, or your session has otherwise expired. You will be logged out.");
+            alert.setHeaderText("You've been disconnected!");
+            alert.setContentText("Another device has logged in with your account. You've been logged out.");
             alert.showAndWait();
 
             if (onSessionInvalidatedCallback != null) {

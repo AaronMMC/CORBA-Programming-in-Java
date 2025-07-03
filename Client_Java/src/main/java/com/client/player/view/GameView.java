@@ -49,13 +49,13 @@ public class GameView implements GameViewInterface {
 
 
     public GameView() {
-        systemMessageLabel.setFont(new Font("Arial", 16));
-        matchmakingCountdownLabel.setFont(new Font("Arial", 18));
+        systemMessageLabel.setFont(new Font("Calibri", 16));
+        matchmakingCountdownLabel.setFont(new Font("Calibri", 18));
         matchmakingCountdownLabel.setStyle("-fx-font-weight: bold;");
-        roundInfoLabel.setFont(new Font("Arial", 16));
-        maskedWordLabel.setFont(new Font("Arial", 32));
+        roundInfoLabel.setFont(new Font("Calibri", 16));
+        maskedWordLabel.setFont(new Font("Calibri", 32));
         maskedWordLabel.setStyle("-fx-font-weight: bold; -fx-letter-spacing: 5px;");
-        attemptsLeftLabel.setFont(new Font("Arial", 14));
+        attemptsLeftLabel.setFont(new Font("Calibri", 14));
         guessedLettersList.setMaxHeight(100);
         guessedLettersList.setMinWidth(200);
         guessedLettersList.setMaxWidth(250);
@@ -94,6 +94,28 @@ public class GameView implements GameViewInterface {
         backToMenuBtn.setOnAction(e -> {
             if (onBackToMenu != null) onBackToMenu.run();
         });
+
+        // --- DARK THEME STYLES ---
+        root.setStyle("-fx-background-color: #121212;");
+
+        String labelStyle = "-fx-text-fill: #EEEEEE;";
+        String inputStyle = "-fx-text-fill: #EEEEEE; -fx-background-color: #1E1E1E; -fx-border-color: #444;";
+
+        systemMessageLabel.setStyle(labelStyle);
+        matchmakingCountdownLabel.setStyle(labelStyle + "-fx-font-weight: bold;");
+        roundInfoLabel.setStyle(labelStyle);
+        maskedWordLabel.setStyle(labelStyle + "-fx-font-weight: bold; -fx-letter-spacing: 5px;");
+        attemptsLeftLabel.setStyle(labelStyle);
+
+        guessInput.setStyle(inputStyle);
+        guessInput.setPromptText("Type a letter and press ENTER");
+
+        guessedLettersList.setStyle("-fx-control-inner-background: #1E1E1E; -fx-text-fill: #EEEEEE;");
+
+        String buttonStyle = "-fx-background-color: #2E2E2E; -fx-text-fill: #FFFFFF; -fx-border-color: #555;";
+        leaderboardBtn.setStyle(buttonStyle);
+        playAgainBtn.setStyle(buttonStyle);
+        backToMenuBtn.setStyle(buttonStyle);
 
         clearAll();
         logger.fine("GameView initialized.");

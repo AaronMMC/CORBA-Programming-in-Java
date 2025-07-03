@@ -117,7 +117,7 @@ public class SessionManager {
             ClientCallback callback = clientCallbacks.remove(username);
             if (callback != null)
                 try {
-                    callback.notifySessionInvalidated("Your connection has been invalidated by a new login on another device.");
+                    callback.notifySessionInvalidated("Your connection has been disconnected by a new login on another device.");
                     System.out.println("ConnectionManager.invalidateSessionByUsername: Notified client " + username + " of connection invalidation.");
                 } catch (Exception e) {
                     System.err.println("ConnectionManager.invalidateSessionByUsername: Error notifying client " + username + ": " + e.getMessage());
