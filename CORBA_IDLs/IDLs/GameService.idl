@@ -1,0 +1,80 @@
+module ModifiedHangman {
+  exception GameNotFoundException {
+    string message;
+  };
+
+  exception PlayerNotLoggedInException {
+    string message;
+  };
+
+  struct GamePlayer {
+    string username;
+    long wins;
+  };
+
+  struct GameResult {
+    string gameId;
+    string gameWinner;
+    sequence<GamePlayer> leaderboard;
+  };
+
+  struct RoundResult {
+    string gameId;
+    long roundNumber;
+    GamePlayer roundWinner;
+    string wordToGuess;
+    string statusMessage;
+    sequence<GamePlayer> currentGameLeaderboard;
+  };
+
+  interface ClientCallback {
+    void startRound(in long wordLength, in long roundNumber);
+    void startGameFailed();
+    void endGame(in GameResult gameResultData);
+    void endRound(in RoundResult roundResultData);
+    void proceedToNextRound(in long wordLength, in long roundNUmber);
+  };
+
+  struct Player {
+    string username;
+    string password;
+    long wins;
+  };
+
+  struct AttemptedLetter {
+    char letter;
+    boolean isLetterCorrect;
+  };
+
+  struct GuessResponse {
+    boolean isWordGuessed;
+    string maskedWord;
+    sequence<AttemptedLetter> attemptedLetters;
+    long remainingAttemptsLeft;
+  };
+
+  struct GameInfo {
+    string gameId;
+    long roundLength;
+    long remainingWaitingTime;
+  };
+
+  struct Leaderboard {
+    sequence<GamePlayer> players;
+  };
+
+  interface GameService {
+    void registerCallback(in ClientCallback callback, in string token) raises (PlayerNotLoggedInException);
+    Player getPlayerByUsername(in string username, in string token) raises (PlayerNotLoggedInException);
+    GameInfo start_game(in string username, in string token) raises (PlayerNotLoggedInException);
+
+    GuessResponse guessLetter(
+      in string username,
+      in string gameId,
+      in char letter,
+      in string token
+    ) raises (GameNotFoundException, PlayerNotLoggedInException);
+
+    Leaderboard get_leaderboard(in string token) raises (PlayerNotLoggedInException);
+  };
+};
